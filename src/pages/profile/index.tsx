@@ -1,34 +1,38 @@
-import { View, Text } from '@tarojs/components'
-import Avatar from '@nutui/nutui-react-taro/dist/es/packages/avatar'
-import Button from '@nutui/nutui-react-taro/dist/es/packages/button'
-import '@nutui/nutui-react-taro/dist/es/packages/avatar/style/css'
-import '@nutui/nutui-react-taro/dist/es/packages/button/style/css'
-import { PageShell } from '../../components/PageShell'
+import { View } from '@tarojs/components'
+import { ManagerCard } from './components/ManagerCard'
+import { MemberCard } from './components/MemberCard'
+import { MenuGroup } from './components/MenuGroup'
+import { MetricGrid } from './components/MetricGrid'
+import { ProfileHeader } from './components/ProfileHeader'
+import {
+  accountMenus,
+  managerInfo,
+  memberActions,
+  metrics,
+  serviceMenus
+} from './profile.data'
 
 export default function ProfilePage() {
   return (
-    <PageShell title='我的' subtitle='管理个人资料、订单、预约和会员权益。'>
-      <View className='rounded-lg bg-white p-5 shadow-soft'>
-        <View className='flex items-center gap-4'>
-          <Avatar size='large'>行</Avatar>
-          <View>
-            <Text className='block text-lg font-semibold text-ink'>书苑会员</Text>
-            <Text className='mt-1 block text-sm text-[#66736d]'>欢迎来到行尚书苑</Text>
-          </View>
-        </View>
-        <View className='mt-5 grid grid-cols-3 gap-3 text-center'>
-          {['订单', '预约', '收藏'].map((item) => (
-            <View key={item} className='rounded-lg bg-brand-soft px-3 py-4'>
-              <Text className='text-sm font-medium text-brand-dark'>{item}</Text>
-            </View>
-          ))}
-        </View>
-        <View className='mt-5'>
-          <Button block type='primary'>
-            完善资料
-          </Button>
-        </View>
+    <View className='min-h-screen bg-canvas pb-6 text-ink'>
+      <View className='bg-brand px-5 pb-8 pt-5'>
+        <ProfileHeader />
+        <MemberCard actions={memberActions} />
       </View>
-    </PageShell>
+
+      <View className='-mt-4 px-4'>
+        <MetricGrid items={metrics} />
+
+        <View className='mt-3'>
+          <MenuGroup items={serviceMenus} />
+        </View>
+
+        <View className='mt-3'>
+          <MenuGroup items={accountMenus} />
+        </View>
+
+        <ManagerCard manager={managerInfo} />
+      </View>
+    </View>
   )
 }

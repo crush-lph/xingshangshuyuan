@@ -3,11 +3,12 @@
   "version": "0.1.0",
   "private": true,
   "description": "Taro4 + NutUI + Tailwind v3 + Webpack5 project",
+  "packageManager": "pnpm@8.14.1",
   "scripts": {
     "build:weapp": "taro build --type weapp",
     "build:h5": "taro build --type h5",
-    "dev:weapp": "npm run build:weapp -- --watch",
-    "dev:h5": "npm run build:h5 -- --watch",
+    "dev:weapp": "taro build --type weapp --watch",
+    "dev:h5": "taro build --type h5 --watch",
     "typecheck": "tsc --noEmit"
   },
   "browserslist": [
@@ -28,8 +29,10 @@
     "@tarojs/runtime": "4.2.0",
     "@tarojs/shared": "4.2.0",
     "@tarojs/taro": "4.2.0",
+    "ahooks": "^3.9.7",
     "react": "^18.3.1",
-    "react-dom": "^18.3.1"
+    "react-dom": "^18.3.1",
+    "zustand": "^5.0.14"
   },
   "devDependencies": {
     "@babel/core": "^7.27.7",

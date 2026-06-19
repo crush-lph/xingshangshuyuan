@@ -1,4 +1,5 @@
 import { defineConfig, type UserConfigExport } from '@tarojs/cli'
+import path from 'node:path'
 import { UnifiedWebpackPluginV5 } from 'weapp-tailwindcss/webpack'
 
 export default defineConfig<'webpack5'>(async () => {
@@ -20,6 +21,9 @@ export default defineConfig<'webpack5'>(async () => {
     },
     sourceRoot: 'src',
     outputRoot: 'dist',
+    alias: {
+      '@': path.resolve(__dirname, '..', 'src')
+    },
     plugins: ['@tarojs/plugin-html'],
     defineConstants: {},
     copy: {
@@ -44,7 +48,8 @@ export default defineConfig<'webpack5'>(async () => {
       webpackChain(chain) {
         chain.plugin('weapp-tailwindcss').use(UnifiedWebpackPluginV5, [
           {
-            appType: 'taro'
+            appType: 'taro',
+            rem2rpx: true
           }
         ])
       }

@@ -1,0 +1,3401 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>行商书苑 · 财税产业生态平台</title>
+<style>
+  :root {
+    --primary: #C8232B;
+    --primary-dark: #9E1B22;
+    --primary-light: #F5E6E7;
+    --gold: #D4A017;
+    --gold-light: #FFF8E1;
+    --dark: #1A1A1A;
+    --gray-1: #333;
+    --gray-2: #666;
+    --gray-3: #999;
+    --gray-4: #CCC;
+    --gray-5: #F5F5F5;
+    --white: #FFFFFF;
+    --success: #07C160;
+    --warning: #FF9900;
+    --border: #EAEAEA;
+    --shadow: 0 2px 12px rgba(0,0,0,0.08);
+    --radius: 12px;
+    --radius-sm: 8px;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: -apple-system, 'PingFang SC', 'Helvetica Neue', sans-serif;
+    background: #F0F0F0;
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    min-height: 100vh;
+    padding: 20px;
+  }
+
+  /* 主容器 */
+  .app-wrapper {
+    display: flex;
+    gap: 24px;
+    align-items: flex-start;
+    max-width: 1400px;
+    width: 100%;
+  }
+
+  /* 手机框 */
+  .phone-frame {
+    width: 390px;
+    min-width: 390px;
+    background: #1A1A1A;
+    border-radius: 44px;
+    padding: 14px;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.4);
+    position: sticky;
+    top: 20px;
+  }
+  .phone-screen {
+    width: 100%;
+    height: 780px;
+    background: var(--white);
+    border-radius: 34px;
+    overflow: hidden;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+  }
+  .phone-notch {
+    height: 44px;
+    background: var(--white);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 20px;
+    font-size: 12px;
+    color: var(--dark);
+    font-weight: 600;
+    flex-shrink: 0;
+  }
+  .notch-center {
+    width: 120px;
+    height: 26px;
+    background: #000;
+    border-radius: 20px;
+  }
+
+  /* 页面内容区 */
+  .page-content {
+    flex: 1;
+    overflow-y: auto;
+    overflow-x: hidden;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+    background: var(--gray-5);
+  }
+  .page-content::-webkit-scrollbar { display: none; }
+
+  /* 底部导航 */
+  .bottom-nav {
+    height: 68px;
+    background: var(--white);
+    border-top: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    padding-bottom: 10px;
+    flex-shrink: 0;
+  }
+  .nav-item {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 3px;
+    cursor: pointer;
+    padding: 6px 0;
+  }
+  .nav-icon { font-size: 22px; }
+  .nav-label { font-size: 10px; color: var(--gray-3); }
+  .nav-item.active .nav-label { color: var(--primary); }
+  .nav-item.active .nav-icon { filter: none; }
+
+  /* 侧边导航面板 */
+  .side-panel {
+    flex: 1;
+    background: var(--white);
+    border-radius: 16px;
+    padding: 24px;
+    box-shadow: var(--shadow);
+    max-height: 810px;
+    overflow-y: auto;
+  }
+  .side-panel h2 {
+    font-size: 18px;
+    color: var(--dark);
+    margin-bottom: 16px;
+    padding-bottom: 12px;
+    border-bottom: 2px solid var(--primary);
+  }
+  .nav-tree { list-style: none; }
+  .nav-tree .section {
+    margin-bottom: 8px;
+  }
+  .nav-tree .section-title {
+    font-size: 12px;
+    color: var(--gray-3);
+    font-weight: 600;
+    padding: 8px 0 4px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+  .nav-tree .page-link {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 10px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 13px;
+    color: var(--gray-1);
+    transition: all 0.2s;
+    margin-bottom: 2px;
+  }
+  .nav-tree .page-link:hover { background: var(--gray-5); }
+  .nav-tree .page-link.active { background: var(--primary-light); color: var(--primary); font-weight: 600; }
+  .nav-tree .page-link .page-num {
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: var(--gray-5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 10px;
+    color: var(--gray-3);
+    flex-shrink: 0;
+  }
+  .nav-tree .page-link.active .page-num { background: var(--primary); color: white; }
+
+  /* ===== 通用组件 ===== */
+  .page { display: none; background: var(--gray-5); min-height: 100%; }
+  .page.active { display: block; }
+
+  /* 顶部导航栏 */
+  .topbar {
+    background: var(--white);
+    padding: 0 16px 0;
+    display: flex;
+    align-items: center;
+    height: 46px;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+  }
+  .topbar-title { font-size: 17px; font-weight: 600; color: var(--dark); flex: 1; text-align: center; }
+  .topbar-back { font-size: 16px; cursor: pointer; color: var(--dark); width: 32px; }
+  .topbar-right { width: 32px; text-align: right; font-size: 16px; cursor: pointer; }
+
+  /* 卡片 */
+  .card {
+    background: var(--white);
+    border-radius: var(--radius);
+    padding: 16px;
+    margin: 0 12px 12px;
+    box-shadow: var(--shadow);
+  }
+  .card-title {
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--dark);
+    margin-bottom: 12px;
+  }
+
+  /* 标签 */
+  .tag {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: 11px;
+    font-weight: 500;
+  }
+  .tag-red { background: #FEE; color: var(--primary); border: 1px solid #FCC; }
+  .tag-gold { background: var(--gold-light); color: var(--gold); border: 1px solid #FFE082; }
+  .tag-green { background: #E8F9F0; color: var(--success); border: 1px solid #B2EFD3; }
+  .tag-blue { background: #E8F0FE; color: #1976D2; border: 1px solid #BBDEFB; }
+  .tag-gray { background: var(--gray-5); color: var(--gray-2); border: 1px solid var(--border); }
+
+  /* 按钮 */
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 10px 20px;
+    border-radius: 24px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    border: none;
+    transition: all 0.2s;
+  }
+  .btn-primary { background: var(--primary); color: white; }
+  .btn-primary:hover { background: var(--primary-dark); }
+  .btn-gold { background: linear-gradient(135deg, #D4A017, #E8BB3D); color: white; }
+  .btn-outline { background: transparent; color: var(--primary); border: 1.5px solid var(--primary); }
+  .btn-sm { padding: 6px 14px; font-size: 12px; border-radius: 16px; }
+  .btn-block { width: 100%; }
+
+  /* 分割线 */
+  .divider { height: 1px; background: var(--border); margin: 12px 0; }
+  .section-gap { height: 8px; background: var(--gray-5); }
+
+  /* 搜索框 */
+  .search-bar {
+    display: flex;
+    align-items: center;
+    background: var(--gray-5);
+    border-radius: 22px;
+    padding: 10px 16px;
+    gap: 8px;
+    margin: 0 12px 12px;
+  }
+  .search-bar input {
+    flex: 1;
+    border: none;
+    background: transparent;
+    font-size: 14px;
+    color: var(--gray-2);
+    outline: none;
+  }
+
+  /* ===== 首页样式 ===== */
+  .home-header {
+    background: linear-gradient(135deg, #C8232B 0%, #9E1B22 100%);
+    padding: 12px 16px 16px;
+  }
+  .home-header-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 12px;
+  }
+  .logo-area { display: flex; align-items: center; gap: 8px; }
+  .logo-text { color: white; font-size: 18px; font-weight: 700; letter-spacing: 1px; }
+  .logo-sub { color: rgba(255,255,255,0.75); font-size: 10px; }
+  .user-info-bar {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .avatar {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.3);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+  }
+  .user-detail { flex: 1; }
+  .user-name { color: white; font-size: 14px; font-weight: 600; }
+  .user-badge {
+    display: inline-block;
+    padding: 1px 6px;
+    border-radius: 8px;
+    font-size: 10px;
+    background: var(--gold-light);
+    color: var(--gold);
+    font-weight: 600;
+  }
+  .home-search {
+    display: flex;
+    align-items: center;
+    background: rgba(255,255,255,0.2);
+    border-radius: 20px;
+    padding: 8px 14px;
+    gap: 8px;
+  }
+  .home-search span { color: rgba(255,255,255,0.85); font-size: 13px; }
+
+  /* Banner轮播 */
+  .banner-wrap {
+    margin: 0 12px 12px;
+    border-radius: var(--radius);
+    overflow: hidden;
+  }
+  .banner-slide {
+    height: 140px;
+    background: linear-gradient(135deg, #C8232B 0%, #7B0D12 100%);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding: 20px;
+    position: relative;
+  }
+  .banner-slide::after {
+    content: '';
+    position: absolute;
+    right: 20px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 70px;
+    height: 70px;
+    background: rgba(255,255,255,0.12);
+    border-radius: 50%;
+  }
+  .banner-tag { color: rgba(255,255,255,0.75); font-size: 11px; margin-bottom: 6px; }
+  .banner-title { color: white; font-size: 18px; font-weight: 700; margin-bottom: 8px; }
+  .banner-btn {
+    display: inline-block;
+    background: white;
+    color: var(--primary);
+    padding: 4px 14px;
+    border-radius: 14px;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+  }
+  .banner-dots { display: flex; justify-content: center; gap: 4px; margin-top: 8px; }
+  .banner-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--gray-4); }
+  .banner-dot.active { width: 16px; border-radius: 4px; background: var(--primary); }
+
+  /* 数据看板 */
+  .stats-bar {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 0;
+    background: var(--white);
+    margin: 0 12px 12px;
+    border-radius: var(--radius);
+    overflow: hidden;
+    box-shadow: var(--shadow);
+  }
+  .stat-item {
+    padding: 12px 8px;
+    text-align: center;
+    border-right: 1px solid var(--border);
+  }
+  .stat-item:last-child { border-right: none; }
+  .stat-num { font-size: 16px; font-weight: 700; color: var(--primary); }
+  .stat-label { font-size: 10px; color: var(--gray-3); margin-top: 2px; }
+
+  /* 快捷入口 */
+  .quick-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+    padding: 16px;
+    background: var(--white);
+    margin: 0 12px 12px;
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+  }
+  .quick-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    cursor: pointer;
+  }
+  .quick-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 22px;
+  }
+  .quick-icon-1 { background: #FEE; }
+  .quick-icon-2 { background: #E8F9F0; }
+  .quick-icon-3 { background: #FFF3E0; }
+  .quick-icon-4 { background: #E8F0FE; }
+  .quick-icon-5 { background: var(--gold-light); }
+  .quick-icon-6 { background: #F3E5F5; }
+  .quick-label { font-size: 12px; color: var(--gray-1); font-weight: 500; }
+
+  /* 资源卡片 */
+  .resource-card {
+    background: var(--white);
+    border-radius: var(--radius-sm);
+    padding: 12px;
+    display: flex;
+    gap: 12px;
+    margin-bottom: 8px;
+    cursor: pointer;
+  }
+  .resource-icon {
+    width: 54px;
+    height: 54px;
+    border-radius: 10px;
+    background: linear-gradient(135deg, var(--primary), #E84343);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 24px;
+    flex-shrink: 0;
+  }
+  .resource-info { flex: 1; }
+  .resource-name { font-size: 14px; font-weight: 600; color: var(--dark); margin-bottom: 4px; }
+  .resource-tags { display: flex; gap: 4px; flex-wrap: wrap; margin-bottom: 6px; }
+  .resource-price { font-size: 16px; font-weight: 700; color: var(--primary); }
+  .resource-price-old { font-size: 11px; color: var(--gray-3); text-decoration: line-through; margin-left: 4px; }
+  .profit-badge {
+    background: #E8F9F0;
+    color: var(--success);
+    font-size: 11px;
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-weight: 600;
+  }
+
+  /* 活动卡片 */
+  .event-card {
+    background: var(--white);
+    border-radius: var(--radius-sm);
+    overflow: hidden;
+    margin-bottom: 8px;
+    cursor: pointer;
+  }
+  .event-header {
+    background: linear-gradient(135deg, #1A1A2E, #16213E);
+    padding: 14px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .event-date-box {
+    background: var(--primary);
+    border-radius: 8px;
+    padding: 8px;
+    text-align: center;
+    min-width: 44px;
+  }
+  .event-date-month { color: rgba(255,255,255,0.85); font-size: 10px; }
+  .event-date-day { color: white; font-size: 20px; font-weight: 700; line-height: 1; }
+  .event-meta { flex: 1; }
+  .event-title { color: white; font-size: 14px; font-weight: 600; margin-bottom: 4px; }
+  .event-city { color: rgba(255,255,255,0.7); font-size: 12px; }
+  .event-body { padding: 12px; display: flex; align-items: center; justify-content: space-between; }
+  .event-prices { display: flex; flex-direction: column; gap: 2px; }
+  .price-normal { font-size: 12px; color: var(--gray-3); }
+  .price-member { font-size: 14px; color: var(--primary); font-weight: 700; }
+
+  /* 会员升级块 */
+  .member-upgrade {
+    background: linear-gradient(135deg, #1A1A2E, #2D2D5E);
+    border-radius: var(--radius);
+    padding: 16px;
+    margin: 0 12px 12px;
+  }
+  .member-plans { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 12px; }
+  .member-plan {
+    border-radius: var(--radius-sm);
+    padding: 12px;
+    text-align: center;
+    cursor: pointer;
+  }
+  .member-plan-elite { background: linear-gradient(135deg, #D4A017, #C4870D); }
+  .member-plan-navigator { background: linear-gradient(135deg, #7B1FA2, #4A148C); }
+  .plan-name { color: white; font-size: 13px; font-weight: 600; margin-bottom: 4px; }
+  .plan-price { color: rgba(255,255,255,0.9); font-size: 11px; }
+  .plan-price strong { font-size: 18px; color: white; font-weight: 700; }
+
+  /* ===== 资源库样式 ===== */
+  .category-nav {
+    display: flex;
+    gap: 8px;
+    padding: 12px 12px;
+    overflow-x: auto;
+    background: var(--white);
+    scrollbar-width: none;
+  }
+  .category-nav::-webkit-scrollbar { display: none; }
+  .cat-item {
+    white-space: nowrap;
+    padding: 6px 14px;
+    border-radius: 18px;
+    font-size: 13px;
+    cursor: pointer;
+    background: var(--gray-5);
+    color: var(--gray-2);
+    border: 1px solid transparent;
+  }
+  .cat-item.active { background: var(--primary-light); color: var(--primary); border-color: #FFCDD2; font-weight: 600; }
+
+  /* 供应商等级徽章 */
+  .supplier-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+    padding: 2px 7px;
+    border-radius: 4px;
+    font-size: 10px;
+    font-weight: 700;
+  }
+  .badge-strategic { background: linear-gradient(135deg, #D4A017, #E8BB3D); color: white; }
+  .badge-certified { background: linear-gradient(135deg, #1976D2, #2196F3); color: white; }
+
+  /* ===== 活动页面样式 ===== */
+  .event-list-card {
+    background: var(--white);
+    border-radius: var(--radius);
+    overflow: hidden;
+    margin: 0 12px 10px;
+    box-shadow: var(--shadow);
+    cursor: pointer;
+  }
+  .event-list-img {
+    height: 110px;
+    background: linear-gradient(135deg, #1A1A2E 0%, #C8232B 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    gap: 6px;
+    position: relative;
+  }
+  .event-list-img .ename { color: white; font-size: 16px; font-weight: 700; }
+  .event-list-img .elocation { color: rgba(255,255,255,0.8); font-size: 12px; }
+  .event-list-info { padding: 12px; }
+  .event-info-row { display: flex; justify-content: space-between; align-items: center; }
+
+  /* ===== 商机页面 ===== */
+  .opportunity-card {
+    background: var(--white);
+    border-radius: var(--radius);
+    padding: 14px;
+    margin: 0 12px 10px;
+    box-shadow: var(--shadow);
+    cursor: pointer;
+  }
+  .opp-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px; }
+  .opp-title { font-size: 14px; font-weight: 600; color: var(--dark); flex: 1; }
+  .opp-meta { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 8px; }
+  .opp-footer { display: flex; justify-content: space-between; align-items: center; }
+  .opp-budget { font-size: 13px; color: var(--primary); font-weight: 700; }
+  .opp-time { font-size: 11px; color: var(--gray-3); }
+
+  /* ===== 我的页面 ===== */
+  .my-header {
+    background: linear-gradient(135deg, #C8232B 0%, #9E1B22 100%);
+    padding: 20px 16px 60px;
+  }
+  .my-avatar-row { display: flex; align-items: center; gap: 14px; margin-bottom: 16px; }
+  .my-avatar-big {
+    width: 64px;
+    height: 64px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.3);
+    border: 2px solid rgba(255,255,255,0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 28px;
+  }
+  .my-user-info .name { color: white; font-size: 18px; font-weight: 700; }
+  .my-user-info .company { color: rgba(255,255,255,0.85); font-size: 12px; margin-top: 2px; }
+  .my-member-card {
+    background: linear-gradient(135deg, #D4A017, #B8860B);
+    border-radius: var(--radius);
+    padding: 14px;
+    margin-top: -44px;
+    position: relative;
+    z-index: 10;
+    margin-left: 12px;
+    margin-right: 12px;
+    box-shadow: 0 4px 20px rgba(212, 160, 23, 0.4);
+  }
+  .member-card-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+  .member-level { color: white; font-size: 16px; font-weight: 700; }
+  .member-expire { color: rgba(255,255,255,0.8); font-size: 11px; }
+  .member-actions { display: flex; gap: 10px; }
+  .member-action-btn {
+    flex: 1;
+    background: rgba(255,255,255,0.2);
+    border-radius: 8px;
+    padding: 8px;
+    text-align: center;
+    color: white;
+    font-size: 12px;
+    cursor: pointer;
+  }
+
+  .menu-list { background: var(--white); border-radius: var(--radius); margin: 12px 12px 0; overflow: hidden; box-shadow: var(--shadow); }
+  .menu-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 14px 16px;
+    border-bottom: 1px solid var(--border);
+    cursor: pointer;
+  }
+  .menu-item:last-child { border-bottom: none; }
+  .menu-icon { width: 36px; height: 36px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 18px; }
+  .menu-text { flex: 1; font-size: 14px; color: var(--dark); font-weight: 500; }
+  .menu-badge { background: var(--primary); color: white; border-radius: 10px; padding: 2px 7px; font-size: 11px; font-weight: 600; }
+  .menu-arrow { color: var(--gray-3); font-size: 14px; }
+
+  /* ===== 详情页通用 ===== */
+  .detail-hero {
+    background: linear-gradient(135deg, #1A1A2E, #C8232B);
+    padding: 20px 16px;
+  }
+  .detail-hero h1 { color: white; font-size: 20px; font-weight: 700; margin-bottom: 10px; }
+  .detail-tags { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 12px; }
+  .detail-tag {
+    padding: 3px 10px;
+    border-radius: 4px;
+    font-size: 11px;
+    background: rgba(255,255,255,0.2);
+    color: white;
+    font-weight: 500;
+  }
+
+  .price-block {
+    background: var(--white);
+    border-radius: var(--radius);
+    padding: 16px;
+    margin: 12px 12px;
+    box-shadow: var(--shadow);
+  }
+  .price-row { display: flex; justify-content: space-between; align-items: center; padding: 8px 0; border-bottom: 1px solid var(--border); }
+  .price-row:last-child { border-bottom: none; padding-bottom: 0; }
+  .price-label { font-size: 13px; color: var(--gray-2); }
+  .price-value { font-size: 16px; font-weight: 700; color: var(--primary); }
+  .price-value.gold { color: var(--gold); }
+  .price-value.strike { font-size: 13px; color: var(--gray-3); text-decoration: line-through; font-weight: 400; }
+
+  /* 底部固定操作栏 */
+  .action-bar {
+    position: sticky;
+    bottom: 0;
+    background: var(--white);
+    padding: 10px 16px;
+    display: flex;
+    gap: 10px;
+    border-top: 1px solid var(--border);
+  }
+  .action-bar .btn { flex: 1; }
+
+  /* 流程步骤 */
+  .steps {
+    display: flex;
+    align-items: center;
+    gap: 0;
+    overflow-x: auto;
+    padding: 16px;
+    scrollbar-width: none;
+  }
+  .step-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    min-width: 60px;
+  }
+  .step-circle {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    background: var(--gray-5);
+    border: 2px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 11px;
+    color: var(--gray-3);
+    font-weight: 700;
+  }
+  .step-circle.done { background: var(--primary); border-color: var(--primary); color: white; }
+  .step-label { font-size: 10px; color: var(--gray-3); text-align: center; }
+  .step-line { flex: 1; height: 2px; background: var(--border); min-width: 20px; margin-top: -24px; }
+  .step-line.done { background: var(--primary); }
+
+  /* 会员权益对比 */
+  .benefit-compare {
+    overflow-x: auto;
+    margin: 0 12px 12px;
+  }
+  .benefit-table {
+    width: 100%;
+    border-radius: var(--radius);
+    overflow: hidden;
+    box-shadow: var(--shadow);
+    min-width: 320px;
+  }
+  .bt-header { display: grid; grid-template-columns: 1.2fr 1fr 1fr; background: var(--dark); }
+  .bt-col { padding: 10px 8px; text-align: center; font-size: 12px; font-weight: 600; }
+  .bt-col.white { color: white; }
+  .bt-col.gold { color: var(--gold); }
+  .bt-col.primary { color: #FF8080; }
+  .bt-row { display: grid; grid-template-columns: 1.2fr 1fr 1fr; background: var(--white); border-bottom: 1px solid var(--border); }
+  .bt-row:last-child { border-bottom: none; }
+  .bt-row:nth-child(even) { background: var(--gray-5); }
+  .bt-cell { padding: 9px 8px; font-size: 11px; text-align: center; color: var(--gray-1); display: flex; align-items: center; justify-content: center; }
+  .bt-cell.label { justify-content: flex-start; color: var(--gray-2); }
+
+  /* 表单样式 */
+  .form-group { margin-bottom: 16px; }
+  .form-label { font-size: 13px; color: var(--gray-1); font-weight: 500; margin-bottom: 6px; display: block; }
+  .form-label.required::before { content: '*'; color: var(--primary); margin-right: 3px; }
+  .form-input {
+    width: 100%;
+    padding: 10px 14px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    font-size: 14px;
+    color: var(--dark);
+    background: white;
+    outline: none;
+  }
+  .form-input:focus { border-color: var(--primary); }
+  .form-select {
+    width: 100%;
+    padding: 10px 14px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    font-size: 14px;
+    color: var(--gray-2);
+    background: white;
+    outline: none;
+    -webkit-appearance: none;
+  }
+  .radio-group { display: flex; gap: 12px; }
+  .radio-item { display: flex; align-items: center; gap: 6px; font-size: 13px; color: var(--gray-1); cursor: pointer; }
+  .radio-dot { width: 16px; height: 16px; border-radius: 50%; border: 2px solid var(--primary); display: flex; align-items: center; justify-content: center; }
+  .radio-dot.checked::after { content: ''; width: 8px; height: 8px; border-radius: 50%; background: var(--primary); }
+
+  /* 二维码样式 */
+  .qr-box {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+    padding: 20px;
+  }
+  .qr-code {
+    width: 140px;
+    height: 140px;
+    background: repeating-conic-gradient(#000 0% 25%, #fff 0% 50%) 0 0/10px 10px;
+    border: 3px solid white;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.15);
+    border-radius: 8px;
+    position: relative;
+  }
+  .qr-label { font-size: 13px; color: var(--gray-2); text-align: center; }
+  .qr-status {
+    padding: 6px 20px;
+    background: var(--success);
+    color: white;
+    border-radius: 20px;
+    font-size: 13px;
+    font-weight: 600;
+  }
+
+  /* 积分页 */
+  .points-header {
+    background: linear-gradient(135deg, #1A1A2E, #2D2D5E);
+    padding: 20px 16px;
+    text-align: center;
+  }
+  .points-num { font-size: 48px; font-weight: 700; color: var(--gold); line-height: 1; }
+  .points-label { color: rgba(255,255,255,0.7); font-size: 12px; margin-top: 6px; }
+
+  /* 对公支付 */
+  .bank-info {
+    background: var(--gold-light);
+    border: 1px solid #FFE082;
+    border-radius: var(--radius-sm);
+    padding: 14px;
+    margin-bottom: 12px;
+  }
+  .bank-row { display: flex; justify-content: space-between; align-items: center; padding: 6px 0; border-bottom: 1px solid #FFE082; }
+  .bank-row:last-child { border-bottom: none; }
+  .bank-key { font-size: 12px; color: var(--gray-3); }
+  .bank-val { font-size: 13px; color: var(--dark); font-weight: 500; }
+  .copy-btn { background: var(--primary); color: white; border: none; border-radius: 6px; padding: 3px 10px; font-size: 11px; cursor: pointer; }
+
+  /* 成功页 */
+  .success-page {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 40px 20px;
+    text-align: center;
+  }
+  .success-icon { font-size: 64px; margin-bottom: 16px; }
+  .success-title { font-size: 20px; font-weight: 700; color: var(--dark); margin-bottom: 8px; }
+  .success-sub { font-size: 14px; color: var(--gray-3); line-height: 1.6; }
+
+  /* 段落内容 */
+  .info-section {
+    background: var(--white);
+    border-radius: var(--radius);
+    padding: 14px;
+    margin: 0 12px 10px;
+    box-shadow: var(--shadow);
+  }
+  .info-section-title {
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--dark);
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .info-section-title::before {
+    content: '';
+    width: 3px;
+    height: 14px;
+    background: var(--primary);
+    border-radius: 2px;
+  }
+  .info-text { font-size: 13px; color: var(--gray-2); line-height: 1.7; }
+
+  /* 订单列表 */
+  .order-tab-bar { display: flex; background: white; padding: 0 12px; overflow-x: auto; scrollbar-width: none; }
+  .order-tab { padding: 12px 14px; font-size: 13px; color: var(--gray-3); white-space: nowrap; cursor: pointer; border-bottom: 2px solid transparent; }
+  .order-tab.active { color: var(--primary); border-bottom-color: var(--primary); font-weight: 600; }
+
+  .order-card {
+    background: white;
+    border-radius: var(--radius);
+    margin: 0 12px 10px;
+    overflow: hidden;
+    box-shadow: var(--shadow);
+  }
+  .order-card-header {
+    padding: 10px 14px;
+    background: var(--gray-5);
+    display: flex;
+    justify-content: space-between;
+    font-size: 12px;
+  }
+  .order-type { color: var(--gray-2); }
+  .order-status-text { color: var(--primary); font-weight: 600; }
+  .order-card-body { padding: 12px 14px; display: flex; gap: 12px; align-items: center; }
+  .order-thumb {
+    width: 50px;
+    height: 50px;
+    border-radius: 8px;
+    background: linear-gradient(135deg, var(--primary), #E84343);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 22px;
+  }
+  .order-info { flex: 1; }
+  .order-name { font-size: 14px; font-weight: 500; color: var(--dark); margin-bottom: 4px; }
+  .order-amount { font-size: 13px; color: var(--primary); font-weight: 700; }
+  .order-card-footer { padding: 10px 14px; border-top: 1px solid var(--border); display: flex; justify-content: flex-end; gap: 8px; }
+
+  /* 后台页面样式 */
+  .admin-header {
+    background: var(--dark);
+    padding: 12px 16px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .admin-header .title { color: white; font-size: 16px; font-weight: 700; }
+  .admin-badge { background: var(--primary); color: white; border-radius: 6px; padding: 2px 8px; font-size: 11px; }
+
+  /* 认证状态 */
+  .cert-status {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 24px 16px;
+    text-align: center;
+  }
+  .cert-icon { font-size: 52px; margin-bottom: 12px; }
+  .cert-label { font-size: 16px; font-weight: 700; color: var(--dark); margin-bottom: 6px; }
+  .cert-desc { font-size: 13px; color: var(--gray-3); line-height: 1.6; }
+
+  /* 顶部提示条 */
+  .notice-bar {
+    background: var(--gold-light);
+    padding: 8px 16px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 12px;
+    color: #795548;
+  }
+
+  /* 评价列表 */
+  .review-item { padding: 12px 16px; border-bottom: 1px solid var(--border); }
+  .review-header { display: flex; justify-content: space-between; margin-bottom: 6px; }
+  .reviewer { font-size: 13px; color: var(--dark); font-weight: 500; }
+  .stars { color: #FFB300; font-size: 12px; }
+  .review-text { font-size: 13px; color: var(--gray-2); line-height: 1.6; }
+
+  /* 商机统计 */
+  .opp-stats {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+    padding: 14px;
+    background: white;
+    margin: 0 12px 10px;
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+  }
+  .opp-stat-item { text-align: center; }
+  .opp-stat-num { font-size: 20px; font-weight: 700; color: var(--primary); }
+  .opp-stat-label { font-size: 11px; color: var(--gray-3); }
+
+  /* 活动页宽屏区域  */
+  .activity-section { padding: 8px 12px 0; }
+  .section-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+  .section-title { font-size: 15px; font-weight: 700; color: var(--dark); }
+  .section-more { font-size: 12px; color: var(--gray-3); cursor: pointer; }
+
+  /* 已登录状态指示 */
+  .login-bar {
+    display: flex;
+    gap: 10px;
+    padding: 10px 16px;
+    background: white;
+    margin-bottom: 8px;
+  }
+  .login-btn-wrap { flex: 1; }
+</style>
+</head>
+<body>
+
+<div class="app-wrapper">
+
+  <!-- 侧边导航 -->
+  <div class="side-panel">
+    <h2>🗂 行商书苑小程序原型</h2>
+    <ul class="nav-tree">
+      <li class="section">
+        <div class="section-title">首页</div>
+        <div class="page-link active" onclick="showPage('home')"><span class="page-num">1</span> 首页工作台</div>
+      </li>
+      <li class="section">
+        <div class="section-title">资源库</div>
+        <div class="page-link" onclick="showPage('resource-home')"><span class="page-num">2</span> 资源库首页</div>
+        <div class="page-link" onclick="showPage('resource-list')"><span class="page-num">3</span> 资源列表页</div>
+        <div class="page-link" onclick="showPage('resource-detail')"><span class="page-num">4</span> 标品资源详情</div>
+        <div class="page-link" onclick="showPage('resource-nonstandard')"><span class="page-num">5</span> 非标资源详情</div>
+        <div class="page-link" onclick="showPage('resource-submit')"><span class="page-num">6</span> 需求提交页</div>
+        <div class="page-link" onclick="showPage('resource-purchase')"><span class="page-num">7</span> 采购确认页</div>
+      </li>
+      <li class="section">
+        <div class="section-title">活动</div>
+        <div class="page-link" onclick="showPage('event-home')"><span class="page-num">8</span> 活动首页</div>
+        <div class="page-link" onclick="showPage('event-list')"><span class="page-num">9</span> 活动列表页</div>
+        <div class="page-link" onclick="showPage('event-detail')"><span class="page-num">10</span> 活动详情页</div>
+        <div class="page-link" onclick="showPage('event-signup')"><span class="page-num">11</span> 活动报名页</div>
+        <div class="page-link" onclick="showPage('event-group')"><span class="page-num">12</span> 拼团参与页</div>
+        <div class="page-link" onclick="showPage('event-ticket')"><span class="page-num">13</span> 报名成功/电子票</div>
+      </li>
+      <li class="section">
+        <div class="section-title">会员</div>
+        <div class="page-link" onclick="showPage('member-benefit')"><span class="page-num">14</span> 会员权益页</div>
+        <div class="page-link" onclick="showPage('member-confirm')"><span class="page-num">15</span> 会员开通确认</div>
+        <div class="page-link" onclick="showPage('payment-transfer')"><span class="page-num">16</span> 对公支付凭证</div>
+      </li>
+      <li class="section">
+        <div class="section-title">商机</div>
+        <div class="page-link" onclick="showPage('opp-home')"><span class="page-num">17</span> 商机首页</div>
+        <div class="page-link" onclick="showPage('opp-detail')"><span class="page-num">18</span> 商机详情页</div>
+        <div class="page-link" onclick="showPage('opp-publish')"><span class="page-num">19</span> 发布商机页</div>
+        <div class="page-link" onclick="showPage('opp-apply')"><span class="page-num">20</span> 申请接单页</div>
+      </li>
+      <li class="section">
+        <div class="section-title">我的</div>
+        <div class="page-link" onclick="showPage('my-home')"><span class="page-num">21</span> 我的/企业会员中心</div>
+        <div class="page-link" onclick="showPage('my-cert')"><span class="page-num">22</span> 企业认证页</div>
+        <div class="page-link" onclick="showPage('my-orders')"><span class="page-num">23</span> 我的订单</div>
+        <div class="page-link" onclick="showPage('my-events')"><span class="page-num">24</span> 我的活动</div>
+        <div class="page-link" onclick="showPage('my-benefits')"><span class="page-num">25</span> 我的权益</div>
+        <div class="page-link" onclick="showPage('my-points')"><span class="page-num">26</span> 我的积分</div>
+        <div class="page-link" onclick="showPage('my-reviews')"><span class="page-num">27</span> 我的评价</div>
+      </li>
+      <li class="section">
+        <div class="section-title">后台管理</div>
+        <div class="page-link" onclick="showPage('admin-checkin')"><span class="page-num">28</span> 后台核销页</div>
+        <div class="page-link" onclick="showPage('admin-cert')"><span class="page-num">29</span> 后台认证审核</div>
+        <div class="page-link" onclick="showPage('admin-orders')"><span class="page-num">30</span> 后台订单确认</div>
+        <div class="page-link" onclick="showPage('admin-resource')"><span class="page-num">31</span> 后台资源需求</div>
+        <div class="page-link" onclick="showPage('admin-opp')"><span class="page-num">32</span> 后台商机撮合</div>
+      </li>
+    </ul>
+  </div>
+
+  <!-- 手机预览框 -->
+  <div class="phone-frame">
+    <div class="phone-screen">
+      <!-- 状态栏 -->
+      <div class="phone-notch">
+        <span>9:41</span>
+        <div class="notch-center"></div>
+        <span>📶 🔋</span>
+      </div>
+
+      <!-- 页面内容 -->
+      <div class="page-content" id="pageContent">
+
+        <!-- ===== 页面1: 首页 ===== -->
+        <div class="page active" id="page-home">
+          <div class="home-header">
+            <div class="home-header-top">
+              <div class="logo-area">
+                <div>
+                  <div class="logo-text">行商书苑</div>
+                  <div class="logo-sub">财税产业生态平台</div>
+                </div>
+              </div>
+              <div style="display:flex;gap:8px">
+                <div style="color:rgba(255,255,255,0.85);font-size:13px;background:rgba(255,255,255,0.2);border-radius:16px;padding:4px 10px;cursor:pointer" onclick="showPage('admin-checkin')">🔔</div>
+              </div>
+            </div>
+            <div class="user-info-bar">
+              <div class="avatar">👤</div>
+              <div class="user-detail">
+                <div class="user-name">陈总 · 鑫财财税</div>
+                <div class="user-badge">⭐ 行商·菁英会员</div>
+              </div>
+              <div style="background:rgba(255,255,255,0.2);color:white;border-radius:10px;padding:4px 10px;font-size:11px;cursor:pointer" onclick="showPage('my-cert')">已认证</div>
+            </div>
+            <div class="home-search" onclick="showPage('resource-list')" style="cursor:pointer">
+              <span>🔍</span>
+              <span>搜索资源、活动、商机…</span>
+            </div>
+          </div>
+
+          <!-- Banner -->
+          <div style="padding:12px 12px 0">
+            <div class="banner-wrap">
+              <div class="banner-slide" onclick="showPage('resource-home')" style="cursor:pointer">
+                <div class="banner-tag">🏪 供应链资源库</div>
+                <div class="banner-title">70+优质资源<br>财税公司专属底价</div>
+                <div class="banner-btn">立即采购 →</div>
+              </div>
+            </div>
+            <div class="banner-dots" style="margin-bottom:8px">
+              <div class="banner-dot active"></div>
+              <div class="banner-dot"></div>
+              <div class="banner-dot"></div>
+              <div class="banner-dot"></div>
+            </div>
+          </div>
+
+          <!-- 数据看板 -->
+          <div class="stats-bar">
+            <div class="stat-item">
+              <div class="stat-num">7000+</div>
+              <div class="stat-label">合作机构</div>
+            </div>
+            <div class="stat-item">
+              <div class="stat-num">3000+</div>
+              <div class="stat-label">付费会员</div>
+            </div>
+            <div class="stat-item">
+              <div class="stat-num">10000+</div>
+              <div class="stat-label">业务对接</div>
+            </div>
+            <div class="stat-item">
+              <div class="stat-num">10+</div>
+              <div class="stat-label">战略供应商</div>
+            </div>
+          </div>
+
+          <!-- 快捷入口 -->
+          <div class="card" style="padding:14px">
+            <div class="quick-grid" style="margin:0;padding:0;box-shadow:none;border-radius:0">
+              <div class="quick-item" onclick="showPage('resource-home')">
+                <div class="quick-icon quick-icon-1">📦</div>
+                <div class="quick-label">找资源</div>
+              </div>
+              <div class="quick-item" onclick="showPage('resource-detail')">
+                <div class="quick-icon quick-icon-2">🛒</div>
+                <div class="quick-label">采购标品</div>
+              </div>
+              <div class="quick-item" onclick="showPage('event-home')">
+                <div class="quick-icon quick-icon-3">🎯</div>
+                <div class="quick-label">报名活动</div>
+              </div>
+              <div class="quick-item" onclick="showPage('opp-publish')">
+                <div class="quick-icon quick-icon-4">💼</div>
+                <div class="quick-label">发布商机</div>
+              </div>
+              <div class="quick-item" onclick="showPage('member-benefit')">
+                <div class="quick-icon quick-icon-5">👑</div>
+                <div class="quick-label">加入会员</div>
+              </div>
+              <div class="quick-item" onclick="showPage('my-cert')">
+                <div class="quick-icon quick-icon-6">🏆</div>
+                <div class="quick-label">企业认证</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- 热门资源 -->
+          <div class="activity-section">
+            <div class="section-header">
+              <div class="section-title">🔥 热门资源推荐</div>
+              <div class="section-more" onclick="showPage('resource-home')">查看全部 ›</div>
+            </div>
+            <div onclick="showPage('resource-detail')" style="cursor:pointer">
+              <div class="resource-card">
+                <div class="resource-icon">💻</div>
+                <div class="resource-info">
+                  <div class="resource-name">财税公司一体化经营系统</div>
+                  <div class="resource-tags">
+                    <span class="supplier-badge badge-strategic">⭐ 战略级</span>
+                    <span class="tag tag-green">平台兜底</span>
+                    <span class="tag tag-blue">支持转卖</span>
+                  </div>
+                  <div style="display:flex;align-items:center;justify-content:space-between">
+                    <div><span class="resource-price">会员 ¥2,980</span><span class="resource-price-old">¥5,800</span></div>
+                    <span class="profit-badge">利润空间 40%</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div onclick="showPage('resource-nonstandard')" style="cursor:pointer">
+              <div class="resource-card">
+                <div class="resource-icon" style="background:linear-gradient(135deg,#1976D2,#42A5F5)">📊</div>
+                <div class="resource-info">
+                  <div class="resource-name">会计工厂交付外包服务</div>
+                  <div class="resource-tags">
+                    <span class="supplier-badge badge-certified">✓ 认证级</span>
+                    <span class="tag tag-gold">非标</span>
+                    <span class="tag tag-blue">支持批量</span>
+                  </div>
+                  <div style="display:flex;align-items:center;justify-content:space-between">
+                    <div><span class="resource-price">提交需求</span><span style="font-size:11px;color:var(--gray-3);margin-left:4px">报价</span></div>
+                    <span class="profit-badge">利润空间 35%</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- 近期活动 -->
+          <div class="activity-section" style="margin-top:8px">
+            <div class="section-header">
+              <div class="section-title">📅 近期线下活动</div>
+              <div class="section-more" onclick="showPage('event-home')">查看全部 ›</div>
+            </div>
+            <div onclick="showPage('event-detail')" style="cursor:pointer;margin-bottom:8px">
+              <div class="event-card" style="margin:0">
+                <div class="event-header">
+                  <div class="event-date-box">
+                    <div class="event-date-month">07月</div>
+                    <div class="event-date-day">12</div>
+                  </div>
+                  <div class="event-meta">
+                    <div class="event-title">财税公司老客户升单训练营</div>
+                    <div class="event-city">📍 深圳</div>
+                  </div>
+                  <span class="tag tag-red">拼团</span>
+                </div>
+                <div class="event-body">
+                  <div class="event-prices">
+                    <div class="price-normal">普通价：¥1,980</div>
+                    <div class="price-member">菁英会员：¥598</div>
+                  </div>
+                  <button class="btn btn-primary btn-sm">立即报名</button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- 会员转化 -->
+          <div class="member-upgrade" style="margin:12px">
+            <div style="color:rgba(255,255,255,0.85);font-size:11px;margin-bottom:4px">🌟 行商会员特权</div>
+            <div style="color:white;font-size:15px;font-weight:700">加入会员，获取供应链底价</div>
+            <div class="member-plans">
+              <div class="member-plan member-plan-elite" onclick="showPage('member-benefit')">
+                <div class="plan-name">⭐ 行商·菁英会员</div>
+                <div class="plan-price">年度优惠 <strong>¥4980</strong></div>
+              </div>
+              <div class="member-plan member-plan-navigator" onclick="showPage('member-benefit')">
+                <div class="plan-name">👑 行商·领航会员</div>
+                <div class="plan-price">年度优惠 <strong>¥12800</strong></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- 推荐商机 -->
+          <div class="activity-section" style="margin-top:4px">
+            <div class="section-header">
+              <div class="section-title">💼 推荐商机</div>
+              <div class="section-more" onclick="showPage('opp-home')">查看全部 ›</div>
+            </div>
+            <div onclick="showPage('opp-detail')" style="cursor:pointer">
+              <div class="opportunity-card" style="margin:0 0 8px">
+                <div class="opp-header">
+                  <div class="opp-title">深圳宝安区工商注册+代账需求，约50家</div>
+                  <span class="tag tag-gold">高价值</span>
+                </div>
+                <div class="opp-meta">
+                  <span class="tag tag-gray">代账</span>
+                  <span class="tag tag-gray">深圳</span>
+                  <span class="tag tag-green">平台撮合</span>
+                </div>
+                <div class="opp-footer">
+                  <div class="opp-budget">预算：¥15万+</div>
+                  <div class="opp-time">2小时前</div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div style="height:20px"></div>
+        </div>
+
+        <!-- ===== 页面2: 资源库首页 ===== -->
+        <div class="page" id="page-resource-home">
+          <div class="topbar">
+            <div class="topbar-back" onclick="goBack()">‹</div>
+            <div class="topbar-title">资源库</div>
+            <div class="topbar-right">🔍</div>
+          </div>
+          <div class="notice-bar">📢 新上架：企税宝·工商年报代办服务，战略供应商，菁英会员6折</div>
+          <div class="search-bar">
+            <span>🔍</span>
+            <input type="text" placeholder="搜索项目、供应商、服务类型…" readonly>
+          </div>
+          <div class="category-nav">
+            <div class="cat-item active">热门项目</div>
+            <div class="cat-item" onclick="showPage('resource-list')">软件工具</div>
+            <div class="cat-item" onclick="showPage('resource-list')">会计工厂</div>
+            <div class="cat-item" onclick="showPage('resource-list')">资质许可</div>
+            <div class="cat-item" onclick="showPage('resource-list')">知产科创</div>
+            <div class="cat-item" onclick="showPage('resource-list')">财税咨询</div>
+            <div class="cat-item" onclick="showPage('resource-list')">获客增长</div>
+            <div class="cat-item" onclick="showPage('member-benefit')">👑会员专享</div>
+          </div>
+          <div class="section-gap"></div>
+          <div style="padding:0 12px 8px">
+            <div class="section-header">
+              <div class="section-title">⭐ 战略供应商推荐</div>
+            </div>
+            <div onclick="showPage('resource-detail')" style="cursor:pointer">
+              <div class="resource-card" style="margin:0 0 8px">
+                <div class="resource-icon">💻</div>
+                <div class="resource-info">
+                  <div class="resource-name">财税公司一体化经营系统</div>
+                  <div class="resource-tags">
+                    <span class="supplier-badge badge-strategic">⭐ 战略级</span>
+                    <span class="tag tag-green">平台兜底</span>
+                    <span class="tag tag-blue">支持转卖</span>
+                    <span class="tag tag-red">标品</span>
+                  </div>
+                  <div style="display:flex;align-items:center;justify-content:space-between">
+                    <div><span class="resource-price">¥2,980</span><span class="resource-price-old">¥5,800</span></div>
+                    <span class="profit-badge">利润 40%</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div onclick="showPage('resource-nonstandard')" style="cursor:pointer">
+              <div class="resource-card" style="margin:0 0 8px">
+                <div class="resource-icon" style="background:linear-gradient(135deg,#1976D2,#42A5F5)">📊</div>
+                <div class="resource-info">
+                  <div class="resource-name">会计工厂交付外包服务</div>
+                  <div class="resource-tags">
+                    <span class="supplier-badge badge-strategic">⭐ 战略级</span>
+                    <span class="tag tag-gold">非标</span>
+                    <span class="tag tag-blue">支持批量</span>
+                  </div>
+                  <div><span class="resource-price">面议</span><span style="font-size:11px;color:var(--gray-3);margin-left:4px">提交需求后报价</span></div>
+                </div>
+              </div>
+            </div>
+            <div onclick="showPage('resource-list')" style="cursor:pointer">
+              <div class="resource-card" style="margin:0 0 8px">
+                <div class="resource-icon" style="background:linear-gradient(135deg,#7B1FA2,#CE93D8)">📑</div>
+                <div class="resource-info">
+                  <div class="resource-name">代理记账许可证代办</div>
+                  <div class="resource-tags">
+                    <span class="supplier-badge badge-certified">✓ 认证级</span>
+                    <span class="tag tag-red">标品</span>
+                    <span class="tag tag-green">平台监管</span>
+                  </div>
+                  <div><span class="resource-price">¥4,800</span><span class="resource-price-old">¥6,500</span></div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <!-- 会员专享 -->
+          <div style="padding:0 12px 8px">
+            <div class="section-header">
+              <div class="section-title">👑 会员专享底价</div>
+              <div class="section-more" onclick="showPage('member-benefit')">开通会员 ›</div>
+            </div>
+            <div style="background:linear-gradient(135deg,#1A1A2E,#2D2D5E);border-radius:var(--radius);padding:14px;display:flex;align-items:center;justify-content:space-between;cursor:pointer" onclick="showPage('member-benefit')">
+              <div>
+                <div style="color:var(--gold);font-size:14px;font-weight:700;margin-bottom:4px">开通会员享底价</div>
+                <div style="color:rgba(255,255,255,0.7);font-size:12px">70+资源专属会员价，平均节省40%</div>
+              </div>
+              <button class="btn btn-gold btn-sm">立即开通</button>
+            </div>
+          </div>
+          <!-- 非标需求 -->
+          <div style="padding:0 12px 8px">
+            <div style="background:var(--white);border-radius:var(--radius);padding:16px;display:flex;align-items:center;gap:12px;box-shadow:var(--shadow)">
+              <div style="font-size:32px">🤔</div>
+              <div style="flex:1">
+                <div style="font-size:14px;font-weight:600;color:var(--dark);margin-bottom:4px">不知道选哪个？</div>
+                <div style="font-size:12px;color:var(--gray-3)">提交需求，客户经理帮你匹配最优方案</div>
+              </div>
+              <button class="btn btn-primary btn-sm" onclick="showPage('resource-submit')">提交需求</button>
+            </div>
+          </div>
+          <div style="height:20px"></div>
+        </div>
+
+        <!-- ===== 页面3: 资源列表页 ===== -->
+        <div class="page" id="page-resource-list">
+          <div class="topbar">
+            <div class="topbar-back" onclick="goBack()">‹</div>
+            <div class="topbar-title">软件工具</div>
+            <div class="topbar-right">⚙️</div>
+          </div>
+          <div class="category-nav">
+            <div class="cat-item active">软件工具</div>
+            <div class="cat-item">会计工厂</div>
+            <div class="cat-item">资质许可</div>
+            <div class="cat-item">财税咨询</div>
+            <div class="cat-item">获客增长</div>
+          </div>
+          <div style="padding:8px 12px;background:white;display:flex;gap:8px;flex-wrap:wrap;border-bottom:1px solid var(--border)">
+            <span class="tag tag-red" style="cursor:pointer">标品</span>
+            <span class="tag tag-gray" style="cursor:pointer">非标</span>
+            <span class="tag tag-gold" style="cursor:pointer">战略级</span>
+            <span class="tag tag-blue" style="cursor:pointer">平台兜底</span>
+            <span class="tag tag-gray" style="cursor:pointer">支持转卖</span>
+            <span class="tag tag-gray" style="cursor:pointer">👑会员专享</span>
+          </div>
+          <div style="padding:8px 12px;background:white;display:flex;gap:10px;font-size:12px;color:var(--gray-3);border-bottom:1px solid var(--border)">
+            <span style="color:var(--primary);font-weight:600">推荐 ▼</span>
+            <span style="cursor:pointer">热度</span>
+            <span style="cursor:pointer">价格</span>
+            <span style="cursor:pointer">利润空间</span>
+          </div>
+          <div style="padding:8px 12px">
+            <div onclick="showPage('resource-detail')" style="cursor:pointer">
+              <div class="resource-card" style="margin:0 0 8px">
+                <div class="resource-icon">💻</div>
+                <div class="resource-info">
+                  <div class="resource-name">财税公司一体化经营系统</div>
+                  <div class="resource-tags">
+                    <span class="supplier-badge badge-strategic">⭐ 战略级</span>
+                    <span class="tag tag-green">平台兜底</span>
+                    <span class="tag tag-blue">支持转卖</span>
+                  </div>
+                  <div style="display:flex;justify-content:space-between;align-items:center">
+                    <div><span class="resource-price">¥2,980</span><span class="resource-price-old">¥5,800</span></div>
+                    <button class="btn btn-primary btn-sm">立即采购</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div onclick="showPage('resource-list')" style="cursor:pointer">
+              <div class="resource-card" style="margin:0 0 8px">
+                <div class="resource-icon" style="background:linear-gradient(135deg,#E65100,#FF9800)">📈</div>
+                <div class="resource-info">
+                  <div class="resource-name">财税公司获客增长系统</div>
+                  <div class="resource-tags">
+                    <span class="supplier-badge badge-strategic">⭐ 战略级</span>
+                    <span class="tag tag-gold">会员专享</span>
+                    <span class="tag tag-blue">支持转卖</span>
+                  </div>
+                  <div style="display:flex;justify-content:space-between;align-items:center">
+                    <div><span class="resource-price">¥3,680</span><span class="resource-price-old">¥6,800</span></div>
+                    <button class="btn btn-primary btn-sm">立即采购</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div onclick="showPage('resource-list')" style="cursor:pointer">
+              <div class="resource-card" style="margin:0 0 8px">
+                <div class="resource-icon" style="background:linear-gradient(135deg,#00695C,#4DB6AC)">📋</div>
+                <div class="resource-info">
+                  <div class="resource-name">电子档案数字化系统</div>
+                  <div class="resource-tags">
+                    <span class="supplier-badge badge-certified">✓ 认证级</span>
+                    <span class="tag tag-red">标品</span>
+                    <span class="tag tag-green">平台监管</span>
+                  </div>
+                  <div style="display:flex;justify-content:space-between;align-items:center">
+                    <div><span class="resource-price">¥1,980</span><span class="resource-price-old">¥3,500</span></div>
+                    <button class="btn btn-primary btn-sm">立即采购</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div style="height:20px"></div>
+        </div>
+
+        <!-- ===== 页面4: 标品资源详情 ===== -->
+        <div class="page" id="page-resource-detail">
+          <div class="detail-hero">
+            <div style="margin-bottom:12px">
+              <div class="topbar-back" onclick="goBack()" style="color:rgba(255,255,255,0.85);font-size:18px;cursor:pointer">‹ 返回</div>
+            </div>
+            <div class="detail-tags">
+              <span class="detail-tag">💻 软件工具</span>
+              <span class="detail-tag">⭐ 战略级供应商</span>
+              <span class="detail-tag">🛡 平台兜底</span>
+            </div>
+            <h1>财税公司一体化经营管理系统</h1>
+            <div style="display:flex;gap:8px;flex-wrap:wrap">
+              <span class="tag tag-blue" style="background:rgba(255,255,255,0.2);border:none;color:white">支持转卖</span>
+              <span class="tag" style="background:rgba(255,255,255,0.2);border:none;color:white">标品</span>
+              <span class="tag" style="background:rgba(255,255,255,0.2);border:none;color:white">会员权益</span>
+            </div>
+          </div>
+          <!-- 价格区 -->
+          <div class="price-block">
+            <div class="price-row">
+              <div class="price-label">普通价</div>
+              <div class="price-value strike">¥5,800/年</div>
+            </div>
+            <div class="price-row">
+              <div class="price-label">⭐ 菁英会员价</div>
+              <div class="price-value">¥2,980/年</div>
+            </div>
+            <div class="price-row">
+              <div class="price-label">👑 领航会员价</div>
+              <div class="price-value gold">¥1,980/年</div>
+            </div>
+            <div style="margin-top:10px;background:var(--gold-light);border-radius:8px;padding:8px 12px;font-size:12px;color:#795548">
+              👑 开通会员可节省最高 ¥3,820，<span style="color:var(--primary);cursor:pointer" onclick="showPage('member-benefit')">立即开通 →</span>
+            </div>
+          </div>
+          <!-- 会员权益说明 -->
+          <div class="info-section">
+            <div class="info-section-title">会员权益说明</div>
+            <div style="display:flex;gap:12px">
+              <div style="flex:1;background:var(--gold-light);border-radius:8px;padding:10px;text-align:center">
+                <div style="font-size:12px;color:var(--gold);font-weight:700;margin-bottom:4px">⭐ 菁英会员</div>
+                <div style="font-size:12px;color:var(--gray-2)">1个月免费试用</div>
+              </div>
+              <div style="flex:1;background:#F3E5F5;border-radius:8px;padding:10px;text-align:center">
+                <div style="font-size:12px;color:#7B1FA2;font-weight:700;margin-bottom:4px">👑 领航会员</div>
+                <div style="font-size:12px;color:var(--gray-2)">1年免费使用</div>
+              </div>
+            </div>
+          </div>
+          <!-- 功能亮点 -->
+          <div class="info-section">
+            <div class="info-section-title">功能亮点</div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+              <div style="background:var(--gray-5);border-radius:8px;padding:10px;font-size:12px;text-align:center">
+                <div style="font-size:20px;margin-bottom:4px">👥</div>客户管理
+              </div>
+              <div style="background:var(--gray-5);border-radius:8px;padding:10px;font-size:12px;text-align:center">
+                <div style="font-size:20px;margin-bottom:4px">📋</div>任务管理
+              </div>
+              <div style="background:var(--gray-5);border-radius:8px;padding:10px;font-size:12px;text-align:center">
+                <div style="font-size:20px;margin-bottom:4px">📊</div>数据看板
+              </div>
+              <div style="background:var(--gray-5);border-radius:8px;padding:10px;font-size:12px;text-align:center">
+                <div style="font-size:20px;margin-bottom:4px">👤</div>员工管理
+              </div>
+            </div>
+          </div>
+          <!-- 交付流程 -->
+          <div class="info-section">
+            <div class="info-section-title">交付流程</div>
+            <div class="steps">
+              <div class="step-item"><div class="step-circle done">1</div><div class="step-label">下单</div></div>
+              <div class="step-line done"></div>
+              <div class="step-item"><div class="step-circle done">2</div><div class="step-label">开通账号</div></div>
+              <div class="step-line"></div>
+              <div class="step-item"><div class="step-circle">3</div><div class="step-label">培训</div></div>
+              <div class="step-line"></div>
+              <div class="step-item"><div class="step-circle">4</div><div class="step-label">使用</div></div>
+              <div class="step-line"></div>
+              <div class="step-item"><div class="step-circle">5</div><div class="step-label">售后</div></div>
+            </div>
+          </div>
+          <!-- 平台保障 -->
+          <div class="info-section">
+            <div class="info-section-title">平台保障</div>
+            <div class="info-text">平台对战略级供应商提供全程监管，售后出现问题平台协助调解，战略合作协议对双方均有约束力。</div>
+          </div>
+          <!-- 评价 -->
+          <div class="info-section" style="padding:0 0 4px">
+            <div style="padding:14px 14px 8px" class="info-section-title">用户评价</div>
+            <div class="review-item">
+              <div class="review-header">
+                <div class="reviewer">王老板 · 成都鑫诚财税</div>
+                <div class="stars">★★★★★</div>
+              </div>
+              <div class="review-text">系统功能完善，操作简单，客户管理效率提升50%，已推荐给3家客户。</div>
+            </div>
+            <div class="review-item">
+              <div class="review-header">
+                <div class="reviewer">李总 · 广州汇达财税</div>
+                <div class="stars">★★★★☆</div>
+              </div>
+              <div class="review-text">功能很全，培训支持到位，平台兜底有保障，转卖给客户也很容易。</div>
+            </div>
+          </div>
+          <div style="height:80px"></div>
+          <div class="action-bar">
+            <button class="btn btn-outline btn-sm" onclick="alert('客户经理将在1小时内联系您')">咨询顾问</button>
+            <button class="btn btn-gold btn-sm" onclick="showPage('member-benefit')">开通会员享优惠</button>
+            <button class="btn btn-primary" onclick="showPage('resource-purchase')">立即采购</button>
+          </div>
+        </div>
+
+        <!-- ===== 页面5: 非标资源详情 ===== -->
+        <div class="page" id="page-resource-nonstandard">
+          <div class="detail-hero" style="background:linear-gradient(135deg,#1565C0,#1A1A2E)">
+            <div style="margin-bottom:12px">
+              <div class="topbar-back" onclick="goBack()" style="color:rgba(255,255,255,0.85);font-size:18px;cursor:pointer">‹ 返回</div>
+            </div>
+            <div class="detail-tags">
+              <span class="detail-tag">📊 会计工厂</span>
+              <span class="detail-tag">⭐ 战略级供应商</span>
+              <span class="detail-tag">🛡 平台兜底</span>
+            </div>
+            <h1>会计工厂交付外包服务</h1>
+            <div style="display:flex;gap:8px;flex-wrap:wrap">
+              <span class="tag" style="background:rgba(255,255,255,0.2);border:none;color:white">非标</span>
+              <span class="tag" style="background:rgba(255,255,255,0.2);border:none;color:white">支持批量交付</span>
+              <span class="tag" style="background:rgba(255,255,255,0.2);border:none;color:white">支持转卖</span>
+            </div>
+          </div>
+          <!-- 参考价格 -->
+          <div class="price-block">
+            <div style="font-size:13px;color:var(--gray-2);margin-bottom:8px">价格因客户规模而定，提交需求后报价</div>
+            <div class="price-row">
+              <div class="price-label">参考价（100户以内/月）</div>
+              <div class="price-value">¥ 面议</div>
+            </div>
+            <div class="price-row">
+              <div class="price-label">👑 会员底价</div>
+              <div class="price-value gold">提交需求后获取</div>
+            </div>
+          </div>
+          <!-- 适合对象 -->
+          <div class="info-section">
+            <div class="info-section-title">适合对象</div>
+            <div class="info-text">500户+财税公司、批量做账需求、旧账整理、报税外包</div>
+          </div>
+          <!-- 服务范围 -->
+          <div class="info-section">
+            <div class="info-section-title">服务范围</div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+              <div style="display:flex;align-items:center;gap:6px;font-size:13px;color:var(--gray-1)"><span>✅</span>记账外包</div>
+              <div style="display:flex;align-items:center;gap:6px;font-size:13px;color:var(--gray-1)"><span>✅</span>报税外包</div>
+              <div style="display:flex;align-items:center;gap:6px;font-size:13px;color:var(--gray-1)"><span>✅</span>旧账整理</div>
+              <div style="display:flex;align-items:center;gap:6px;font-size:13px;color:var(--gray-1)"><span>✅</span>账务复核</div>
+              <div style="display:flex;align-items:center;gap:6px;font-size:13px;color:var(--gray-1)"><span>✅</span>票据整理</div>
+            </div>
+          </div>
+          <!-- 交付流程 -->
+          <div class="info-section">
+            <div class="info-section-title">交付流程</div>
+            <div class="steps">
+              <div class="step-item"><div class="step-circle done">1</div><div class="step-label">提交需求</div></div>
+              <div class="step-line done"></div>
+              <div class="step-item"><div class="step-circle done">2</div><div class="step-label">诊断</div></div>
+              <div class="step-line"></div>
+              <div class="step-item"><div class="step-circle">3</div><div class="step-label">报价</div></div>
+              <div class="step-line"></div>
+              <div class="step-item"><div class="step-circle">4</div><div class="step-label">确认</div></div>
+              <div class="step-line"></div>
+              <div class="step-item"><div class="step-circle">5</div><div class="step-label">交付</div></div>
+            </div>
+          </div>
+          <!-- 转卖工具包 -->
+          <div class="info-section">
+            <div class="info-section-title">转卖工具包</div>
+            <div style="background:linear-gradient(135deg,#1A1A2E,#2D2D5E);border-radius:8px;padding:12px">
+              <div style="color:var(--gold);font-size:13px;font-weight:700;margin-bottom:8px">👑 会员可下载转卖工具包</div>
+              <div style="display:flex;gap:8px;flex-wrap:wrap">
+                <span class="tag" style="background:rgba(255,255,255,0.15);color:rgba(255,255,255,0.8);border:none">客户话术</span>
+                <span class="tag" style="background:rgba(255,255,255,0.15);color:rgba(255,255,255,0.8);border:none">报价参考</span>
+                <span class="tag" style="background:rgba(255,255,255,0.15);color:rgba(255,255,255,0.8);border:none">朋友圈文案</span>
+                <span class="tag" style="background:rgba(255,255,255,0.15);color:rgba(255,255,255,0.8);border:none">需求诊断表</span>
+              </div>
+              <button class="btn btn-gold btn-sm" style="margin-top:10px;width:100%" onclick="showPage('member-benefit')">开通会员下载</button>
+            </div>
+          </div>
+          <div style="height:80px"></div>
+          <div class="action-bar">
+            <button class="btn btn-outline btn-sm" onclick="alert('客户经理将在1小时内联系您')">咨询顾问</button>
+            <button class="btn btn-gold btn-sm" onclick="showPage('member-benefit')">开通会员</button>
+            <button class="btn btn-primary" onclick="showPage('resource-submit')">提交需求</button>
+          </div>
+        </div>
+
+        <!-- ===== 页面6: 资源需求提交 ===== -->
+        <div class="page" id="page-resource-submit">
+          <div class="topbar">
+            <div class="topbar-back" onclick="goBack()">‹</div>
+            <div class="topbar-title">提交需求</div>
+            <div class="topbar-right"></div>
+          </div>
+          <div style="padding:12px">
+            <div class="card">
+              <div class="card-title">项目信息</div>
+              <div style="background:var(--gray-5);border-radius:8px;padding:10px;font-size:13px;color:var(--gray-1)">📦 会计工厂交付外包服务</div>
+            </div>
+            <div class="card">
+              <div class="card-title">企业信息</div>
+              <div class="form-group">
+                <label class="form-label required">企业名称</label>
+                <input class="form-input" placeholder="请输入企业名称" value="鑫财财税有限公司">
+              </div>
+              <div class="form-group">
+                <label class="form-label required">联系人</label>
+                <input class="form-input" placeholder="请输入联系人姓名" value="陈总">
+              </div>
+              <div class="form-group">
+                <label class="form-label required">手机号</label>
+                <input class="form-input" placeholder="请输入手机号" value="138****8888">
+              </div>
+              <div class="form-group">
+                <label class="form-label required">所在城市</label>
+                <input class="form-input" placeholder="请输入城市" value="深圳市">
+              </div>
+            </div>
+            <div class="card">
+              <div class="card-title">需求信息</div>
+              <div class="form-group">
+                <label class="form-label required">服务需求描述</label>
+                <textarea class="form-input" rows="3" placeholder="请详细描述您的需求…" style="resize:none">批量代账外包，约200户小规模纳税人，需支持报税</textarea>
+              </div>
+              <div class="form-group">
+                <label class="form-label required">是否转卖</label>
+                <div class="radio-group">
+                  <div class="radio-item"><div class="radio-dot checked"></div>自用</div>
+                  <div class="radio-item"><div class="radio-dot"></div>转卖给客户</div>
+                </div>
+              </div>
+              <div class="form-group">
+                <label class="form-label">预算范围</label>
+                <select class="form-select"><option>待供应商报价</option><option>2万元以内</option><option>2-5万元</option><option>5万元以上</option></select>
+              </div>
+              <div class="form-group">
+                <label class="form-label">发票需求</label>
+                <div class="radio-group">
+                  <div class="radio-item"><div class="radio-dot checked"></div>需要发票</div>
+                  <div class="radio-item"><div class="radio-dot"></div>不需要</div>
+                </div>
+              </div>
+            </div>
+            <button class="btn btn-primary btn-block" onclick="showPage('home')" style="margin-top:4px">提交需求</button>
+            <div style="text-align:center;font-size:12px;color:var(--gray-3);margin-top:10px">客户经理将在1个工作日内联系您</div>
+          </div>
+        </div>
+
+        <!-- ===== 页面7: 采购确认页 ===== -->
+        <div class="page" id="page-resource-purchase">
+          <div class="topbar">
+            <div class="topbar-back" onclick="goBack()">‹</div>
+            <div class="topbar-title">采购确认</div>
+          </div>
+          <div style="padding:12px">
+            <div class="card">
+              <div class="card-title">商品信息</div>
+              <div style="display:flex;gap:12px;align-items:center">
+                <div class="resource-icon" style="width:50px;height:50px;font-size:22px">💻</div>
+                <div>
+                  <div style="font-size:14px;font-weight:600;color:var(--dark);margin-bottom:4px">财税公司一体化经营管理系统</div>
+                  <div style="font-size:12px;color:var(--gray-3)">有效期：1年</div>
+                  <div style="font-size:16px;font-weight:700;color:var(--primary);margin-top:4px">¥2,980</div>
+                </div>
+              </div>
+            </div>
+            <div class="card">
+              <div class="card-title">企业信息</div>
+              <div class="form-group">
+                <label class="form-label required">企业名称</label>
+                <input class="form-input" value="鑫财财税有限公司">
+              </div>
+              <div class="form-group">
+                <label class="form-label required">联系人</label>
+                <input class="form-input" value="陈总">
+              </div>
+              <div class="form-group">
+                <label class="form-label required">手机号</label>
+                <input class="form-input" value="138****8888">
+              </div>
+            </div>
+            <div class="card">
+              <div class="card-title">发票信息</div>
+              <div class="form-group">
+                <label class="form-label">是否需要发票</label>
+                <div class="radio-group">
+                  <div class="radio-item"><div class="radio-dot checked"></div>需要发票</div>
+                  <div class="radio-item"><div class="radio-dot"></div>不需要</div>
+                </div>
+              </div>
+              <div class="form-group">
+                <label class="form-label">发票抬头</label>
+                <input class="form-input" placeholder="请输入发票抬头" value="鑫财财税有限公司">
+              </div>
+            </div>
+            <div class="card">
+              <div class="card-title">支付方式</div>
+              <div style="display:flex;flex-direction:column;gap:10px">
+                <div style="display:flex;align-items:center;gap:12px;padding:12px;border:2px solid var(--primary);border-radius:10px;cursor:pointer;background:var(--primary-light)">
+                  <span style="font-size:24px">💚</span>
+                  <div>
+                    <div style="font-size:14px;font-weight:600;color:var(--dark)">微信支付</div>
+                    <div style="font-size:12px;color:var(--gray-3)">支付成功后自动开通</div>
+                  </div>
+                  <span style="margin-left:auto;color:var(--primary);font-size:18px">●</span>
+                </div>
+                <div style="display:flex;align-items:center;gap:12px;padding:12px;border:1.5px solid var(--border);border-radius:10px;cursor:pointer" onclick="showPage('payment-transfer')">
+                  <span style="font-size:24px">🏦</span>
+                  <div>
+                    <div style="font-size:14px;font-weight:600;color:var(--dark)">对公转账</div>
+                    <div style="font-size:12px;color:var(--gray-3)">提交后财务确认</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div style="background:var(--gray-5);border-radius:10px;padding:12px;display:flex;justify-content:space-between;align-items:center;margin-top:4px">
+              <div style="font-size:14px;color:var(--gray-2)">实付金额</div>
+              <div style="font-size:22px;font-weight:700;color:var(--primary)">¥2,980</div>
+            </div>
+            <button class="btn btn-primary btn-block" style="margin-top:12px" onclick="alert('支付成功！订单已创建，客户经理将在1小时内联系您开通账号。')">确认支付 ¥2,980</button>
+          </div>
+        </div>
+
+        <!-- ===== 页面8: 活动首页 ===== -->
+        <div class="page" id="page-event-home">
+          <div class="topbar">
+            <div class="topbar-back" onclick="goBack()">‹</div>
+            <div class="topbar-title">活动</div>
+            <div class="topbar-right">📅</div>
+          </div>
+          <div class="notice-bar">📢 峰会倒计时：2025行商财税领袖峰会 · 北京 · 还有23天</div>
+          <div class="banner-wrap" style="margin:12px">
+            <div class="banner-slide" onclick="showPage('event-detail')" style="cursor:pointer;background:linear-gradient(135deg,#1A1A2E 0%,#C8232B 100%)">
+              <div class="banner-tag">🎯 全国巡回训练营</div>
+              <div class="banner-title">老客户升单训练营<br>深圳站 · 7月12日</div>
+              <div class="banner-btn">立即报名 →</div>
+            </div>
+          </div>
+          <div class="category-nav">
+            <div class="cat-item active">全部</div>
+            <div class="cat-item" onclick="showPage('event-list')">经营管理</div>
+            <div class="cat-item" onclick="showPage('event-list')">营销增长</div>
+            <div class="cat-item" onclick="showPage('event-list')">专业交付</div>
+            <div class="cat-item" onclick="showPage('event-list')">峰会沙龙</div>
+            <div class="cat-item" onclick="showPage('event-list')">知行塾</div>
+          </div>
+          <div style="padding:0 12px">
+            <div onclick="showPage('event-detail')" style="cursor:pointer">
+              <div class="event-list-card" style="margin:0 0 10px">
+                <div class="event-list-img">
+                  <div class="ename">老客户升单训练营</div>
+                  <div class="elocation">📍 深圳 · 7月12日</div>
+                  <div style="position:absolute;top:10px;right:10px"><span class="tag tag-red">拼团中</span></div>
+                </div>
+                <div class="event-list-info">
+                  <div class="event-info-row">
+                    <div>
+                      <div style="font-size:14px;font-weight:600;color:var(--dark)">老客户升单训练营 · 深圳站</div>
+                      <div style="font-size:12px;color:var(--gray-3);margin-top:3px">📍 深圳 龙华区 · 周六全天</div>
+                    </div>
+                    <div style="text-align:right">
+                      <div style="font-size:11px;color:var(--gray-3);text-decoration:line-through">普通 ¥1,980</div>
+                      <div style="font-size:15px;font-weight:700;color:var(--primary)">会员 ¥598</div>
+                    </div>
+                  </div>
+                  <div style="display:flex;justify-content:space-between;align-items:center;margin-top:10px">
+                    <div><span class="tag tag-gray">还剩12个名额</span></div>
+                    <button class="btn btn-primary btn-sm">立即报名</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div onclick="showPage('event-detail')" style="cursor:pointer">
+              <div class="event-list-card" style="margin:0 0 10px">
+                <div class="event-list-img" style="background:linear-gradient(135deg,#1A1A2E,#7B1FA2)">
+                  <div class="ename">2025行商财税领袖峰会</div>
+                  <div class="elocation">📍 北京 · 8月15日</div>
+                  <div style="position:absolute;top:10px;right:10px"><span class="tag tag-gold">会员专享</span></div>
+                </div>
+                <div class="event-list-info">
+                  <div class="event-info-row">
+                    <div>
+                      <div style="font-size:14px;font-weight:600;color:var(--dark)">2025行商财税领袖峰会</div>
+                      <div style="font-size:12px;color:var(--gray-3);margin-top:3px">📍 北京 国家会议中心 · 8月15-16日</div>
+                    </div>
+                    <div style="text-align:right">
+                      <div style="font-size:11px;color:var(--gray-3);text-decoration:line-through">普通 ¥3,800</div>
+                      <div style="font-size:15px;font-weight:700;color:var(--gold)">会员 ¥980</div>
+                    </div>
+                  </div>
+                  <div style="display:flex;justify-content:space-between;align-items:center;margin-top:10px">
+                    <div><span class="tag tag-gray">还剩86个名额</span></div>
+                    <button class="btn btn-gold btn-sm">立即报名</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div style="height:20px"></div>
+        </div>
+
+        <!-- ===== 页面9: 活动列表 ===== -->
+        <div class="page" id="page-event-list">
+          <div class="topbar">
+            <div class="topbar-back" onclick="goBack()">‹</div>
+            <div class="topbar-title">活动列表</div>
+            <div class="topbar-right">🔍</div>
+          </div>
+          <div class="order-tab-bar">
+            <div class="order-tab active">全部</div>
+            <div class="order-tab">经营管理</div>
+            <div class="order-tab">营销增长</div>
+            <div class="order-tab">峰会沙龙</div>
+            <div class="order-tab">知行塾</div>
+          </div>
+          <div style="padding:8px 12px;background:white;display:flex;gap:8px;border-bottom:1px solid var(--border)">
+            <span class="tag tag-gray" style="cursor:pointer">城市 ▼</span>
+            <span class="tag tag-gray" style="cursor:pointer">时间 ▼</span>
+            <span class="tag tag-red" style="cursor:pointer">拼团</span>
+            <span class="tag tag-gold" style="cursor:pointer">会员权益</span>
+            <span class="tag tag-green" style="cursor:pointer">有名额</span>
+          </div>
+          <div style="padding:8px 12px">
+            <div onclick="showPage('event-detail')" style="cursor:pointer">
+              <div class="event-list-card" style="margin:0 0 10px">
+                <div class="event-list-img">
+                  <div class="ename">老客户升单训练营</div>
+                  <div class="elocation">📍 深圳 · 7月12日</div>
+                  <div style="position:absolute;top:10px;right:10px"><span class="tag tag-red">拼团中</span></div>
+                </div>
+                <div class="event-list-info">
+                  <div class="event-info-row">
+                    <div style="font-size:13px;font-weight:600;color:var(--dark)">老客户升单训练营 · 深圳站</div>
+                    <div style="font-size:15px;font-weight:700;color:var(--primary)">会员 ¥598</div>
+                  </div>
+                  <div style="display:flex;justify-content:space-between;align-items:center;margin-top:8px">
+                    <span class="tag tag-gray" style="font-size:11px">还剩12名额</span>
+                    <div style="display:flex;gap:6px">
+                      <button class="btn btn-outline btn-sm" onclick="event.stopPropagation();showPage('event-group')">发起拼团</button>
+                      <button class="btn btn-primary btn-sm">立即报名</button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div style="height:20px"></div>
+        </div>
+
+        <!-- ===== 页面10: 活动详情 ===== -->
+        <div class="page" id="page-event-detail">
+          <div style="background:linear-gradient(135deg,#1A1A2E,#C8232B);padding:20px 16px;position:relative">
+            <div style="margin-bottom:12px;color:rgba(255,255,255,0.85);cursor:pointer" onclick="goBack()">‹ 返回</div>
+            <div style="display:flex;gap:8px;margin-bottom:12px">
+              <span class="detail-tag">🎯 全国巡回</span>
+              <span class="detail-tag">📖 线下训练营</span>
+              <span class="detail-tag">👥 支持拼团</span>
+            </div>
+            <h1 style="color:white;font-size:20px;font-weight:700;margin-bottom:10px">财税公司老客户<br>升单训练营</h1>
+            <div style="display:flex;gap:14px">
+              <div style="color:rgba(255,255,255,0.85);font-size:12px">📍 深圳 · 龙华区</div>
+              <div style="color:rgba(255,255,255,0.85);font-size:12px">📅 2025年7月12日</div>
+            </div>
+          </div>
+          <!-- 基本信息 -->
+          <div class="info-section" style="margin-top:12px">
+            <div class="info-section-title">活动信息</div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;font-size:13px">
+              <div><span style="color:var(--gray-3)">时间：</span>2025-07-12 9:00</div>
+              <div><span style="color:var(--gray-3)">地点：</span>深圳龙华万豪</div>
+              <div><span style="color:var(--gray-3)">截止报名：</span>7月10日</div>
+              <div><span style="color:var(--gray-3)">剩余名额：</span><span style="color:var(--primary);font-weight:700">12人</span></div>
+            </div>
+          </div>
+          <!-- 票种价格 -->
+          <div class="price-block">
+            <div style="font-size:14px;font-weight:700;color:var(--dark);margin-bottom:12px">🎫 票种选择</div>
+            <div style="display:flex;flex-direction:column;gap:10px">
+              <div style="display:flex;justify-content:space-between;align-items:center;padding:10px;border:1.5px solid var(--border);border-radius:10px">
+                <div><div style="font-size:13px;font-weight:600">普通票</div><div style="font-size:11px;color:var(--gray-3)">包含全天课程+餐饮</div></div>
+                <div style="font-size:16px;font-weight:700;color:var(--dark)">¥1,980</div>
+              </div>
+              <div style="display:flex;justify-content:space-between;align-items:center;padding:10px;border:2px solid var(--gold);border-radius:10px;background:var(--gold-light)">
+                <div><div style="font-size:13px;font-weight:600;color:var(--gold)">⭐ 菁英会员票</div><div style="font-size:11px;color:var(--gray-3)">会员专属基础会务费</div></div>
+                <div style="font-size:16px;font-weight:700;color:var(--gold)">¥598</div>
+              </div>
+              <div style="display:flex;justify-content:space-between;align-items:center;padding:10px;border:1.5px solid #7B1FA2;border-radius:10px;background:#F3E5F5">
+                <div><div style="font-size:13px;font-weight:600;color:#7B1FA2">👑 领航会员票</div><div style="font-size:11px;color:var(--gray-3)">含VIP位置+晚宴</div></div>
+                <div style="font-size:16px;font-weight:700;color:#7B1FA2">¥0</div>
+              </div>
+              <div onclick="showPage('event-group')" style="display:flex;justify-content:space-between;align-items:center;padding:10px;border:1.5px solid var(--primary);border-radius:10px;cursor:pointer">
+                <div><div style="font-size:13px;font-weight:600;color:var(--primary)">👨‍👩‍👧 拼团票（3人）</div><div style="font-size:11px;color:var(--gray-3)">已有1人，还差2人成团</div></div>
+                <div style="font-size:16px;font-weight:700;color:var(--primary)">¥1,280</div>
+              </div>
+            </div>
+          </div>
+          <!-- 活动大纲 -->
+          <div class="info-section">
+            <div class="info-section-title">活动大纲</div>
+            <div style="font-size:13px;color:var(--gray-1);line-height:2">
+              <div>📌 上午：老客户升单心法与策略</div>
+              <div>📌 中午：案例拆解+圆桌讨论</div>
+              <div>📌 下午：团队演练+话术打磨</div>
+              <div>📌 结尾：资源对接+商机撮合</div>
+            </div>
+          </div>
+          <!-- 推荐积分 -->
+          <div class="info-section" style="background:linear-gradient(135deg,var(--primary-light),white)">
+            <div class="info-section-title">📣 推荐积分</div>
+            <div style="font-size:13px;color:var(--gray-2)">分享活动给好友，好友成功报名可获得 <strong style="color:var(--primary)">100积分</strong>，可兑换礼品或会务费抵扣</div>
+            <button class="btn btn-outline btn-sm" style="margin-top:10px">分享海报</button>
+          </div>
+          <div style="height:80px"></div>
+          <div class="action-bar">
+            <button class="btn btn-outline btn-sm" onclick="showPage('event-group')">发起拼团</button>
+            <button class="btn btn-gold btn-sm" onclick="showPage('member-benefit')">开通会员享优惠</button>
+            <button class="btn btn-primary" onclick="showPage('event-signup')">立即报名</button>
+          </div>
+        </div>
+
+        <!-- ===== 页面11: 活动报名 ===== -->
+        <div class="page" id="page-event-signup">
+          <div class="topbar">
+            <div class="topbar-back" onclick="goBack()">‹</div>
+            <div class="topbar-title">活动报名</div>
+          </div>
+          <div style="padding:12px">
+            <div class="card">
+              <div class="card-title">活动信息</div>
+              <div style="font-size:14px;font-weight:600;color:var(--dark);margin-bottom:6px">老客户升单训练营 · 深圳站</div>
+              <div style="font-size:12px;color:var(--gray-3)">📅 2025年7月12日 9:00 · 📍 深圳 龙华万豪酒店</div>
+            </div>
+            <div class="card">
+              <div class="card-title">票种选择</div>
+              <div style="display:flex;justify-content:space-between;align-items:center;padding:10px;border:2px solid var(--gold);border-radius:10px;background:var(--gold-light)">
+                <div><div style="font-size:13px;font-weight:600;color:var(--gold)">⭐ 菁英会员票（已选）</div></div>
+                <div style="font-size:16px;font-weight:700;color:var(--gold)">¥598</div>
+              </div>
+            </div>
+            <div class="card">
+              <div class="card-title">参会人信息</div>
+              <div class="form-group">
+                <label class="form-label required">企业名称</label>
+                <input class="form-input" value="鑫财财税有限公司">
+              </div>
+              <div class="form-group">
+                <label class="form-label required">参会人姓名</label>
+                <input class="form-input" value="陈总">
+              </div>
+              <div class="form-group">
+                <label class="form-label required">手机号</label>
+                <input class="form-input" value="138****8888">
+              </div>
+              <div class="form-group">
+                <label class="form-label required">职务</label>
+                <input class="form-input" value="公司总经理">
+              </div>
+            </div>
+            <div class="card">
+              <div class="card-title">支付方式</div>
+              <div style="display:flex;flex-direction:column;gap:10px">
+                <div style="display:flex;align-items:center;gap:12px;padding:12px;border:2px solid var(--primary);border-radius:10px;cursor:pointer;background:var(--primary-light)">
+                  <span style="font-size:22px">💚</span>
+                  <div style="flex:1">
+                    <div style="font-size:14px;font-weight:600">微信支付</div>
+                    <div style="font-size:12px;color:var(--gray-3)">支付成功自动生成电子票</div>
+                  </div>
+                  <span style="color:var(--primary)">●</span>
+                </div>
+                <div style="display:flex;align-items:center;gap:12px;padding:12px;border:1.5px solid var(--border);border-radius:10px;cursor:pointer" onclick="showPage('payment-transfer')">
+                  <span style="font-size:22px">🏦</span>
+                  <div style="flex:1">
+                    <div style="font-size:14px;font-weight:600">对公转账</div>
+                    <div style="font-size:12px;color:var(--gray-3)">财务确认后生成电子票</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div style="background:var(--gray-5);border-radius:10px;padding:12px;display:flex;justify-content:space-between;margin-top:4px">
+              <div style="font-size:14px;color:var(--gray-2)">实付金额</div>
+              <div style="font-size:22px;font-weight:700;color:var(--primary)">¥598</div>
+            </div>
+            <button class="btn btn-primary btn-block" style="margin-top:12px" onclick="showPage('event-ticket')">确认报名并支付 ¥598</button>
+          </div>
+        </div>
+
+        <!-- ===== 页面12: 拼团页 ===== -->
+        <div class="page" id="page-event-group">
+          <div class="topbar">
+            <div class="topbar-back" onclick="goBack()">‹</div>
+            <div class="topbar-title">发起拼团</div>
+          </div>
+          <div style="padding:12px">
+            <div class="card" style="background:linear-gradient(135deg,var(--primary),#9E1B22);color:white">
+              <div style="font-size:16px;font-weight:700;margin-bottom:8px">老客户升单训练营 · 深圳站</div>
+              <div style="font-size:13px;opacity:0.85;margin-bottom:12px">📅 2025年7月12日 · 📍 深圳龙华</div>
+              <div style="display:flex;justify-content:space-around;background:rgba(255,255,255,0.15);border-radius:10px;padding:12px">
+                <div style="text-align:center">
+                  <div style="font-size:22px;font-weight:700">3人团</div>
+                  <div style="font-size:12px;opacity:0.8">拼团价</div>
+                  <div style="font-size:18px;font-weight:700">¥1,280</div>
+                </div>
+                <div style="text-align:center">
+                  <div style="font-size:22px;font-weight:700">5人团</div>
+                  <div style="font-size:12px;opacity:0.8">拼团价</div>
+                  <div style="font-size:18px;font-weight:700">¥980</div>
+                </div>
+              </div>
+            </div>
+            <!-- 当前团状态 -->
+            <div class="card">
+              <div class="card-title">当前拼团状态</div>
+              <div style="display:flex;align-items:center;justify-content:center;gap:16px;margin:10px 0">
+                <div style="text-align:center">
+                  <div style="width:50px;height:50px;border-radius:50%;background:var(--primary);display:flex;align-items:center;justify-content:center;font-size:22px;margin:0 auto 6px">👤</div>
+                  <div style="font-size:11px;color:var(--gray-3)">团长（已付）</div>
+                </div>
+                <div style="text-align:center">
+                  <div style="width:50px;height:50px;border-radius:50%;background:var(--gray-4);display:flex;align-items:center;justify-content:center;font-size:22px;margin:0 auto 6px">➕</div>
+                  <div style="font-size:11px;color:var(--gray-3)">待加入</div>
+                </div>
+                <div style="text-align:center">
+                  <div style="width:50px;height:50px;border-radius:50%;background:var(--gray-4);display:flex;align-items:center;justify-content:center;font-size:22px;margin:0 auto 6px">➕</div>
+                  <div style="font-size:11px;color:var(--gray-3)">待加入</div>
+                </div>
+              </div>
+              <div style="text-align:center;font-size:13px;color:var(--primary);font-weight:700;margin-bottom:8px">还差 2 人成团 · 截止7月10日</div>
+            </div>
+            <!-- 参团报名 -->
+            <div class="card">
+              <div class="card-title">参团报名</div>
+              <div class="form-group">
+                <label class="form-label required">姓名</label>
+                <input class="form-input" placeholder="请输入参会人姓名">
+              </div>
+              <div class="form-group">
+                <label class="form-label required">手机号</label>
+                <input class="form-input" placeholder="请输入手机号">
+              </div>
+            </div>
+            <div style="display:flex;gap:10px;margin-top:4px">
+              <button class="btn btn-outline" style="flex:1" onclick="alert('海报已生成，请保存并分享！')">📤 分享邀请</button>
+              <button class="btn btn-primary" style="flex:1" onclick="showPage('event-ticket')">支付并加入</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- ===== 页面13: 报名成功/电子票 ===== -->
+        <div class="page" id="page-event-ticket">
+          <div class="topbar">
+            <div class="topbar-back" onclick="goBack()">‹</div>
+            <div class="topbar-title">我的电子票</div>
+          </div>
+          <div style="padding:12px">
+            <div style="background:linear-gradient(135deg,var(--success),#00A350);border-radius:var(--radius);padding:20px;text-align:center;margin-bottom:12px">
+              <div style="font-size:32px;margin-bottom:8px">✅</div>
+              <div style="color:white;font-size:18px;font-weight:700;margin-bottom:4px">报名成功！</div>
+              <div style="color:rgba(255,255,255,0.85);font-size:13px">请保存电子票，现场出示二维码核销</div>
+            </div>
+            <div class="card">
+              <div class="qr-box">
+                <div style="text-align:center;margin-bottom:8px">
+                  <div style="font-size:15px;font-weight:700;color:var(--dark)">老客户升单训练营 · 深圳站</div>
+                  <div style="font-size:12px;color:var(--gray-3);margin-top:4px">2025年7月12日 9:00 · 深圳龙华万豪</div>
+                </div>
+                <div class="qr-code"></div>
+                <div class="qr-label">现场出示二维码核销签到</div>
+                <div class="qr-status">待核销</div>
+              </div>
+              <div class="divider"></div>
+              <div style="font-size:13px;display:flex;flex-direction:column;gap:8px">
+                <div style="display:flex;justify-content:space-between"><span style="color:var(--gray-3)">参会人</span><span style="font-weight:500">陈总</span></div>
+                <div style="display:flex;justify-content:space-between"><span style="color:var(--gray-3)">企业</span><span style="font-weight:500">鑫财财税有限公司</span></div>
+                <div style="display:flex;justify-content:space-between"><span style="color:var(--gray-3)">票种</span><span style="font-weight:500;color:var(--gold)">菁英会员票</span></div>
+                <div style="display:flex;justify-content:space-between"><span style="color:var(--gray-3)">实付金额</span><span style="font-weight:700;color:var(--primary)">¥598</span></div>
+              </div>
+            </div>
+            <!-- 专属客户经理 -->
+            <div class="card">
+              <div class="info-section-title" style="font-size:13px;padding:0;margin:0 0 10px">🤝 专属客户经理</div>
+              <div style="display:flex;align-items:center;gap:12px">
+                <div style="width:44px;height:44px;border-radius:50%;background:var(--primary);display:flex;align-items:center;justify-content:center;font-size:20px">👩</div>
+                <div>
+                  <div style="font-size:14px;font-weight:600;color:var(--dark)">张晓慧</div>
+                  <div style="font-size:12px;color:var(--gray-3)">138-0000-8888</div>
+                </div>
+                <button class="btn btn-outline btn-sm" style="margin-left:auto" onclick="alert('复制微信：zhangxiaohui_xs')">联系</button>
+              </div>
+            </div>
+            <div style="display:flex;gap:10px;margin-top:4px">
+              <button class="btn btn-outline" style="flex:1" onclick="alert('海报已生成，推荐好友报名可获100积分！')">📤 分享赚积分</button>
+              <button class="btn btn-primary" style="flex:1" onclick="showPage('my-events')">查看我的报名</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- ===== 页面14: 会员权益 ===== -->
+        <div class="page" id="page-member-benefit">
+          <div class="topbar">
+            <div class="topbar-back" onclick="goBack()">‹</div>
+            <div class="topbar-title">行商会员</div>
+          </div>
+          <div style="background:linear-gradient(135deg,#1A1A2E,#2D2D5E);padding:20px 16px;text-align:center">
+            <div style="font-size:13px;color:rgba(255,255,255,0.7);margin-bottom:8px">加入行商会员，获得供应链底价、商机、线下课、圈层资源</div>
+            <div style="font-size:28px;font-weight:700;color:var(--gold)">行商书苑会员体系</div>
+          </div>
+          <!-- 三档会员 -->
+          <div style="padding:12px;display:flex;flex-direction:column;gap:10px">
+            <!-- 注册伙伴 -->
+            <div class="card" style="border:1.5px solid var(--border)">
+              <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+                <div style="font-size:15px;font-weight:700;color:var(--dark)">注册伙伴</div>
+                <span class="tag tag-green">免费注册</span>
+              </div>
+              <div style="font-size:12px;color:var(--gray-2);line-height:1.8">浏览公开资源 · 报名公开活动 · 提交企业认证</div>
+            </div>
+            <!-- 菁英会员 -->
+            <div class="card" style="border:2px solid var(--gold);background:linear-gradient(135deg,#FFFDF0,white)">
+              <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+                <div style="font-size:15px;font-weight:700;color:var(--gold)">⭐ 行商·菁英会员</div>
+                <div style="text-align:right">
+                  <div style="font-size:11px;color:var(--gray-3);text-decoration:line-through">原价 ¥6,980</div>
+                  <div style="font-size:20px;font-weight:700;color:var(--gold)">¥4,980<span style="font-size:12px">/年</span></div>
+                </div>
+              </div>
+              <div style="font-size:12px;color:var(--gray-2);line-height:2;margin-bottom:12px">
+                ✅ 资源供应链底价采购<br>
+                ✅ 线下课基础会务费（¥598-980）<br>
+                ✅ 商机优先申请权<br>
+                ✅ 授牌·菁英会员资格<br>
+                ✅ 1个月系统试用权益
+              </div>
+              <button class="btn btn-gold btn-block" onclick="showPage('member-confirm')">立即开通 ¥4,980</button>
+            </div>
+            <!-- 领航会员 -->
+            <div class="card" style="border:2px solid #7B1FA2;background:linear-gradient(135deg,#F8F0FF,white)">
+              <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+                <div style="font-size:15px;font-weight:700;color:#7B1FA2">👑 行商·领航会员</div>
+                <div style="text-align:right">
+                  <div style="font-size:11px;color:var(--gray-3);text-decoration:line-through">原价 ¥16,800</div>
+                  <div style="font-size:20px;font-weight:700;color:#7B1FA2">¥12,800<span style="font-size:12px">/年</span></div>
+                </div>
+              </div>
+              <div style="font-size:12px;color:var(--gray-2);line-height:2;margin-bottom:12px">
+                ✅ 战略供应商底价（低于菁英价）<br>
+                ✅ 峰会免费门票（含晚宴）<br>
+                ✅ 高价值商机优先获取<br>
+                ✅ 知行塾·私董会参与资格<br>
+                ✅ 1年系统免费使用权益<br>
+                ✅ 授牌·领航标杆资格
+              </div>
+              <button class="btn btn-block" style="background:linear-gradient(135deg,#7B1FA2,#4A148C);color:white;border-radius:24px;padding:10px;font-size:14px;font-weight:700;cursor:pointer" onclick="showPage('member-confirm')">立即开通 ¥12,800</button>
+            </div>
+          </div>
+          <!-- 权益对比表 -->
+          <div class="card">
+            <div class="card-title">🆚 权益对比</div>
+            <div class="benefit-compare" style="margin:0">
+              <div class="benefit-table">
+                <div class="bt-header">
+                  <div class="bt-col white">权益项</div>
+                  <div class="bt-col gold">菁英会员</div>
+                  <div class="bt-col primary">领航会员</div>
+                </div>
+                <div class="bt-row"><div class="bt-cell label">供应链价格</div><div class="bt-cell">会员价</div><div class="bt-cell">战略底价</div></div>
+                <div class="bt-row"><div class="bt-cell label">线下课</div><div class="bt-cell">¥598起</div><div class="bt-cell">¥0权益票</div></div>
+                <div class="bt-row"><div class="bt-cell label">年度峰会</div><div class="bt-cell">¥980</div><div class="bt-cell">免费含晚宴</div></div>
+                <div class="bt-row"><div class="bt-cell label">商机申请</div><div class="bt-cell">✅</div><div class="bt-cell">优先</div></div>
+                <div class="bt-row"><div class="bt-cell label">知行塾</div><div class="bt-cell">—</div><div class="bt-cell">✅</div></div>
+                <div class="bt-row"><div class="bt-cell label">系统权益</div><div class="bt-cell">1月试用</div><div class="bt-cell">1年免费</div></div>
+              </div>
+            </div>
+          </div>
+          <div style="padding:0 12px 12px">
+            <div class="card" style="background:var(--gray-5)">
+              <div style="font-size:13px;color:var(--gray-2);line-height:2">
+                <div><strong>Q：有效期多久？</strong></div>
+                <div style="color:var(--gray-3)">开通之日起1年有效，到期可续费。</div>
+                <div style="margin-top:6px"><strong>Q：支持对公转账吗？</strong></div>
+                <div style="color:var(--gray-3)">支持微信支付和对公转账，财务确认后开通。</div>
+                <div style="margin-top:6px"><strong>Q：是否可以升级？</strong></div>
+                <div style="color:var(--gray-3)">支持从菁英升级到领航，补差价即可。</div>
+              </div>
+            </div>
+          </div>
+          <div style="height:20px"></div>
+        </div>
+
+        <!-- ===== 页面15: 会员开通确认 ===== -->
+        <div class="page" id="page-member-confirm">
+          <div class="topbar">
+            <div class="topbar-back" onclick="goBack()">‹</div>
+            <div class="topbar-title">开通会员</div>
+          </div>
+          <div style="padding:12px">
+            <!-- 会员类型选择 -->
+            <div class="card">
+              <div class="card-title">选择会员类型</div>
+              <div style="display:flex;gap:10px">
+                <div style="flex:1;border:2px solid var(--gold);border-radius:10px;padding:14px;text-align:center;background:var(--gold-light);cursor:pointer">
+                  <div style="font-size:20px;margin-bottom:6px">⭐</div>
+                  <div style="font-size:13px;font-weight:700;color:var(--gold)">菁英会员</div>
+                  <div style="font-size:18px;font-weight:700;color:var(--gold);margin-top:4px">¥4,980</div>
+                  <div style="font-size:11px;color:var(--gray-3)">原价¥6,980</div>
+                </div>
+                <div style="flex:1;border:1.5px solid var(--border);border-radius:10px;padding:14px;text-align:center;cursor:pointer" onclick="this.parentNode.firstElementChild.style.border='1.5px solid var(--border)';this.style.border='2px solid #7B1FA2';this.style.background='#F8F0FF'">
+                  <div style="font-size:20px;margin-bottom:6px">👑</div>
+                  <div style="font-size:13px;font-weight:700;color:#7B1FA2">领航会员</div>
+                  <div style="font-size:18px;font-weight:700;color:#7B1FA2;margin-top:4px">¥12,800</div>
+                  <div style="font-size:11px;color:var(--gray-3)">原价¥16,800</div>
+                </div>
+              </div>
+            </div>
+            <!-- 企业信息 -->
+            <div class="card">
+              <div class="card-title">企业信息</div>
+              <div class="form-group">
+                <label class="form-label required">企业名称</label>
+                <input class="form-input" value="鑫财财税有限公司">
+              </div>
+              <div class="form-group">
+                <label class="form-label required">联系人</label>
+                <input class="form-input" value="陈总">
+              </div>
+              <div class="form-group">
+                <label class="form-label required">手机号</label>
+                <input class="form-input" value="138****8888">
+              </div>
+            </div>
+            <!-- 发票信息 -->
+            <div class="card">
+              <div class="card-title">发票信息</div>
+              <div class="form-group">
+                <label class="form-label">是否需要发票</label>
+                <div class="radio-group">
+                  <div class="radio-item"><div class="radio-dot checked"></div>需要</div>
+                  <div class="radio-item"><div class="radio-dot"></div>不需要</div>
+                </div>
+              </div>
+              <div class="form-group">
+                <label class="form-label">发票抬头</label>
+                <input class="form-input" value="鑫财财税有限公司">
+              </div>
+              <div class="form-group">
+                <label class="form-label">税号</label>
+                <input class="form-input" placeholder="请输入统一社会信用代码">
+              </div>
+            </div>
+            <!-- 支付方式 -->
+            <div class="card">
+              <div class="card-title">支付方式</div>
+              <div style="display:flex;flex-direction:column;gap:10px">
+                <div style="display:flex;align-items:center;gap:12px;padding:12px;border:2px solid var(--primary);border-radius:10px;background:var(--primary-light);cursor:pointer">
+                  <span style="font-size:22px">💚</span>
+                  <div style="flex:1"><div style="font-size:14px;font-weight:600">微信支付</div></div>
+                  <span style="color:var(--primary)">●</span>
+                </div>
+                <div style="display:flex;align-items:center;gap:12px;padding:12px;border:1.5px solid var(--border);border-radius:10px;cursor:pointer" onclick="showPage('payment-transfer')">
+                  <span style="font-size:22px">🏦</span>
+                  <div><div style="font-size:14px;font-weight:600">对公转账</div></div>
+                </div>
+              </div>
+            </div>
+            <div style="display:flex;align-items:center;gap:6px;padding:10px 0;font-size:12px;color:var(--gray-3)">
+              <input type="checkbox" checked style="accent-color:var(--primary)">
+              已阅读并同意《行商会员服务协议》及《平台规则》
+            </div>
+            <div style="background:var(--gray-5);border-radius:10px;padding:12px;display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+              <div style="font-size:14px;color:var(--gray-2)">实付金额</div>
+              <div style="font-size:24px;font-weight:700;color:var(--gold)">¥4,980</div>
+            </div>
+            <button class="btn btn-gold btn-block" onclick="alert('支付成功！您已成功开通行商·菁英会员，权益即刻生效。')">确认开通 · 立即支付</button>
+          </div>
+        </div>
+
+        <!-- ===== 页面16: 对公支付凭证 ===== -->
+        <div class="page" id="page-payment-transfer">
+          <div class="topbar">
+            <div class="topbar-back" onclick="goBack()">‹</div>
+            <div class="topbar-title">对公转账</div>
+          </div>
+          <div style="padding:12px">
+            <div class="card">
+              <div class="card-title">订单信息</div>
+              <div style="display:flex;flex-direction:column;gap:8px;font-size:13px">
+                <div style="display:flex;justify-content:space-between"><span style="color:var(--gray-3)">订单编号</span><span>XS20250712001</span></div>
+                <div style="display:flex;justify-content:space-between"><span style="color:var(--gray-3)">项目名称</span><span style="font-weight:600">行商·菁英会员（1年）</span></div>
+                <div style="display:flex;justify-content:space-between"><span style="color:var(--gray-3)">订单金额</span><span style="font-weight:700;color:var(--primary);font-size:16px">¥4,980</span></div>
+              </div>
+            </div>
+            <div class="card">
+              <div class="card-title">对公账户信息</div>
+              <div class="bank-info">
+                <div class="bank-row">
+                  <div class="bank-key">户名</div>
+                  <div class="bank-val">行商企业服务（深圳）有限公司</div>
+                </div>
+                <div class="bank-row">
+                  <div class="bank-key">开户行</div>
+                  <div class="bank-val">招商银行深圳南山支行</div>
+                </div>
+                <div class="bank-row" style="align-items:center">
+                  <div class="bank-key">账号</div>
+                  <div style="display:flex;align-items:center;gap:8px">
+                    <div class="bank-val">6225 8830 1234 5678</div>
+                    <button class="copy-btn" onclick="alert('账号已复制')">复制</button>
+                  </div>
+                </div>
+                <div class="bank-row">
+                  <div class="bank-key">转账备注</div>
+                  <div class="bank-val" style="color:var(--primary)">XS20250712001+鑫财财税</div>
+                </div>
+              </div>
+              <div style="background:var(--primary-light);border-radius:8px;padding:10px;font-size:12px;color:var(--gray-2)">
+                ⚠️ 转账时请务必备注订单号，便于财务确认到账
+              </div>
+            </div>
+            <div class="card">
+              <div class="card-title">上传付款凭证</div>
+              <div style="border:2px dashed var(--border);border-radius:10px;padding:24px;text-align:center;cursor:pointer;color:var(--gray-3)">
+                <div style="font-size:32px;margin-bottom:8px">📷</div>
+                <div style="font-size:13px">点击上传转账截图</div>
+                <div style="font-size:11px;margin-top:4px">支持 JPG、PNG 格式</div>
+              </div>
+            </div>
+            <div style="background:var(--gray-5);border-radius:10px;padding:12px;font-size:12px;color:var(--gray-3);margin-bottom:12px;line-height:1.8">
+              📌 提交后财务将在1个工作日内确认到账，确认后自动开通会员权益并发送通知
+            </div>
+            <button class="btn btn-primary btn-block" onclick="alert('付款凭证已提交！财务将在1工作日内确认，请留意消息通知。')">提交付款凭证</button>
+          </div>
+        </div>
+
+        <!-- ===== 页面17: 商机首页 ===== -->
+        <div class="page" id="page-opp-home">
+          <div class="topbar">
+            <div class="topbar-back" onclick="goBack()">‹</div>
+            <div class="topbar-title">商机</div>
+            <div class="topbar-right">🔔</div>
+          </div>
+          <div style="background:linear-gradient(135deg,#1A1A2E,#2D2D5E);padding:16px">
+            <div style="font-size:12px;color:rgba(255,255,255,0.7);margin-bottom:6px">商机：财税公司甩单、接单、跨区域协作与高端项目撮合</div>
+            <div class="opp-stats" style="background:transparent;box-shadow:none;padding:0;margin:0;gap:0">
+              <div class="opp-stat-item">
+                <div class="opp-stat-num" style="color:var(--gold)">10000+</div>
+                <div class="opp-stat-label" style="color:rgba(255,255,255,0.6)">累计对接</div>
+              </div>
+              <div class="opp-stat-item">
+                <div class="opp-stat-num" style="color:var(--gold)">1000万+</div>
+                <div class="opp-stat-label" style="color:rgba(255,255,255,0.6)">促成营收</div>
+              </div>
+              <div class="opp-stat-item">
+                <div class="opp-stat-num" style="color:var(--gold)">98%</div>
+                <div class="opp-stat-label" style="color:rgba(255,255,255,0.6)">合作好评</div>
+              </div>
+            </div>
+            <div style="display:flex;gap:10px;margin-top:14px">
+              <button class="btn btn-primary" style="flex:1" onclick="showPage('opp-publish')">📤 我要甩单</button>
+              <button class="btn btn-outline" style="flex:1;color:white;border-color:rgba(255,255,255,0.5)" onclick="showPage('opp-detail')">📥 我要接单</button>
+            </div>
+          </div>
+          <!-- 分类 -->
+          <div class="category-nav">
+            <div class="cat-item active">全部</div>
+            <div class="cat-item">工商注册</div>
+            <div class="cat-item">代账</div>
+            <div class="cat-item">税筹</div>
+            <div class="cat-item">股权</div>
+            <div class="cat-item">资质</div>
+            <div class="cat-item">知产</div>
+            <div class="cat-item">会计工厂</div>
+          </div>
+          <!-- 商机列表 -->
+          <div style="padding:8px 12px">
+            <div onclick="showPage('opp-detail')" style="cursor:pointer">
+              <div class="opportunity-card" style="margin:0 0 10px">
+                <div class="opp-header">
+                  <div class="opp-title">深圳宝安工商注册+代账，约50家新设企业</div>
+                  <span class="tag tag-gold">高价值</span>
+                </div>
+                <div class="opp-meta">
+                  <span class="tag tag-gray">代账</span><span class="tag tag-gray">深圳</span><span class="tag tag-green">平台撮合</span><span class="tag tag-blue">会员可申请</span>
+                </div>
+                <div class="opp-footer">
+                  <div class="opp-budget">预算：¥15万+</div>
+                  <div class="opp-time">2小时前 · 3人申请</div>
+                </div>
+              </div>
+            </div>
+            <div onclick="showPage('opp-detail')" style="cursor:pointer">
+              <div class="opportunity-card" style="margin:0 0 10px">
+                <div class="opp-header">
+                  <div class="opp-title">广州天河区高新技术企业认定需求</div>
+                  <span class="tag tag-blue">平台审核</span>
+                </div>
+                <div class="opp-meta">
+                  <span class="tag tag-gray">资质</span><span class="tag tag-gray">广州</span><span class="tag tag-gray">跨区域</span>
+                </div>
+                <div class="opp-footer">
+                  <div class="opp-budget">预算：面议</div>
+                  <div class="opp-time">5小时前 · 1人申请</div>
+                </div>
+              </div>
+            </div>
+            <div onclick="showPage('opp-detail')" style="cursor:pointer">
+              <div class="opportunity-card" style="margin:0 0 10px">
+                <div class="opp-header">
+                  <div class="opp-title">北京朝阳区批量代账外包，500户+</div>
+                  <span class="tag tag-red">高端撮合</span>
+                </div>
+                <div class="opp-meta">
+                  <span class="tag tag-gray">会计工厂</span><span class="tag tag-gray">北京</span><span class="tag tag-green">保密</span>
+                </div>
+                <div class="opp-footer">
+                  <div class="opp-budget">预算：¥80万/年</div>
+                  <div class="opp-time">1天前 · 7人申请</div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div style="height:20px"></div>
+        </div>
+
+        <!-- ===== 页面18: 商机详情 ===== -->
+        <div class="page" id="page-opp-detail">
+          <div class="topbar">
+            <div class="topbar-back" onclick="goBack()">‹</div>
+            <div class="topbar-title">商机详情</div>
+          </div>
+          <div style="padding:12px">
+            <div class="card">
+              <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px">
+                <div style="font-size:16px;font-weight:700;color:var(--dark);flex:1;margin-right:10px">深圳宝安区工商注册+代账，约50家新设企业</div>
+                <span class="tag tag-gold">高价值</span>
+              </div>
+              <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px">
+                <span class="tag tag-gray">代账</span>
+                <span class="tag tag-gray">📍 深圳</span>
+                <span class="tag tag-blue">会员可申请</span>
+                <span class="tag tag-green">平台撮合</span>
+                <span class="tag tag-red">保密</span>
+              </div>
+              <div style="display:flex;justify-content:space-between;font-size:12px;color:var(--gray-3)">
+                <span>发布时间：2小时前</span>
+                <span>已有3人申请</span>
+              </div>
+            </div>
+            <div class="info-section">
+              <div class="info-section-title">需求摘要</div>
+              <div class="info-text">深圳宝安区新设企业约50家，需一站式工商注册+代理记账服务，含月报、季报、年报。客户性质为小规模纳税人，要求本地服务团队。</div>
+            </div>
+            <div class="card">
+              <div style="display:flex;flex-direction:column;gap:10px;font-size:13px">
+                <div style="display:flex;justify-content:space-between"><span style="color:var(--gray-3)">预算范围</span><span style="font-weight:700;color:var(--primary)">¥15万+/年</span></div>
+                <div style="display:flex;justify-content:space-between"><span style="color:var(--gray-3)">交付区域</span><span>深圳市（宝安区为主）</span></div>
+                <div style="display:flex;justify-content:space-between"><span style="color:var(--gray-3)">交付要求</span><span>1个月内完成注册</span></div>
+                <div style="display:flex;justify-content:space-between"><span style="color:var(--gray-3)">资质要求</span><span>需持代理记账许可证</span></div>
+              </div>
+            </div>
+            <!-- 联系方式保密提示 -->
+            <div class="info-section" style="background:linear-gradient(135deg,#1A1A2E,#2D2D5E)">
+              <div style="color:rgba(255,255,255,0.85);font-size:13px;margin-bottom:8px">🔒 联系方式由平台保护，申请接单后客户经理协助撮合</div>
+              <div style="color:rgba(255,255,255,0.6);font-size:12px">开通会员可优先申请高价值商机</div>
+            </div>
+          </div>
+          <div style="height:80px"></div>
+          <div class="action-bar">
+            <button class="btn btn-outline btn-sm" onclick="alert('客户经理将在1小时内联系您')">咨询客户经理</button>
+            <button class="btn btn-gold btn-sm" onclick="showPage('member-benefit')">开通会员优先</button>
+            <button class="btn btn-primary" onclick="showPage('opp-apply')">申请接单</button>
+          </div>
+        </div>
+
+        <!-- ===== 页面19: 发布商机 ===== -->
+        <div class="page" id="page-opp-publish">
+          <div class="topbar">
+            <div class="topbar-back" onclick="goBack()">‹</div>
+            <div class="topbar-title">发布商机</div>
+          </div>
+          <div style="padding:12px">
+            <div class="card">
+              <div class="card-title">商机信息</div>
+              <div class="form-group">
+                <label class="form-label required">业务类型</label>
+                <select class="form-select">
+                  <option>请选择业务类型</option>
+                  <option>工商注册</option>
+                  <option>代理记账</option>
+                  <option>税务筹划</option>
+                  <option>股权架构</option>
+                  <option>资质许可</option>
+                  <option>知产科创</option>
+                  <option>会计工厂</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label class="form-label required">客户所在城市</label>
+                <input class="form-input" placeholder="请输入城市">
+              </div>
+              <div class="form-group">
+                <label class="form-label">是否跨区域</label>
+                <div class="radio-group">
+                  <div class="radio-item"><div class="radio-dot"></div>是</div>
+                  <div class="radio-item"><div class="radio-dot checked"></div>否</div>
+                </div>
+              </div>
+              <div class="form-group">
+                <label class="form-label required">需求描述</label>
+                <textarea class="form-input" rows="4" placeholder="请详细描述客户需求，包括数量、具体要求等…" style="resize:none"></textarea>
+              </div>
+              <div class="form-group">
+                <label class="form-label">预算范围</label>
+                <div class="radio-group">
+                  <div class="radio-item"><div class="radio-dot"></div>提供预算</div>
+                  <div class="radio-item"><div class="radio-dot checked"></div>面议</div>
+                </div>
+              </div>
+            </div>
+            <div class="card">
+              <div class="card-title">撮合设置</div>
+              <div class="form-group">
+                <label class="form-label">是否高端咨询需求</label>
+                <div class="radio-group">
+                  <div class="radio-item"><div class="radio-dot"></div>是（平台重点撮合）</div>
+                  <div class="radio-item"><div class="radio-dot checked"></div>否</div>
+                </div>
+              </div>
+              <div class="form-group">
+                <label class="form-label">是否需要平台撮合</label>
+                <div class="radio-group">
+                  <div class="radio-item"><div class="radio-dot checked"></div>是</div>
+                  <div class="radio-item"><div class="radio-dot"></div>否（开放申请）</div>
+                </div>
+              </div>
+              <div class="form-group">
+                <label class="form-label">保密要求</label>
+                <div class="radio-group">
+                  <div class="radio-item"><div class="radio-dot checked"></div>联系方式保密</div>
+                  <div class="radio-item"><div class="radio-dot"></div>公开</div>
+                </div>
+              </div>
+            </div>
+            <div class="card">
+              <div class="card-title">联系人信息</div>
+              <div class="form-group">
+                <label class="form-label required">联系人姓名</label>
+                <input class="form-input" value="陈总">
+              </div>
+              <div class="form-group">
+                <label class="form-label required">手机号</label>
+                <input class="form-input" value="138****8888">
+              </div>
+            </div>
+            <button class="btn btn-primary btn-block" onclick="alert('商机已提交！客户经理将在1个工作日内审核并协助撮合。')">提交审核</button>
+          </div>
+        </div>
+
+        <!-- ===== 页面20: 申请接单 ===== -->
+        <div class="page" id="page-opp-apply">
+          <div class="topbar">
+            <div class="topbar-back" onclick="goBack()">‹</div>
+            <div class="topbar-title">申请接单</div>
+          </div>
+          <div style="padding:12px">
+            <div class="card" style="background:var(--gray-5)">
+              <div style="font-size:13px;font-weight:600;color:var(--dark)">商机：深圳宝安区工商注册+代账，约50家新设企业</div>
+            </div>
+            <div class="card">
+              <div class="card-title">企业能力</div>
+              <div style="font-size:13px;display:flex;flex-direction:column;gap:8px">
+                <div style="display:flex;justify-content:space-between"><span style="color:var(--gray-3)">企业名称</span><span>鑫财财税有限公司</span></div>
+                <div style="display:flex;justify-content:space-between"><span style="color:var(--gray-3)">认证状态</span><span style="color:var(--success);font-weight:600">✅ 已认证</span></div>
+                <div style="display:flex;justify-content:space-between"><span style="color:var(--gray-3)">服务城市</span><span>深圳、广州</span></div>
+              </div>
+            </div>
+            <div class="card">
+              <div class="card-title">接单说明</div>
+              <div class="form-group">
+                <label class="form-label required">为什么适合接这个单</label>
+                <textarea class="form-input" rows="3" placeholder="请说明您的服务经验和优势…" style="resize:none">本公司深耕深圳代账市场8年，服务超500家企业，拥有完整的工商注册团队和代账服务体系。</textarea>
+              </div>
+              <div class="form-group">
+                <label class="form-label">报价说明</label>
+                <div class="radio-group">
+                  <div class="radio-item"><div class="radio-dot"></div>提供报价</div>
+                  <div class="radio-item"><div class="radio-dot checked"></div>详谈后报价</div>
+                </div>
+              </div>
+              <div class="form-group">
+                <label class="form-label">案例资料（选填）</label>
+                <div style="border:2px dashed var(--border);border-radius:8px;padding:16px;text-align:center;cursor:pointer;color:var(--gray-3);font-size:13px">
+                  📎 上传相关案例
+                </div>
+              </div>
+            </div>
+            <button class="btn btn-primary btn-block" onclick="showPage('my-home')">提交申请</button>
+            <div style="text-align:center;font-size:12px;color:var(--gray-3);margin-top:10px">客户经理审核后协助撮合，请耐心等待</div>
+          </div>
+        </div>
+
+        <!-- ===== 页面21: 我的 ===== -->
+        <div class="page" id="page-my-home">
+          <div class="my-header">
+            <div class="my-avatar-row">
+              <div class="my-avatar-big">👤</div>
+              <div class="my-user-info">
+                <div class="name">陈总</div>
+                <div class="company">鑫财财税有限公司</div>
+              </div>
+              <div style="display:flex;flex-direction:column;gap:4px;align-items:flex-end">
+                <span class="tag tag-green" style="font-size:10px">✅ 已认证</span>
+              </div>
+            </div>
+          </div>
+          <!-- 会员卡 -->
+          <div class="my-member-card">
+            <div class="member-card-top">
+              <div>
+                <div style="font-size:10px;color:rgba(255,255,255,0.75)">当前等级</div>
+                <div class="member-level">⭐ 行商·菁英会员</div>
+              </div>
+              <div class="member-expire">到期：2026-07-01</div>
+            </div>
+            <div class="member-actions">
+              <div class="member-action-btn" onclick="showPage('member-benefit')">续费</div>
+              <div class="member-action-btn" onclick="showPage('member-benefit')">升级领航</div>
+              <div class="member-action-btn" onclick="showPage('my-benefits')">查看权益</div>
+            </div>
+          </div>
+          <!-- 快捷数据 -->
+          <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:0;background:white;margin:12px 12px 0;border-radius:var(--radius);overflow:hidden;box-shadow:var(--shadow)">
+            <div style="padding:12px 8px;text-align:center;border-right:1px solid var(--border);cursor:pointer" onclick="showPage('my-orders')">
+              <div style="font-size:18px;font-weight:700;color:var(--primary)">3</div>
+              <div style="font-size:10px;color:var(--gray-3)">我的订单</div>
+            </div>
+            <div style="padding:12px 8px;text-align:center;border-right:1px solid var(--border);cursor:pointer" onclick="showPage('my-events')">
+              <div style="font-size:18px;font-weight:700;color:var(--primary)">2</div>
+              <div style="font-size:10px;color:var(--gray-3)">我的活动</div>
+            </div>
+            <div style="padding:12px 8px;text-align:center;border-right:1px solid var(--border);cursor:pointer" onclick="showPage('my-points')">
+              <div style="font-size:18px;font-weight:700;color:var(--gold)">380</div>
+              <div style="font-size:10px;color:var(--gray-3)">我的积分</div>
+            </div>
+            <div style="padding:12px 8px;text-align:center;cursor:pointer" onclick="showPage('my-reviews')">
+              <div style="font-size:18px;font-weight:700;color:var(--success)">5</div>
+              <div style="font-size:10px;color:var(--gray-3)">待评价</div>
+            </div>
+          </div>
+          <!-- 菜单 -->
+          <div style="margin-top:12px">
+            <div class="menu-list">
+              <div class="menu-item" onclick="showPage('my-benefits')">
+                <div class="menu-icon" style="background:var(--gold-light)">🎁</div>
+                <div class="menu-text">我的权益</div>
+                <span class="tag tag-gold" style="font-size:10px">3项可用</span>
+                <div class="menu-arrow">›</div>
+              </div>
+              <div class="menu-item" onclick="showPage('my-orders')">
+                <div class="menu-icon" style="background:var(--primary-light)">📋</div>
+                <div class="menu-text">我的订单</div>
+                <div class="menu-badge">2待支付</div>
+                <div class="menu-arrow">›</div>
+              </div>
+              <div class="menu-item" onclick="showPage('my-events')">
+                <div class="menu-icon" style="background:#E8F9F0">🎫</div>
+                <div class="menu-text">我的活动</div>
+                <div class="menu-arrow">›</div>
+              </div>
+              <div class="menu-item" onclick="showPage('resource-home')">
+                <div class="menu-icon" style="background:#E8F0FE">📦</div>
+                <div class="menu-text">我的资源</div>
+                <div class="menu-arrow">›</div>
+              </div>
+              <div class="menu-item" onclick="showPage('opp-home')">
+                <div class="menu-icon" style="background:#FFF3E0">💼</div>
+                <div class="menu-text">我的商机</div>
+                <span class="tag tag-red" style="font-size:10px">1待评价</span>
+                <div class="menu-arrow">›</div>
+              </div>
+            </div>
+            <div class="menu-list" style="margin-top:10px">
+              <div class="menu-item" onclick="showPage('my-cert')">
+                <div class="menu-icon" style="background:#E8F9F0">🏢</div>
+                <div class="menu-text">企业认证</div>
+                <span class="tag tag-green" style="font-size:10px">已认证</span>
+                <div class="menu-arrow">›</div>
+              </div>
+              <div class="menu-item" onclick="showPage('my-points')">
+                <div class="menu-icon" style="background:var(--gold-light)">⭐</div>
+                <div class="menu-text">我的积分</div>
+                <div class="menu-text" style="text-align:right;color:var(--gold);font-weight:700">380分</div>
+                <div class="menu-arrow">›</div>
+              </div>
+              <div class="menu-item" onclick="showPage('my-reviews')">
+                <div class="menu-icon" style="background:var(--primary-light)">⭐</div>
+                <div class="menu-text">我的评价</div>
+                <div class="menu-badge">5待评</div>
+                <div class="menu-arrow">›</div>
+              </div>
+              <div class="menu-item">
+                <div class="menu-icon" style="background:var(--gray-5)">⚙️</div>
+                <div class="menu-text">设置</div>
+                <div class="menu-arrow">›</div>
+              </div>
+            </div>
+          </div>
+          <!-- 客户经理 -->
+          <div class="card" style="margin-top:10px;display:flex;align-items:center;gap:12px">
+            <div style="width:44px;height:44px;border-radius:50%;background:var(--primary);display:flex;align-items:center;justify-content:center;font-size:20px">👩</div>
+            <div style="flex:1">
+              <div style="font-size:14px;font-weight:600;color:var(--dark)">张晓慧 · 专属客户经理</div>
+              <div style="font-size:12px;color:var(--gray-3)">138-0000-8888</div>
+            </div>
+            <button class="btn btn-outline btn-sm" onclick="alert('微信：zhangxiaohui_xs')">联系</button>
+          </div>
+          <div style="height:20px"></div>
+        </div>
+
+        <!-- ===== 页面22: 企业认证 ===== -->
+        <div class="page" id="page-my-cert">
+          <div class="topbar">
+            <div class="topbar-back" onclick="goBack()">‹</div>
+            <div class="topbar-title">企业认证</div>
+          </div>
+          <div class="cert-status">
+            <div class="cert-icon">✅</div>
+            <div class="cert-label" style="color:var(--success)">认证已通过</div>
+            <div class="cert-desc">您的企业已完成认证，可享受商机申请、平台合作等权益</div>
+          </div>
+          <div style="padding:0 12px">
+            <div class="card">
+              <div class="card-title">企业资料</div>
+              <div style="display:flex;flex-direction:column;gap:10px;font-size:13px">
+                <div style="display:flex;justify-content:space-between"><span style="color:var(--gray-3)">企业名称</span><span>鑫财财税有限公司</span></div>
+                <div style="display:flex;justify-content:space-between"><span style="color:var(--gray-3)">信用代码</span><span>914403001234567890</span></div>
+                <div style="display:flex;justify-content:space-between"><span style="color:var(--gray-3)">服务客户数</span><span style="font-weight:600;color:var(--primary)">500户+</span></div>
+                <div style="display:flex;justify-content:space-between"><span style="color:var(--gray-3)">团队人数</span><span>20人</span></div>
+                <div style="display:flex;justify-content:space-between"><span style="color:var(--gray-3)">擅长业务</span><span>代账、税筹、工商</span></div>
+                <div style="display:flex;justify-content:space-between"><span style="color:var(--gray-3)">可承接城市</span><span>深圳、广州</span></div>
+                <div style="display:flex;justify-content:space-between"><span style="color:var(--gray-3)">跨区域服务</span><span>是</span></div>
+                <div style="display:flex;justify-content:space-between"><span style="color:var(--gray-3)">愿意接单</span><span style="color:var(--success)">是</span></div>
+              </div>
+            </div>
+            <div class="card" style="background:var(--gray-5)">
+              <div style="font-size:13px;color:var(--gray-2);line-height:2">
+                🏷️ 认证标签：500户+ · 可跨区域 · 代账 · 工商<br>
+                🕐 认证时间：2025-01-15
+              </div>
+            </div>
+            <button class="btn btn-outline btn-block" style="margin-top:4px">申请更新资料</button>
+          </div>
+        </div>
+
+        <!-- ===== 页面23: 我的订单 ===== -->
+        <div class="page" id="page-my-orders">
+          <div class="topbar">
+            <div class="topbar-back" onclick="goBack()">‹</div>
+            <div class="topbar-title">我的订单</div>
+          </div>
+          <div class="order-tab-bar">
+            <div class="order-tab active">全部</div>
+            <div class="order-tab">待支付</div>
+            <div class="order-tab">待确认</div>
+            <div class="order-tab">服务中</div>
+            <div class="order-tab">已完成</div>
+            <div class="order-tab">待评价</div>
+          </div>
+          <div style="padding:8px 0">
+            <div class="order-card">
+              <div class="order-card-header">
+                <span class="order-type">资源采购</span>
+                <span class="order-status-text">服务中</span>
+              </div>
+              <div class="order-card-body">
+                <div class="order-thumb">💻</div>
+                <div class="order-info">
+                  <div class="order-name">财税公司一体化经营管理系统</div>
+                  <div style="font-size:11px;color:var(--gray-3)">有效期：2025-07-12 至 2026-07-12</div>
+                  <div class="order-amount">¥2,980</div>
+                </div>
+              </div>
+              <div class="order-card-footer">
+                <button class="btn btn-outline btn-sm">申请发票</button>
+                <button class="btn btn-primary btn-sm" onclick="showPage('my-reviews')">评价</button>
+              </div>
+            </div>
+            <div class="order-card">
+              <div class="order-card-header">
+                <span class="order-type">会员开通</span>
+                <span class="order-status-text" style="color:var(--gold)">已完成</span>
+              </div>
+              <div class="order-card-body">
+                <div class="order-thumb" style="background:linear-gradient(135deg,var(--gold),#B8860B)">👑</div>
+                <div class="order-info">
+                  <div class="order-name">行商·菁英会员（1年）</div>
+                  <div style="font-size:11px;color:var(--gray-3)">2025-07-01 开通</div>
+                  <div class="order-amount" style="color:var(--gold)">¥4,980</div>
+                </div>
+              </div>
+              <div class="order-card-footer">
+                <button class="btn btn-outline btn-sm">查看发票</button>
+                <button class="btn btn-gold btn-sm" onclick="showPage('member-benefit')">续费</button>
+              </div>
+            </div>
+            <div class="order-card">
+              <div class="order-card-header">
+                <span class="order-type">活动报名</span>
+                <span class="order-status-text" style="color:var(--warning)">待支付</span>
+              </div>
+              <div class="order-card-body">
+                <div class="order-thumb" style="background:linear-gradient(135deg,#1A1A2E,#C8232B)">🎯</div>
+                <div class="order-info">
+                  <div class="order-name">老客户升单训练营 · 深圳站</div>
+                  <div style="font-size:11px;color:var(--gray-3)">2025-07-12 · 菁英会员票</div>
+                  <div class="order-amount">¥598</div>
+                </div>
+              </div>
+              <div class="order-card-footer">
+                <button class="btn btn-outline btn-sm" onclick="showPage('payment-transfer')">对公转账</button>
+                <button class="btn btn-primary btn-sm" onclick="showPage('event-ticket')">去支付</button>
+              </div>
+            </div>
+          </div>
+          <div style="height:20px"></div>
+        </div>
+
+        <!-- ===== 页面24: 我的活动 ===== -->
+        <div class="page" id="page-my-events">
+          <div class="topbar">
+            <div class="topbar-back" onclick="goBack()">‹</div>
+            <div class="topbar-title">我的活动</div>
+          </div>
+          <div class="order-tab-bar">
+            <div class="order-tab active">全部</div>
+            <div class="order-tab">待支付</div>
+            <div class="order-tab">待核销</div>
+            <div class="order-tab">已核销</div>
+            <div class="order-tab">已结束</div>
+          </div>
+          <div style="padding:8px 0">
+            <div class="order-card">
+              <div class="order-card-header">
+                <span class="order-type">线下训练营</span>
+                <span class="order-status-text" style="color:var(--warning)">待核销</span>
+              </div>
+              <div class="order-card-body">
+                <div class="order-thumb" style="background:linear-gradient(135deg,#1A1A2E,#C8232B)">🎯</div>
+                <div class="order-info">
+                  <div class="order-name">老客户升单训练营 · 深圳站</div>
+                  <div style="font-size:11px;color:var(--gray-3)">2025-07-12 9:00 · 深圳龙华万豪</div>
+                  <div class="order-amount" style="color:var(--gold)">⭐ 菁英会员票</div>
+                </div>
+              </div>
+              <div class="order-card-footer">
+                <button class="btn btn-outline btn-sm" onclick="alert('海报已生成，推荐好友可获积分！')">分享</button>
+                <button class="btn btn-primary btn-sm" onclick="showPage('event-ticket')">查看电子票</button>
+              </div>
+            </div>
+            <div class="order-card">
+              <div class="order-card-header">
+                <span class="order-type">峰会</span>
+                <span class="order-status-text" style="color:var(--success)">已核销</span>
+              </div>
+              <div class="order-card-body">
+                <div class="order-thumb" style="background:linear-gradient(135deg,#7B1FA2,#1A1A2E)">🏆</div>
+                <div class="order-info">
+                  <div class="order-name">2024行商财税领袖峰会</div>
+                  <div style="font-size:11px;color:var(--gray-3)">2024-08-20 · 上海</div>
+                  <div class="order-amount">¥980</div>
+                </div>
+              </div>
+              <div class="order-card-footer">
+                <button class="btn btn-primary btn-sm" onclick="showPage('my-reviews')">去评价</button>
+              </div>
+            </div>
+          </div>
+          <div style="height:20px"></div>
+        </div>
+
+        <!-- ===== 页面25: 我的权益 ===== -->
+        <div class="page" id="page-my-benefits">
+          <div class="topbar">
+            <div class="topbar-back" onclick="goBack()">‹</div>
+            <div class="topbar-title">我的权益</div>
+          </div>
+          <!-- 会员卡片 -->
+          <div style="background:linear-gradient(135deg,#D4A017,#B8860B);margin:12px;border-radius:var(--radius);padding:16px;box-shadow:0 4px 20px rgba(212,160,23,0.4)">
+            <div style="display:flex;justify-content:space-between;align-items:center">
+              <div>
+                <div style="color:rgba(255,255,255,0.8);font-size:11px">当前等级</div>
+                <div style="color:white;font-size:18px;font-weight:700;margin-top:2px">⭐ 行商·菁英会员</div>
+              </div>
+              <button class="btn btn-sm" style="background:rgba(255,255,255,0.2);color:white;border:1px solid rgba(255,255,255,0.4)" onclick="showPage('member-benefit')">升级领航</button>
+            </div>
+            <div style="color:rgba(255,255,255,0.75);font-size:12px;margin-top:8px">有效期至：2026年7月1日 · 剩余365天</div>
+          </div>
+          <!-- 权益列表 -->
+          <div style="padding:0 12px;display:flex;flex-direction:column;gap:10px">
+            <div class="card">
+              <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+                <div class="info-section-title" style="padding:0;margin:0">📚 课程权益</div>
+                <button class="btn btn-primary btn-sm" onclick="showPage('event-home')">去报名</button>
+              </div>
+              <div style="display:flex;justify-content:space-between;font-size:13px;color:var(--gray-2)">
+                <span>线下课基础会务费资格</span>
+                <span style="color:var(--primary);font-weight:700">剩余3次</span>
+              </div>
+            </div>
+            <div class="card">
+              <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+                <div class="info-section-title" style="padding:0;margin:0">🏆 峰会权益</div>
+                <button class="btn btn-outline btn-sm" onclick="showPage('event-home')">查看峰会</button>
+              </div>
+              <div style="font-size:13px;color:var(--gray-3)">升级领航会员可获得峰会免费门票</div>
+            </div>
+            <div class="card">
+              <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+                <div class="info-section-title" style="padding:0;margin:0">📦 资源权益</div>
+                <button class="btn btn-primary btn-sm" onclick="showPage('resource-home')">去采购</button>
+              </div>
+              <div style="display:flex;flex-direction:column;gap:6px;font-size:13px">
+                <div style="display:flex;justify-content:space-between"><span style="color:var(--gray-3)">采购价格</span><span style="color:var(--gold);font-weight:700">菁英会员价</span></div>
+                <div style="display:flex;justify-content:space-between"><span style="color:var(--gray-3)">系统试用</span><span style="color:var(--primary);font-weight:700">1个月（可用）</span></div>
+              </div>
+            </div>
+            <div class="card">
+              <div class="info-section-title" style="padding:0;margin-bottom:10px">🏅 品牌权益</div>
+              <div style="font-size:13px;color:var(--gray-2)">行商·菁英会员授牌资格，可申请标杆评选</div>
+              <button class="btn btn-outline btn-sm" style="margin-top:10px">申请授牌</button>
+            </div>
+          </div>
+          <div style="height:20px"></div>
+        </div>
+
+        <!-- ===== 页面26: 我的积分 ===== -->
+        <div class="page" id="page-my-points">
+          <div class="topbar">
+            <div class="topbar-back" onclick="goBack()">‹</div>
+            <div class="topbar-title">我的积分</div>
+          </div>
+          <div class="points-header">
+            <div style="font-size:12px;color:rgba(255,255,255,0.7);margin-bottom:6px">可用积分</div>
+            <div class="points-num">380</div>
+            <div class="points-label">累计获得：680积分 · 已兑换：300积分</div>
+          </div>
+          <div style="padding:12px">
+            <!-- 积分规则 -->
+            <div class="card">
+              <div class="card-title">📋 积分获取规则</div>
+              <div style="display:flex;flex-direction:column;gap:8px;font-size:13px">
+                <div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--border)">
+                  <span style="color:var(--gray-2)">注册账号</span>
+                  <span style="color:var(--success);font-weight:700">+50分</span>
+                </div>
+                <div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--border)">
+                  <span style="color:var(--gray-2)">完成企业认证</span>
+                  <span style="color:var(--success);font-weight:700">+100分</span>
+                </div>
+                <div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--border)">
+                  <span style="color:var(--gray-2)">报名活动</span>
+                  <span style="color:var(--success);font-weight:700">+30分/次</span>
+                </div>
+                <div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--border)">
+                  <span style="color:var(--gray-2)">推荐好友报名</span>
+                  <span style="color:var(--success);font-weight:700">+100分/次</span>
+                </div>
+                <div style="display:flex;justify-content:space-between;padding:6px 0">
+                  <span style="color:var(--gray-2)">资源采购</span>
+                  <span style="color:var(--success);font-weight:700">消费额×1%</span>
+                </div>
+              </div>
+            </div>
+            <!-- 积分明细 -->
+            <div class="card">
+              <div class="card-title">💰 积分明细</div>
+              <div style="display:flex;flex-direction:column;gap:8px;font-size:13px">
+                <div style="display:flex;justify-content:space-between;align-items:center">
+                  <div><div style="color:var(--dark)">推荐好友报名活动</div><div style="font-size:11px;color:var(--gray-3)">2025-07-10</div></div>
+                  <span style="color:var(--success);font-weight:700">+100</span>
+                </div>
+                <div style="display:flex;justify-content:space-between;align-items:center">
+                  <div><div style="color:var(--dark)">系统采购积分</div><div style="font-size:11px;color:var(--gray-3)">2025-07-05</div></div>
+                  <span style="color:var(--success);font-weight:700">+30</span>
+                </div>
+                <div style="display:flex;justify-content:space-between;align-items:center">
+                  <div><div style="color:var(--dark)">兑换会务费抵扣券</div><div style="font-size:11px;color:var(--gray-3)">2025-06-20</div></div>
+                  <span style="color:var(--primary);font-weight:700">-300</span>
+                </div>
+              </div>
+            </div>
+            <!-- 兑换 -->
+            <div class="card">
+              <div class="card-title">🎁 积分兑换</div>
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+                <div style="border:1.5px solid var(--border);border-radius:10px;padding:12px;text-align:center;cursor:pointer">
+                  <div style="font-size:22px;margin-bottom:6px">🎫</div>
+                  <div style="font-size:12px;color:var(--dark);font-weight:600">会务费抵扣券</div>
+                  <div style="font-size:11px;color:var(--primary);margin-top:4px">300积分</div>
+                </div>
+                <div style="border:1.5px solid var(--border);border-radius:10px;padding:12px;text-align:center;cursor:pointer">
+                  <div style="font-size:22px;margin-bottom:6px">🎁</div>
+                  <div style="font-size:12px;color:var(--dark);font-weight:600">精选礼品</div>
+                  <div style="font-size:11px;color:var(--primary);margin-top:4px">500积分</div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div style="height:20px"></div>
+        </div>
+
+        <!-- ===== 页面27: 我的评价 ===== -->
+        <div class="page" id="page-my-reviews">
+          <div class="topbar">
+            <div class="topbar-back" onclick="goBack()">‹</div>
+            <div class="topbar-title">我的评价</div>
+          </div>
+          <div class="order-tab-bar">
+            <div class="order-tab active">待评价(5)</div>
+            <div class="order-tab">已评价</div>
+          </div>
+          <div style="padding:8px 0">
+            <div class="order-card">
+              <div class="order-card-header">
+                <span class="order-type">活动评价</span>
+                <span class="order-status-text" style="color:var(--warning)">待评价</span>
+              </div>
+              <div class="order-card-body">
+                <div class="order-thumb" style="background:linear-gradient(135deg,#7B1FA2,#1A1A2E)">🏆</div>
+                <div class="order-info">
+                  <div class="order-name">2024行商财税领袖峰会</div>
+                  <div style="font-size:11px;color:var(--gray-3)">2024-08-20 已结束</div>
+                </div>
+              </div>
+              <div class="order-card-footer">
+                <button class="btn btn-primary btn-sm" onclick="alert('评价已提交！感谢您的反馈。')">去评价</button>
+              </div>
+            </div>
+            <div class="order-card">
+              <div class="order-card-header">
+                <span class="order-type">资源评价</span>
+                <span class="order-status-text" style="color:var(--warning)">待评价</span>
+              </div>
+              <div class="order-card-body">
+                <div class="order-thumb">💻</div>
+                <div class="order-info">
+                  <div class="order-name">财税公司一体化经营管理系统</div>
+                  <div style="font-size:11px;color:var(--gray-3)">使用中 · 30天</div>
+                </div>
+              </div>
+              <div class="order-card-footer">
+                <button class="btn btn-primary btn-sm" onclick="alert('评价已提交！感谢您的反馈。')">去评价</button>
+              </div>
+            </div>
+          </div>
+          <div style="height:20px"></div>
+        </div>
+
+        <!-- ===== 页面28: 后台核销 ===== -->
+        <div class="page" id="page-admin-checkin">
+          <div class="admin-header">
+            <div>
+              <div class="title">🔍 活动核销系统</div>
+              <div style="color:rgba(255,255,255,0.6);font-size:11px;margin-top:2px">后台 · 运营人员使用</div>
+            </div>
+            <div class="admin-badge">后台</div>
+          </div>
+          <div style="padding:12px">
+            <div class="card" style="text-align:center;padding:30px 20px">
+              <div style="font-size:48px;margin-bottom:16px">📱</div>
+              <div style="font-size:16px;font-weight:700;color:var(--dark);margin-bottom:8px">扫描电子票二维码</div>
+              <div style="font-size:13px;color:var(--gray-3);margin-bottom:20px">引导参会者打开小程序 → 我的活动 → 查看电子票</div>
+              <button class="btn btn-primary" style="width:160px" onclick="showCheckinResult()">📷 开始扫码</button>
+            </div>
+            <div class="card" id="checkinResult" style="display:none">
+              <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px">
+                <div style="width:50px;height:50px;border-radius:50%;background:var(--primary);display:flex;align-items:center;justify-content:center;font-size:22px">👤</div>
+                <div>
+                  <div style="font-size:15px;font-weight:700;color:var(--dark)">陈总</div>
+                  <div style="font-size:12px;color:var(--gray-3)">鑫财财税有限公司</div>
+                </div>
+                <span class="tag tag-gold" style="margin-left:auto">菁英会员票</span>
+              </div>
+              <div style="display:flex;flex-direction:column;gap:8px;font-size:13px;margin-bottom:16px">
+                <div style="display:flex;justify-content:space-between"><span style="color:var(--gray-3)">活动</span><span>老客户升单训练营 · 深圳站</span></div>
+                <div style="display:flex;justify-content:space-between"><span style="color:var(--gray-3)">票种</span><span style="color:var(--gold);font-weight:600">⭐ 菁英会员票</span></div>
+                <div style="display:flex;justify-content:space-between"><span style="color:var(--gray-3)">支付状态</span><span style="color:var(--success);font-weight:600">✅ 已支付</span></div>
+                <div style="display:flex;justify-content:space-between"><span style="color:var(--gray-3)">核销状态</span><span style="color:var(--warning);font-weight:600">⏳ 待核销</span></div>
+              </div>
+              <button class="btn btn-primary btn-block" onclick="alert('✅ 核销成功！陈总 已签到。')">确认签到</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- ===== 页面29: 后台认证审核 ===== -->
+        <div class="page" id="page-admin-cert">
+          <div class="admin-header">
+            <div>
+              <div class="title">🏢 认证审核</div>
+              <div style="color:rgba(255,255,255,0.6);font-size:11px;margin-top:2px">待审核：12条</div>
+            </div>
+            <div class="admin-badge">后台</div>
+          </div>
+          <div style="padding:8px 12px;background:white;display:flex;gap:8px;border-bottom:1px solid var(--border)">
+            <span class="tag tag-red" style="cursor:pointer">待审核(12)</span>
+            <span class="tag tag-green" style="cursor:pointer">已通过(235)</span>
+            <span class="tag tag-gray" style="cursor:pointer">已驳回(8)</span>
+          </div>
+          <div style="padding:8px 0">
+            <div class="order-card">
+              <div class="order-card-header">
+                <span class="order-type">2025-07-11 提交</span>
+                <span class="order-status-text" style="color:var(--warning)">待审核</span>
+              </div>
+              <div class="order-card-body">
+                <div class="order-thumb" style="background:var(--gray-4)">🏢</div>
+                <div class="order-info">
+                  <div class="order-name">明华财税咨询有限公司</div>
+                  <div style="font-size:11px;color:var(--gray-3)">北京市朝阳区 · 团队15人 · 300户客户</div>
+                  <div style="display:flex;gap:4px;margin-top:4px">
+                    <span class="tag tag-gray" style="font-size:10px">代账</span>
+                    <span class="tag tag-gray" style="font-size:10px">税筹</span>
+                  </div>
+                </div>
+              </div>
+              <div class="order-card-footer">
+                <button class="btn btn-outline btn-sm" style="color:var(--primary)" onclick="alert('已驳回，请补充营业执照原件。')">驳回</button>
+                <button class="btn btn-primary btn-sm" onclick="alert('✅ 认证通过！已发送通知短信。')">通过认证</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ===== 页面30: 后台订单确认 ===== -->
+        <div class="page" id="page-admin-orders">
+          <div class="admin-header">
+            <div>
+              <div class="title">💰 订单确认</div>
+              <div style="color:rgba(255,255,255,0.6);font-size:11px;margin-top:2px">待确认：6笔</div>
+            </div>
+            <div class="admin-badge">后台</div>
+          </div>
+          <div style="padding:8px 12px;background:white;display:flex;gap:8px;border-bottom:1px solid var(--border)">
+            <span class="tag tag-red" style="cursor:pointer">待确认(6)</span>
+            <span class="tag tag-green" style="cursor:pointer">已支付(89)</span>
+            <span class="tag tag-gray" style="cursor:pointer">已完成(320)</span>
+          </div>
+          <div style="padding:8px 0">
+            <div class="order-card">
+              <div class="order-card-header">
+                <span class="order-type">会员开通 · 对公转账</span>
+                <span class="order-status-text" style="color:var(--warning)">待确认</span>
+              </div>
+              <div class="order-card-body">
+                <div class="order-thumb" style="background:linear-gradient(135deg,var(--gold),#B8860B)">👑</div>
+                <div class="order-info">
+                  <div class="order-name">行商·菁英会员 · 鑫财财税有限公司</div>
+                  <div style="font-size:11px;color:var(--gray-3)">XS20250712001 · 2025-07-11 提交</div>
+                  <div class="order-amount">¥4,980</div>
+                </div>
+              </div>
+              <div class="order-card-footer">
+                <button class="btn btn-outline btn-sm" onclick="alert('查看凭证图片')">查看凭证</button>
+                <button class="btn btn-primary btn-sm" onclick="alert('✅ 已确认收款！会员权益已自动开通，通知已发送。')">确认收款</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ===== 页面31: 后台资源需求 ===== -->
+        <div class="page" id="page-admin-resource">
+          <div class="admin-header">
+            <div>
+              <div class="title">📦 资源需求跟进</div>
+              <div style="color:rgba(255,255,255,0.6);font-size:11px;margin-top:2px">新需求：8条</div>
+            </div>
+            <div class="admin-badge">后台</div>
+          </div>
+          <div style="padding:8px 12px;background:white;display:flex;gap:8px;overflow-x:auto;border-bottom:1px solid var(--border);scrollbar-width:none">
+            <span class="tag tag-red" style="cursor:pointer;white-space:nowrap">新需求(8)</span>
+            <span class="tag tag-blue" style="cursor:pointer;white-space:nowrap">跟进中(15)</span>
+            <span class="tag tag-gold" style="cursor:pointer;white-space:nowrap">已报价(6)</span>
+            <span class="tag tag-green" style="cursor:pointer;white-space:nowrap">已成交(89)</span>
+            <span class="tag tag-gray" style="cursor:pointer;white-space:nowrap">已关闭(12)</span>
+          </div>
+          <div style="padding:8px 0">
+            <div class="order-card">
+              <div class="order-card-header">
+                <span class="order-type">会计工厂 · 批量外包</span>
+                <span class="order-status-text" style="color:var(--primary)">新需求</span>
+              </div>
+              <div class="order-card-body">
+                <div class="order-thumb" style="background:linear-gradient(135deg,#1976D2,#42A5F5)">📊</div>
+                <div class="order-info">
+                  <div class="order-name">鑫财财税有限公司 · 陈总</div>
+                  <div style="font-size:11px;color:var(--gray-3)">200户代账外包 · 深圳市 · 自用</div>
+                </div>
+              </div>
+              <div style="padding:8px 14px;border-top:1px solid var(--border)">
+                <div class="form-group" style="margin-bottom:8px">
+                  <label class="form-label" style="font-size:11px">分配客户经理</label>
+                  <select class="form-select" style="font-size:12px;padding:6px 10px"><option>张晓慧</option><option>李明</option><option>王芳</option></select>
+                </div>
+                <div style="display:flex;gap:8px">
+                  <button class="btn btn-outline btn-sm" style="flex:1" onclick="alert('已添加跟进记录')">添加记录</button>
+                  <button class="btn btn-primary btn-sm" style="flex:1" onclick="alert('已分配！张晓慧将在2小时内联系客户。')">确认分配</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ===== 页面32: 后台商机撮合 ===== -->
+        <div class="page" id="page-admin-opp">
+          <div class="admin-header">
+            <div>
+              <div class="title">💼 商机撮合管理</div>
+              <div style="color:rgba(255,255,255,0.6);font-size:11px;margin-top:2px">待审核：5条</div>
+            </div>
+            <div class="admin-badge">后台</div>
+          </div>
+          <div style="padding:8px 12px;background:white;display:flex;gap:8px;overflow-x:auto;border-bottom:1px solid var(--border);scrollbar-width:none">
+            <span class="tag tag-red" style="cursor:pointer;white-space:nowrap">待审核(5)</span>
+            <span class="tag tag-blue" style="cursor:pointer;white-space:nowrap">展示中(42)</span>
+            <span class="tag tag-gold" style="cursor:pointer;white-space:nowrap">撮合中(18)</span>
+            <span class="tag tag-green" style="cursor:pointer;white-space:nowrap">已完成(156)</span>
+          </div>
+          <div style="padding:8px 0">
+            <div class="order-card">
+              <div class="order-card-header">
+                <span class="order-type">代账 · 深圳 · 高端撮合</span>
+                <span class="order-status-text" style="color:var(--primary)">待审核</span>
+              </div>
+              <div class="order-card-body">
+                <div class="order-thumb" style="background:linear-gradient(135deg,#1A1A2E,#C8232B)">💼</div>
+                <div class="order-info">
+                  <div class="order-name">深圳宝安区工商注册+代账，约50家新设企业</div>
+                  <div style="font-size:11px;color:var(--gray-3)">预算：¥15万+ · 3人申请</div>
+                </div>
+              </div>
+              <div style="padding:8px 14px;border-top:1px solid var(--border)">
+                <div style="font-size:12px;color:var(--gray-3);margin-bottom:8px">申请接单方：鑫财财税、汇达财务、创业财税</div>
+                <div style="display:flex;gap:8px">
+                  <button class="btn btn-outline btn-sm" style="flex:1;color:var(--primary)" onclick="alert('商机已驳回')">驳回</button>
+                  <button class="btn btn-outline btn-sm" style="flex:1" onclick="alert('已转高端撮合通道')">转高端撮合</button>
+                  <button class="btn btn-primary btn-sm" style="flex:1" onclick="alert('✅ 审核通过，商机已上线展示！')">通过审核</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+      <!-- 底部导航 -->
+      <div class="bottom-nav" id="bottomNav">
+        <div class="nav-item active" id="nav-home" onclick="showPage('home');setActiveNav('home')">
+          <div class="nav-icon">🏠</div>
+          <div class="nav-label" style="color:var(--primary)">首页</div>
+        </div>
+        <div class="nav-item" id="nav-resource" onclick="showPage('resource-home');setActiveNav('resource')">
+          <div class="nav-icon">📦</div>
+          <div class="nav-label">资源库</div>
+        </div>
+        <div class="nav-item" id="nav-opp" onclick="showPage('opp-home');setActiveNav('opp')">
+          <div class="nav-icon">💼</div>
+          <div class="nav-label">商机</div>
+        </div>
+        <div class="nav-item" id="nav-event" onclick="showPage('event-home');setActiveNav('event')">
+          <div class="nav-icon">🎯</div>
+          <div class="nav-label">活动</div>
+        </div>
+        <div class="nav-item" id="nav-my" onclick="showPage('my-home');setActiveNav('my')">
+          <div class="nav-icon">👤</div>
+          <div class="nav-label">我的</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  let currentPage = 'home';
+  let pageHistory = [];
+  const adminPages = ['admin-checkin', 'admin-cert', 'admin-orders', 'admin-resource', 'admin-opp'];
+
+  function showPage(pageId) {
+    // 隐藏当前页面
+    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+    // 显示目标页面
+    const target = document.getElementById('page-' + pageId);
+    if (target) {
+      target.classList.add('active');
+      document.getElementById('pageContent').scrollTop = 0;
+    }
+    // 历史记录
+    if (pageId !== currentPage) {
+      pageHistory.push(currentPage);
+    }
+    currentPage = pageId;
+    // 更新底部导航
+    updateBottomNav(pageId);
+    // 更新侧边导航
+    document.querySelectorAll('.page-link').forEach(l => l.classList.remove('active'));
+    const activeLink = document.querySelector('.page-link[onclick*="' + pageId + '"]');
+    if (activeLink) activeLink.classList.add('active');
+  }
+
+  function goBack() {
+    if (pageHistory.length > 0) {
+      const prev = pageHistory.pop();
+      showPage(prev);
+      pageHistory.pop(); // 移除刚才showPage添加的当前页
+    }
+  }
+
+  function setActiveNav(nav) {
+    document.querySelectorAll('.nav-item').forEach(n => {
+      n.classList.remove('active');
+      n.querySelector('.nav-label').style.color = '';
+    });
+    const target = document.getElementById('nav-' + nav);
+    if (target) {
+      target.classList.add('active');
+      target.querySelector('.nav-label').style.color = 'var(--primary)';
+    }
+  }
+
+  function updateBottomNav(pageId) {
+    const bottomNav = document.getElementById('bottomNav');
+    // 后台页面隐藏底部导航
+    if (adminPages.includes(pageId)) {
+      bottomNav.style.display = 'none';
+      return;
+    }
+    bottomNav.style.display = 'flex';
+    // 根据页面确定激活的导航
+    if (pageId === 'home') setActiveNav('home');
+    else if (pageId.startsWith('resource')) setActiveNav('resource');
+    else if (pageId.startsWith('opp') || pageId === 'opp-home') setActiveNav('opp');
+    else if (pageId.startsWith('event')) setActiveNav('event');
+    else if (pageId.startsWith('my') || pageId === 'member-benefit' || pageId === 'member-confirm' || pageId === 'payment-transfer') setActiveNav('my');
+  }
+
+  function showCheckinResult() {
+    document.getElementById('checkinResult').style.display = 'block';
+  }
+
+  // 初始化
+  showPage('home');
+</script>
+</body>
+</html>
