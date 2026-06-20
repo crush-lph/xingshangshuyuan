@@ -3,7 +3,7 @@ import { PageShell } from '@/components/PageShell'
 
 export default function AdminCertPage() {
   return (
-    <PageShell title='认证审核' subtitle='审核企业资料、服务能力和认证标签。'>
+    <PageShell title="认证审核" subtitle="审核企业资料、服务能力和认证标签。">
       <ItemList
         items={[
           {

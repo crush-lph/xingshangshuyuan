@@ -1,0 +1,8 @@
+dist
+node_modules
+.swc
+.temp
+.pnpm-store
+pnpm-lock.yaml
+docs/reference
+design-system

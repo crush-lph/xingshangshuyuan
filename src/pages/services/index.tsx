@@ -20,19 +20,19 @@ const categories: Category[] = [
 
 export default function ServicesPage() {
   return (
-    <PageShell title='服务商城' subtitle='工具、培训、咨询和资质服务统一入口。'>
-      <View className='grid gap-3'>
+    <PageShell title="服务商城" subtitle="工具、培训、咨询和资质服务统一入口。">
+      <View className="grid gap-3">
         <SectionCard>
-          <View className='grid grid-cols-2 gap-3'>
+          <View className="grid grid-cols-2 gap-3">
             {categories.map((category) => (
               <View
                 key={category.name}
-                className='rounded-lg bg-brand-soft px-4 py-4'
+                className="rounded-lg bg-brand-soft px-4 py-4"
                 onClick={() => router.to(category.path)}
               >
-                <View className='mb-3 h-1 w-8 rounded-full bg-gold' />
-                <Text className='block text-base font-bold text-brand'>{category.name}</Text>
-                <Text className='mt-1 block text-xs leading-5 text-muted'>{category.desc}</Text>
+                <View className="mb-3 h-1 w-8 rounded-full bg-gold" />
+                <Text className="block text-base font-bold text-brand">{category.name}</Text>
+                <Text className="mt-1 block text-xs leading-5 text-muted">{category.desc}</Text>
               </View>
             ))}
           </View>
@@ -75,15 +75,15 @@ export default function ServicesPage() {
           ]}
         />
 
-        <View className='rounded-lg bg-brand-deep p-4 shadow-medium'>
-          <View className='flex items-center justify-between gap-3'>
-            <View className='flex-1'>
-              <Text className='block text-base font-bold text-white'>不知道选哪个？</Text>
-              <Text className='mt-2 block text-sm leading-5 text-white/65'>
+        <View className="rounded-lg bg-brand-deep p-4 shadow-medium">
+          <View className="flex items-center justify-between gap-3">
+            <View className="flex-1">
+              <Text className="block text-base font-bold text-white">不知道选哪个？</Text>
+              <Text className="mt-2 block text-sm leading-5 text-white/65">
                 提交需求，客户经理帮你匹配工具、供应商或课程方案。
               </Text>
             </View>
-            <Button type='primary' size='small' onClick={() => router.to(routes.resourceSubmit)}>
+            <Button type="primary" size="small" onClick={() => router.to(routes.resourceSubmit)}>
               提需求
             </Button>
           </View>

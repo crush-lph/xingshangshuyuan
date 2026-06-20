@@ -5,12 +5,12 @@ import { routes } from '@/shared/router'
 
 export default function OpportunityHomePage() {
   return (
-    <PageShell title='商机' subtitle='财税公司甩单、接单、跨区域协作与高端项目撮合。'>
-      <View className='grid gap-3'>
-        <View className='rounded-lg bg-brand-deep p-4 shadow-medium'>
-          <Text className='block text-xs font-semibold text-gold-light'>商机撮合中心</Text>
-          <Text className='mt-2 block text-xl font-bold text-white'>甩单、接单、跨区域协作</Text>
-          <Text className='mt-2 block text-sm leading-5 text-white/65'>
+    <PageShell title="商机" subtitle="财税公司甩单、接单、跨区域协作与高端项目撮合。">
+      <View className="grid gap-3">
+        <View className="rounded-lg bg-brand-deep p-4 shadow-medium">
+          <Text className="block text-xs font-semibold text-gold-light">商机撮合中心</Text>
+          <Text className="mt-2 block text-xl font-bold text-white">甩单、接单、跨区域协作</Text>
+          <Text className="mt-2 block text-sm leading-5 text-white/65">
             发布方信息默认脱敏，申请通过后开放联系方式。
           </Text>
         </View>
@@ -30,8 +30,8 @@ export default function OpportunityHomePage() {
           ]}
         />
 
-        <SectionCard title='商机类型'>
-          <View className='flex flex-wrap gap-2'>
+        <SectionCard title="商机类型">
+          <View className="flex flex-wrap gap-2">
             {['全部', '工商注册', '代理记账', '税筹咨询', '资质办理', '跨区域协作'].map((item, index) => (
               <View key={item} className={`rounded-full px-3 py-2 ${index === 0 ? 'bg-brand' : 'bg-brand-soft'}`}>
                 <Text className={`text-xs font-semibold ${index === 0 ? 'text-white' : 'text-brand'}`}>{item}</Text>

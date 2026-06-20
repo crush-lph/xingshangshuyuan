@@ -4,10 +4,10 @@ import { routes } from '@/shared/router'
 
 export default function OpportunityPublishPage() {
   return (
-    <PageShell title='发布商机' subtitle='提交客户需求后，平台审核并协助撮合服务商。'>
+    <PageShell title="发布商机" subtitle="提交客户需求后，平台审核并协助撮合服务商。">
       <FormPreview
-        title='商机信息'
-        desc='当前为发布表单预览，后续接入真实表单和资料上传。'
+        title="商机信息"
+        desc="当前为发布表单预览，后续接入真实表单和资料上传。"
         fields={[
           { label: '商机类型', value: '工商注册 + 代账' },
           { label: '服务区域', value: '深圳宝安' },

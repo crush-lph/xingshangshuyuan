@@ -5,11 +5,11 @@ import { routes } from '@/shared/router'
 
 export default function ResourcePurchasePage() {
   return (
-    <PageShell title='采购确认' subtitle='确认资源、权益和支付方式后生成订单。'>
-      <View className='grid gap-3'>
-        <SectionCard title='订单资源'>
-          <Text className='block text-base font-bold text-ink'>AI 智能发票管理</Text>
-          <Text className='mt-2 block text-sm text-muted'>在线开通 · 平台认证供应商</Text>
+    <PageShell title="采购确认" subtitle="确认资源、权益和支付方式后生成订单。">
+      <View className="grid gap-3">
+        <SectionCard title="订单资源">
+          <Text className="block text-base font-bold text-ink">AI 智能发票管理</Text>
+          <Text className="mt-2 block text-sm text-muted">在线开通 · 平台认证供应商</Text>
         </SectionCard>
         <FieldList
           fields={[

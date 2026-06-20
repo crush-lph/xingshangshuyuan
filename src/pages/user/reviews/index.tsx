@@ -3,7 +3,7 @@ import { PageShell } from '@/components/PageShell'
 
 export default function UserReviewsPage() {
   return (
-    <PageShell title='我的评价' subtitle='对已完成的资源、活动和商机服务进行评价。'>
+    <PageShell title="我的评价" subtitle="对已完成的资源、活动和商机服务进行评价。">
       <ItemList
         items={[
           {

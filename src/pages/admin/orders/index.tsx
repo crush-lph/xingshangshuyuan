@@ -3,7 +3,7 @@ import { PageShell } from '@/components/PageShell'
 
 export default function AdminOrdersPage() {
   return (
-    <PageShell title='订单确认' subtitle='处理对公转账、会员开通和资源采购订单。'>
+    <PageShell title="订单确认" subtitle="处理对公转账、会员开通和资源采购订单。">
       <ItemList
         items={[
           {

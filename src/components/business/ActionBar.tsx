@@ -22,15 +22,25 @@ function getButtonClassName(variant: ActionItem['variant']) {
 
 export function ActionBar({ actions }: ActionBarProps) {
   return (
-    <View className='flex gap-2'>
+    <View className="flex gap-2">
       {actions.map((action) => (
         <Button
           key={action.label}
           block
-          size='small'
+          size="small"
           className={getButtonClassName(action.variant)}
+          disabled={action.disabled}
           {...getButtonProps(action.variant)}
           onClick={() => {
+            if (action.disabled) {
+              return
+            }
+
+            if (action.onClick) {
+              void action.onClick()
+              return
+            }
+
             if (action.path) {
               router.to(action.path)
             }

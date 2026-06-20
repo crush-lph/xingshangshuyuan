@@ -3,7 +3,7 @@ import { PageShell } from '@/components/PageShell'
 
 export default function AdminResourcePage() {
   return (
-    <PageShell title='资源需求' subtitle='跟进非标需求、供应商报价和交付状态。'>
+    <PageShell title="资源需求" subtitle="跟进非标需求、供应商报价和交付状态。">
       <ItemList
         items={[
           {

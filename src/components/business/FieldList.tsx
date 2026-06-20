@@ -7,7 +7,7 @@ interface FieldListProps {
 
 export function FieldList({ fields }: FieldListProps) {
   return (
-    <View className='overflow-hidden rounded-lg bg-white shadow-soft'>
+    <View className="overflow-hidden rounded-lg bg-white shadow-soft">
       {fields.map((field, index) => (
         <View
           key={field.label}
@@ -15,8 +15,8 @@ export function FieldList({ fields }: FieldListProps) {
             index === fields.length - 1 ? '' : 'border-b border-line'
           }`}
         >
-          <Text className='text-sm text-muted'>{field.label}</Text>
-          <Text className='text-right text-sm font-semibold text-ink'>{field.value}</Text>
+          <Text className="text-sm text-muted">{field.label}</Text>
+          <Text className="text-right text-sm font-semibold text-ink">{field.value}</Text>
         </View>
       ))}
     </View>

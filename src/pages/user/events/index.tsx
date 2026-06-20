@@ -4,7 +4,7 @@ import { routes } from '@/shared/router'
 
 export default function UserEventsPage() {
   return (
-    <PageShell title='我的活动' subtitle='管理报名记录、电子票和活动评价。'>
+    <PageShell title="我的活动" subtitle="管理报名记录、电子票和活动评价。">
       <ItemList
         items={[
           {

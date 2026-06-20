@@ -3,7 +3,7 @@ import { PageShell } from '@/components/PageShell'
 
 export default function AdminOpportunityPage() {
   return (
-    <PageShell title='商机撮合' subtitle='审核商机、匹配服务商并跟踪撮合结果。'>
+    <PageShell title="商机撮合" subtitle="审核商机、匹配服务商并跟踪撮合结果。">
       <ItemList
         items={[
           {

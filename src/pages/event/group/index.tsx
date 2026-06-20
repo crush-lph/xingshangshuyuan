@@ -5,11 +5,11 @@ import { routes } from '@/shared/router'
 
 export default function EventGroupPage() {
   return (
-    <PageShell title='拼团参与' subtitle='邀请同行一起报名，成团后享受优惠价。'>
-      <View className='grid gap-3'>
-        <SectionCard title='当前拼团'>
-          <Text className='block text-lg font-bold text-gold'>3人成团 · 还差1人</Text>
-          <Text className='mt-2 block text-sm text-muted'>成团价 ¥398，未成团自动按原路径退款。</Text>
+    <PageShell title="拼团参与" subtitle="邀请同行一起报名，成团后享受优惠价。">
+      <View className="grid gap-3">
+        <SectionCard title="当前拼团">
+          <Text className="block text-lg font-bold text-gold">3人成团 · 还差1人</Text>
+          <Text className="mt-2 block text-sm text-muted">成团价 ¥398，未成团自动按原路径退款。</Text>
         </SectionCard>
         <FieldList
           fields={[

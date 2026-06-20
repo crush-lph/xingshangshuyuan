@@ -4,11 +4,13 @@ import { PageShell } from '@/components/PageShell'
 
 export default function UserCertPage() {
   return (
-    <PageShell title='企业认证' subtitle='认证通过后可申请商机、发布需求并享受平台合作权益。'>
-      <View className='grid gap-3'>
-        <SectionCard title='认证状态'>
-          <Text className='block text-lg font-bold text-[#38A169]'>认证已通过</Text>
-          <Text className='mt-2 block text-sm leading-6 text-muted'>企业信息已完成审核，可正常使用会员与商机能力。</Text>
+    <PageShell title="企业认证" subtitle="认证通过后可申请商机、发布需求并享受平台合作权益。">
+      <View className="grid gap-3">
+        <SectionCard title="认证状态">
+          <Text className="block text-lg font-bold text-[#38A169]">认证已通过</Text>
+          <Text className="mt-2 block text-sm leading-6 text-muted">
+            企业信息已完成审核，可正常使用会员与商机能力。
+          </Text>
         </SectionCard>
         <FieldList
           fields={[

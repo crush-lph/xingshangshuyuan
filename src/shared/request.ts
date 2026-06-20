@@ -2,16 +2,7 @@ import Taro from '@tarojs/taro'
 
 export type RequestData = string | TaroGeneral.IAnyObject | ArrayBuffer
 
-export type HttpMethod =
-  | 'OPTIONS'
-  | 'GET'
-  | 'HEAD'
-  | 'POST'
-  | 'PUT'
-  | 'DELETE'
-  | 'TRACE'
-  | 'CONNECT'
-  | 'PATCH'
+export type HttpMethod = 'OPTIONS' | 'GET' | 'HEAD' | 'POST' | 'PUT' | 'DELETE' | 'TRACE' | 'CONNECT' | 'PATCH'
 
 export type RequestHeader = TaroGeneral.IAnyObject
 
@@ -21,9 +12,7 @@ export interface RequestConfig {
   timeout?: number
 }
 
-export interface RequestOptions<
-  TData extends RequestData = TaroGeneral.IAnyObject
-> {
+export interface RequestOptions<TData extends RequestData = TaroGeneral.IAnyObject> {
   url: string
   method?: HttpMethod
   data?: TData
@@ -34,13 +23,15 @@ export interface RequestOptions<
   responseType?: 'text' | 'arraybuffer'
 }
 
-export type ApiRequestOptions<
-  TData extends RequestData = TaroGeneral.IAnyObject
-> = Omit<RequestOptions<TData>, 'url' | 'method'>
+export type ApiRequestOptions<TData extends RequestData = TaroGeneral.IAnyObject> = Omit<
+  RequestOptions<TData>,
+  'url' | 'method'
+>
 
-export type ApiBodyRequestOptions<
-  TData extends RequestData = TaroGeneral.IAnyObject
-> = Omit<ApiRequestOptions<TData>, 'data'>
+export type ApiBodyRequestOptions<TData extends RequestData = TaroGeneral.IAnyObject> = Omit<
+  ApiRequestOptions<TData>,
+  'data'
+>
 
 export interface RequestError<TData = unknown> extends Error {
   statusCode?: number
@@ -88,20 +79,10 @@ function createRequestError<TData>(statusCode: number, data: TData): RequestErro
   })
 }
 
-export async function request<
-  TResponse = unknown,
-  TData extends RequestData = TaroGeneral.IAnyObject
->(options: RequestOptions<TData>): Promise<TResponse> {
-  const {
-    baseURL,
-    data,
-    dataType,
-    header,
-    method = 'GET',
-    responseType,
-    timeout,
-    url
-  } = options
+export async function request<TResponse = unknown, TData extends RequestData = TaroGeneral.IAnyObject>(
+  options: RequestOptions<TData>
+): Promise<TResponse> {
+  const { baseURL, data, dataType, header, method = 'GET', responseType, timeout, url } = options
 
   const response = await Taro.request<TResponse, TData>({
     data,
@@ -123,10 +104,11 @@ export async function request<
   throw createRequestError(response.statusCode, response.data)
 }
 
-function requestWithMethod<
-  TResponse,
-  TData extends RequestData = TaroGeneral.IAnyObject
->(method: HttpMethod, url: string, options?: ApiRequestOptions<TData>) {
+function requestWithMethod<TResponse, TData extends RequestData = TaroGeneral.IAnyObject>(
+  method: HttpMethod,
+  url: string,
+  options?: ApiRequestOptions<TData>
+) {
   return request<TResponse, TData>({
     ...options,
     method,
@@ -134,10 +116,7 @@ function requestWithMethod<
   })
 }
 
-function requestWithBody<
-  TResponse,
-  TData extends RequestData = TaroGeneral.IAnyObject
->(
+function requestWithBody<TResponse, TData extends RequestData = TaroGeneral.IAnyObject>(
   method: HttpMethod,
   url: string,
   data?: TData,

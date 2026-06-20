@@ -4,10 +4,10 @@ import { routes } from '@/shared/router'
 
 export default function OpportunityApplyPage() {
   return (
-    <PageShell title='申请接单' subtitle='提交服务能力说明，平台审核后推送给发布方。'>
+    <PageShell title="申请接单" subtitle="提交服务能力说明，平台审核后推送给发布方。">
       <FormPreview
-        title='申请信息'
-        desc='系统会带入企业认证信息，减少重复填写。'
+        title="申请信息"
+        desc="系统会带入企业认证信息，减少重复填写。"
         fields={[
           { label: '申请企业', value: '鑫财财税有限公司' },
           { label: '认证状态', value: '已认证' },

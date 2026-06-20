@@ -8,7 +8,7 @@ interface MetricGridProps {
 
 export function MetricGrid({ items }: MetricGridProps) {
   return (
-    <View className='grid grid-cols-4 overflow-hidden rounded-lg bg-white shadow-soft'>
+    <View className="grid grid-cols-4 overflow-hidden rounded-lg bg-white shadow-soft">
       {items.map((item, index) => (
         <View
           key={item.label}
@@ -16,7 +16,7 @@ export function MetricGrid({ items }: MetricGridProps) {
           onClick={() => router.to(item.path)}
         >
           <Text className={`block text-lg font-bold ${item.color}`}>{item.value}</Text>
-          <Text className='mt-1 block text-xs text-muted'>{item.label}</Text>
+          <Text className="mt-1 block text-xs text-muted">{item.label}</Text>
         </View>
       ))}
     </View>

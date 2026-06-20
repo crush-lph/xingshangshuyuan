@@ -7,15 +7,15 @@ const tracks = ['经营增长', '专业交付', '团队管理', '商机撮合', 
 
 export default function ShuyuanPage() {
   return (
-    <PageShell title='行商书苑' subtitle='财税机构课程、活动和服务标准沉淀。'>
-      <View className='grid gap-3'>
-        <View className='rounded-lg bg-brand-deep p-4 shadow-medium'>
-          <Text className='block text-xs font-semibold text-gold-light'>本周推荐</Text>
-          <Text className='mt-2 block text-xl font-bold text-white'>老客户升单训练营 · 深圳站</Text>
-          <Text className='mt-2 block text-sm leading-5 text-white/65'>
+    <PageShell title="行商书苑" subtitle="财税机构课程、活动和服务标准沉淀。">
+      <View className="grid gap-3">
+        <View className="rounded-lg bg-brand-deep p-4 shadow-medium">
+          <Text className="block text-xs font-semibold text-gold-light">本周推荐</Text>
+          <Text className="mt-2 block text-xl font-bold text-white">老客户升单训练营 · 深圳站</Text>
+          <Text className="mt-2 block text-sm leading-5 text-white/65">
             课程、案例拆解、现场演练和同城资源对接一体化。
           </Text>
-          <View className='mt-3'>
+          <View className="mt-3">
             <ActionBar actions={[{ label: '立即报名', variant: 'gold', path: routes.eventDetail }]} />
           </View>
         </View>
@@ -28,8 +28,8 @@ export default function ShuyuanPage() {
           ]}
         />
 
-        <SectionCard title='学习路径'>
-          <View className='grid grid-cols-3 gap-2'>
+        <SectionCard title="学习路径">
+          <View className="grid grid-cols-3 gap-2">
             {tracks.map((item, index) => (
               <View
                 key={item}
@@ -71,14 +71,16 @@ export default function ShuyuanPage() {
           ]}
         />
 
-        <SectionCard title='服务标准'>
-          <View className='grid gap-2'>
+        <SectionCard title="服务标准">
+          <View className="grid gap-2">
             {[
               '认证服务商需要完成企业认证、案例审核和服务承诺。',
               '课程资料与资源模板优先向会员开放。',
               '平台沉淀活动签到、报名、评价与权益核销记录。'
             ].map((item) => (
-              <Text key={item} className='block text-sm leading-6 text-muted'>{item}</Text>
+              <Text key={item} className="block text-sm leading-6 text-muted">
+                {item}
+              </Text>
             ))}
           </View>
         </SectionCard>

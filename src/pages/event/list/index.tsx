@@ -5,12 +5,15 @@ import { routes } from '@/shared/router'
 
 export default function EventListPage() {
   return (
-    <PageShell title='活动列表' subtitle='按城市、主题和会员权益筛选活动。'>
-      <View className='grid gap-3'>
+    <PageShell title="活动列表" subtitle="按城市、主题和会员权益筛选活动。">
+      <View className="grid gap-3">
         <SectionCard>
-          <View className='flex flex-wrap gap-2'>
+          <View className="flex flex-wrap gap-2">
             {['全部', '深圳', '杭州', '线上', '会员优惠'].map((item, index) => (
-              <View key={item} className={`rounded-full px-3 py-2 ${index === 0 ? 'bg-brand' : 'bg-white border border-line'}`}>
+              <View
+                key={item}
+                className={`rounded-full px-3 py-2 ${index === 0 ? 'bg-brand' : 'bg-white border border-line'}`}
+              >
                 <Text className={`text-xs font-semibold ${index === 0 ? 'text-white' : 'text-muted'}`}>{item}</Text>
               </View>
             ))}

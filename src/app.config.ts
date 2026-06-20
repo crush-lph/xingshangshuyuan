@@ -1,10 +1,5 @@
 export default defineAppConfig({
-  pages: [
-    'pages/home/index',
-    'pages/services/index',
-    'pages/shuyuan/index',
-    'pages/profile/index'
-  ],
+  pages: ['pages/home/index', 'pages/services/index', 'pages/shuyuan/index', 'pages/profile/index'],
   subPackages: [
     {
       root: 'pages/resource',
@@ -19,52 +14,23 @@ export default defineAppConfig({
     },
     {
       root: 'pages/event',
-      pages: [
-        'home/index',
-        'list/index',
-        'detail/index',
-        'signup/index',
-        'group/index',
-        'ticket/index'
-      ]
+      pages: ['home/index', 'list/index', 'detail/index', 'signup/index', 'group/index', 'ticket/index']
     },
     {
       root: 'pages/member',
-      pages: [
-        'benefit/index',
-        'confirm/index',
-        'payment-transfer/index'
-      ]
+      pages: ['benefit/index', 'confirm/index', 'payment-transfer/index']
     },
     {
       root: 'pages/opportunity',
-      pages: [
-        'home/index',
-        'detail/index',
-        'publish/index',
-        'apply/index'
-      ]
+      pages: ['home/index', 'detail/index', 'publish/index', 'apply/index']
     },
     {
       root: 'pages/user',
-      pages: [
-        'cert/index',
-        'orders/index',
-        'events/index',
-        'benefits/index',
-        'points/index',
-        'reviews/index'
-      ]
+      pages: ['cert/index', 'orders/index', 'events/index', 'benefits/index', 'points/index', 'reviews/index']
     },
     {
       root: 'pages/admin',
-      pages: [
-        'checkin/index',
-        'cert/index',
-        'orders/index',
-        'resource/index',
-        'opportunity/index'
-      ]
+      pages: ['checkin/index', 'cert/index', 'orders/index', 'resource/index', 'opportunity/index']
     }
   ],
   window: {

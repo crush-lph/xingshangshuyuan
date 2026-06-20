@@ -5,10 +5,10 @@ import { routes } from '@/shared/router'
 
 export default function ResourceNonstandardDetailPage() {
   return (
-    <PageShell title='跨区域工商注册需求' subtitle='非标资源由客户经理协同供应商报价和交付。'>
-      <View className='grid gap-3'>
-        <SectionCard title='需求说明'>
-          <Text className='text-sm leading-6 text-muted'>
+    <PageShell title="跨区域工商注册需求" subtitle="非标资源由客户经理协同供应商报价和交付。">
+      <View className="grid gap-3">
+        <SectionCard title="需求说明">
+          <Text className="text-sm leading-6 text-muted">
             适用于跨城市工商注册、批量变更、疑难资质和项目型服务。提交需求后平台进行供应商匹配。
           </Text>
         </SectionCard>

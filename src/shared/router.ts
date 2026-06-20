@@ -37,12 +37,7 @@ export const routes = {
   adminOpportunity: '/pages/admin/opportunity/index'
 } as const
 
-export const tabRoutePaths = [
-  routes.home,
-  routes.services,
-  routes.shuyuan,
-  routes.profile
-] as const
+export const tabRoutePaths = [routes.home, routes.services, routes.shuyuan, routes.profile] as const
 
 export type KnownRoutePath = (typeof routes)[keyof typeof routes]
 export type TabRoutePath = (typeof tabRoutePaths)[number]

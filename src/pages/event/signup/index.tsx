@@ -4,10 +4,10 @@ import { routes } from '@/shared/router'
 
 export default function EventSignupPage() {
   return (
-    <PageShell title='活动报名' subtitle='确认参会人和票务信息。'>
+    <PageShell title="活动报名" subtitle="确认参会人和票务信息。">
       <FormPreview
-        title='报名信息'
-        desc='提交后生成活动订单和电子票。'
+        title="报名信息"
+        desc="提交后生成活动订单和电子票。"
         fields={[
           { label: '参会人', value: '陈总' },
           { label: '手机号', value: '13800008888' },

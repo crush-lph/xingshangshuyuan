@@ -8,7 +8,7 @@ interface ItemListProps {
 
 export function ItemList({ items }: ItemListProps) {
   return (
-    <View className='overflow-hidden rounded-lg bg-white shadow-soft'>
+    <View className="overflow-hidden rounded-lg bg-white shadow-soft">
       {items.map((item, index) => (
         <View
           key={`${item.title}-${index}`}
@@ -19,22 +19,20 @@ export function ItemList({ items }: ItemListProps) {
             }
           }}
         >
-          <View className='flex items-start justify-between gap-3'>
-            <View className='flex-1'>
-              <View className='flex items-center gap-2'>
-                <Text className='text-base font-semibold text-ink'>{item.title}</Text>
+          <View className="flex items-start justify-between gap-3">
+            <View className="flex-1">
+              <View className="flex items-center gap-2">
+                <Text className="text-base font-semibold text-ink">{item.title}</Text>
                 {item.tag ? (
-                  <Text className='rounded bg-gold-soft px-2 py-1 text-xs font-medium text-gold'>
-                    {item.tag}
-                  </Text>
+                  <Text className="rounded bg-gold-soft px-2 py-1 text-xs font-medium text-gold">{item.tag}</Text>
                 ) : null}
               </View>
-              {item.desc ? <Text className='mt-2 block text-sm leading-5 text-muted'>{item.desc}</Text> : null}
-              {item.meta ? <Text className='mt-2 block text-xs text-muted'>{item.meta}</Text> : null}
+              {item.desc ? <Text className="mt-2 block text-sm leading-5 text-muted">{item.desc}</Text> : null}
+              {item.meta ? <Text className="mt-2 block text-xs text-muted">{item.meta}</Text> : null}
             </View>
-            <View className='items-end'>
-              {item.price ? <Text className='block text-base font-bold text-gold'>{item.price}</Text> : null}
-              {item.action ? <Text className='mt-2 block text-xs font-medium text-tech'>{item.action}</Text> : null}
+            <View className="items-end">
+              {item.price ? <Text className="block text-base font-bold text-gold">{item.price}</Text> : null}
+              {item.action ? <Text className="mt-2 block text-xs font-medium text-tech">{item.action}</Text> : null}
             </View>
           </View>
         </View>

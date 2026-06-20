@@ -5,10 +5,10 @@ import { routes } from '@/shared/router'
 
 export default function EventHomePage() {
   return (
-    <PageShell title='活动' subtitle='线下峰会、训练营和城市沙龙，服务财税机构增长。'>
-      <View className='grid gap-3'>
-        <View className='rounded-lg bg-gold-soft px-4 py-3'>
-          <Text className='text-sm font-semibold text-gold'>深圳数字化转型峰会开放报名，会员票限量 80 张</Text>
+    <PageShell title="活动" subtitle="线下峰会、训练营和城市沙龙，服务财税机构增长。">
+      <View className="grid gap-3">
+        <View className="rounded-lg bg-gold-soft px-4 py-3">
+          <Text className="text-sm font-semibold text-gold">深圳数字化转型峰会开放报名，会员票限量 80 张</Text>
         </View>
 
         <StatGrid
@@ -19,10 +19,13 @@ export default function EventHomePage() {
           ]}
         />
 
-        <SectionCard title='活动分类'>
-          <View className='grid grid-cols-3 gap-2'>
+        <SectionCard title="活动分类">
+          <View className="grid grid-cols-3 gap-2">
             {['经营管理', '营销增长', '专业交付', '峰会沙龙', '知行塾', '会员闭门'].map((item, index) => (
-              <View key={item} className={`rounded-lg px-3 py-3 text-center ${index === 0 ? 'bg-brand' : 'bg-brand-soft'}`}>
+              <View
+                key={item}
+                className={`rounded-lg px-3 py-3 text-center ${index === 0 ? 'bg-brand' : 'bg-brand-soft'}`}
+              >
                 <Text className={`text-sm font-semibold ${index === 0 ? 'text-white' : 'text-brand'}`}>{item}</Text>
               </View>
             ))}

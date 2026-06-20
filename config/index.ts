@@ -31,9 +31,11 @@ export default defineConfig<'webpack5'>(async () => {
       options: {}
     },
     framework: 'react',
-    compiler: 'webpack5',
-    sass: {
-      data: '@import "@nutui/nutui-react-taro/dist/styles/variables.scss";'
+    compiler: {
+      type: 'webpack5',
+      prebundle: {
+        enable: false
+      }
     },
     mini: {
       postcss: {

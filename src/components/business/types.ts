@@ -10,6 +10,8 @@ export interface ActionItem {
   label: string
   path?: RoutePath
   variant?: 'primary' | 'gold' | 'outline'
+  disabled?: boolean
+  onClick?: () => void | Promise<void>
 }
 
 export interface ListItem {

@@ -5,32 +5,30 @@ import { router, routes } from '@/shared/router'
 
 export default function ResourceHomePage() {
   return (
-    <PageShell title='资源库' subtitle='软件工具、会计工厂、资质许可与财税服务资源统一采购。'>
-      <View className='grid gap-3'>
-        <View className='rounded-lg bg-gold-soft px-4 py-3'>
-          <Text className='text-sm font-semibold text-gold'>
-            新上架：企税宝工商年报代办服务，菁英会员 6 折
-          </Text>
+    <PageShell title="资源库" subtitle="软件工具、会计工厂、资质许可与财税服务资源统一采购。">
+      <View className="grid gap-3">
+        <View className="rounded-lg bg-gold-soft px-4 py-3">
+          <Text className="text-sm font-semibold text-gold">新上架：企税宝工商年报代办服务，菁英会员 6 折</Text>
         </View>
-        <View className='rounded-full bg-white px-4 py-3 shadow-soft' onClick={() => router.to(routes.resourceList)}>
-          <Text className='text-sm text-muted'>搜索项目、供应商、服务类型...</Text>
+        <View className="rounded-full bg-white px-4 py-3 shadow-soft" onClick={() => router.to(routes.resourceList)}>
+          <Text className="text-sm text-muted">搜索项目、供应商、服务类型...</Text>
         </View>
-        <SectionCard title='资源分类'>
-          <View className='flex flex-wrap gap-2'>
-            {['热门项目', '软件工具', '会计工厂', '资质许可', '知产科创', '财税咨询', '获客增长', '会员专享'].map((item, index) => (
-              <View
-                key={item}
-                className={`rounded-full px-3 py-2 ${index === 0 ? 'bg-brand' : 'bg-brand-soft'}`}
-                onClick={() => router.to(index === 7 ? routes.memberBenefit : routes.resourceList)}
-              >
-                <Text className={`text-xs font-semibold ${index === 0 ? 'text-white' : 'text-brand'}`}>
-                  {item}
-                </Text>
-              </View>
-            ))}
+        <SectionCard title="资源分类">
+          <View className="flex flex-wrap gap-2">
+            {['热门项目', '软件工具', '会计工厂', '资质许可', '知产科创', '财税咨询', '获客增长', '会员专享'].map(
+              (item, index) => (
+                <View
+                  key={item}
+                  className={`rounded-full px-3 py-2 ${index === 0 ? 'bg-brand' : 'bg-brand-soft'}`}
+                  onClick={() => router.to(index === 7 ? routes.memberBenefit : routes.resourceList)}
+                >
+                  <Text className={`text-xs font-semibold ${index === 0 ? 'text-white' : 'text-brand'}`}>{item}</Text>
+                </View>
+              )
+            )}
           </View>
         </SectionCard>
-        <SectionCard title='战略供应商推荐'>
+        <SectionCard title="战略供应商推荐">
           <ItemList
             items={[
               {
@@ -60,25 +58,23 @@ export default function ResourceHomePage() {
             ]}
           />
         </SectionCard>
-        <View className='rounded-lg bg-brand-deep p-4 shadow-medium'>
-          <Text className='block text-base font-bold text-gold-light'>开通会员享底价</Text>
-          <Text className='mt-2 block text-sm leading-5 text-white/65'>
-            70+ 资源专属会员价，平均节省 40%。
-          </Text>
-          <View className='mt-3'>
+        <View className="rounded-lg bg-brand-deep p-4 shadow-medium">
+          <Text className="block text-base font-bold text-gold-light">开通会员享底价</Text>
+          <Text className="mt-2 block text-sm leading-5 text-white/65">70+ 资源专属会员价，平均节省 40%。</Text>
+          <View className="mt-3">
             <ActionBar actions={[{ label: '立即开通', variant: 'gold', path: routes.memberBenefit }]} />
           </View>
         </View>
-        <View className='rounded-lg bg-white p-4 shadow-soft'>
-          <View className='flex items-center justify-between gap-4'>
-            <View className='flex-1'>
-              <Text className='block text-base font-bold text-ink'>不知道选哪个？</Text>
-              <Text className='mt-2 block text-sm leading-5 text-muted'>
+        <View className="rounded-lg bg-white p-4 shadow-soft">
+          <View className="flex items-center justify-between gap-4">
+            <View className="flex-1">
+              <Text className="block text-base font-bold text-ink">不知道选哪个？</Text>
+              <Text className="mt-2 block text-sm leading-5 text-muted">
                 提交需求，客户经理帮你匹配最优供应商和报价方案。
               </Text>
             </View>
-            <View className='rounded-lg bg-brand px-3 py-2' onClick={() => router.to(routes.resourceSubmit)}>
-              <Text className='text-xs font-semibold text-white'>提交需求</Text>
+            <View className="rounded-lg bg-brand px-3 py-2" onClick={() => router.to(routes.resourceSubmit)}>
+              <Text className="text-xs font-semibold text-white">提交需求</Text>
             </View>
           </View>
         </View>
