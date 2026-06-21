@@ -17,6 +17,7 @@
 - 设计规范：`docs/reference/002-design-spec.html`
 - 视觉规范沉淀：`design-system/行尚书苑/MASTER.md`
 - 架构说明：`docs/architecture.md`
+- 接口文档：`docs/api.md`
 - 路由配置：`src/app.config.ts`
 - 路由工具：`src/shared/router.ts`
 - 请求工具：`src/shared/request.ts`

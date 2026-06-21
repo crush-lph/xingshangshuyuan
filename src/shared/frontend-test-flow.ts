@@ -1,4 +1,5 @@
 import Taro from '@tarojs/taro'
+import { wxLogin } from '@/services'
 import { api } from './request'
 
 export type PaymentMethod = 'wechat' | 'transfer'
@@ -135,9 +136,23 @@ export async function getCurrentAuthSession() {
 export async function loginWithWechat(): Promise<AuthSession> {
   if (!frontendMockEnabled) {
     const loginResult = await Taro.login()
-    const session = await api.post<AuthSession, { code: string }>('/auth/wechat/login', {
+    const response = await wxLogin({
       code: loginResult.code
     })
+    const nickname = response.data.nickname || '用户'
+    const session: AuthSession = {
+      token: response.data.token || '',
+      openid: '',
+      loginCode: loginResult.code,
+      profile: {
+        id: String(response.data.user_id || ''),
+        name: nickname,
+        companyName: '',
+        avatarText: nickname.slice(0, 1),
+        verified: false
+      }
+    }
+
     writeStorage(AUTH_STORAGE_KEY, session)
     return session
   }
