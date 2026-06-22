@@ -1,4 +1,5 @@
 import type { RoutePath } from '@/shared/router'
+import type { AppIconName } from '@/shared/app-icons'
 
 export interface MetricItem {
   label: string
@@ -14,7 +15,7 @@ export interface MemberAction {
 
 export interface MenuItem {
   label: string
-  icon: string
+  icon: AppIconName
   iconClass: string
   path?: RoutePath
   badge?: string

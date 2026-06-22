@@ -1,5 +1,6 @@
 import { Text, View } from '@tarojs/components'
 import Taro from '@tarojs/taro'
+import { AppIcon } from '@/components/AppIcon'
 import { router } from '@/shared/router'
 import type { MenuItem } from '../types'
 
@@ -29,7 +30,7 @@ export function MenuGroup({ items }: MenuGroupProps) {
           onClick={() => openPath(item.path)}
         >
           <View className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg ${item.iconClass}`}>
-            <Text className="text-sm font-bold">{item.icon}</Text>
+            <AppIcon name={item.icon} size={18} />
           </View>
           <Text className="flex-1 text-sm font-semibold text-ink">{item.label}</Text>
           {item.value ? <Text className="text-sm font-bold text-gold">{item.value}</Text> : null}

@@ -5,7 +5,7 @@ import tseslint from 'typescript-eslint'
 
 export default tseslint.config(
   {
-    ignores: ['dist/**', 'node_modules/**', '.swc/**', '.temp/**', '.pnpm-store/**']
+    ignores: ['dist/**', 'node_modules/**', '.swc/**', '.temp/**', '.pnpm-store/**', 'src/assets/remixicon-font.ts']
   },
   js.configs.recommended,
   ...tseslint.configs.recommended,

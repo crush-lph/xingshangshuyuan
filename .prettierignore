@@ -6,3 +6,4 @@ node_modules
 pnpm-lock.yaml
 docs/reference
 design-system
+src/assets/remixicon-font.ts

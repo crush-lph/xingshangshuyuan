@@ -17,13 +17,15 @@ import {
   type GetOpportunitiesData,
   type GetProductsData
 } from '@/services'
+import { AppIcon } from '@/components/AppIcon'
 import { EmptyState } from '@/components/business'
+import { getAppIconName, type AppIconName } from '@/shared/app-icons'
 import { router, routes, type RoutePath } from '@/shared/router'
 import { compactJoin, priceOf, textOf, textOrPlaceholder } from '@/shared/view-data'
 
 interface QuickEntry {
   label: string
-  icon: string
+  icon: AppIconName
   path: RoutePath
 }
 
@@ -216,11 +218,12 @@ export default function HomePage() {
         setQuickEntries(
           (quickEntriesResult.value.data.list ?? []).slice(0, 6).map((item) => {
             const label = textOrPlaceholder(item.name, '入口')
+            const path = routeFromApi(item.link_url) ?? routes.home
 
             return {
               label,
-              icon: textOf(item.icon) ?? label.slice(0, 1),
-              path: routeFromApi(item.link_url) ?? routes.home
+              icon: getAppIconName(label, item.icon, path),
+              path
             }
           })
         )
@@ -348,7 +351,7 @@ export default function HomePage() {
               {quickEntries.map((entry) => (
                 <View key={entry.label} className="items-center text-center" onClick={() => router.to(entry.path)}>
                   <View className="mx-auto flex h-11 w-11 items-center justify-center rounded-lg bg-brand-soft">
-                    <Text className="text-sm font-bold text-brand">{entry.icon}</Text>
+                    <AppIcon name={entry.icon} size={22} className="text-brand" />
                   </View>
                   <Text className="mt-2 block text-xs font-semibold text-ink">{entry.label}</Text>
                 </View>

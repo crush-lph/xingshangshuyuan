@@ -2,15 +2,17 @@ import { useEffect, useState } from 'react'
 import { View, Text } from '@tarojs/components'
 import Button from '@nutui/nutui-react-taro/dist/es/packages/button'
 import '@nutui/nutui-react-taro/dist/es/packages/button/style/css'
+import { AppIcon } from '@/components/AppIcon'
 import { EmptyState, ItemList, SectionCard, type ListItem } from '@/components/business'
 import { PageShell } from '@/components/PageShell'
 import { getProductCategories, getProducts } from '@/services'
+import { getAppIconName, type AppIconName } from '@/shared/app-icons'
 import { router, routes, type RoutePath } from '@/shared/router'
 import { priceOf, textOf, textOrPlaceholder } from '@/shared/view-data'
 
 interface Category {
   name: string
-  desc?: string
+  icon: AppIconName
   path: RoutePath
 }
 
@@ -29,7 +31,7 @@ export default function ServicesPage() {
         setCategories(
           (categoriesResult.value.data.list ?? []).slice(0, 4).map((item) => ({
             name: textOrPlaceholder(item.name, '未命名分类'),
-            desc: textOf(item.icon),
+            icon: getAppIconName(textOrPlaceholder(item.name, '未命名分类'), item.icon, routes.resourceList),
             path: routes.resourceList
           }))
         )
@@ -61,8 +63,10 @@ export default function ServicesPage() {
             <View className="grid grid-cols-2 gap-3">
               {categories.map((item) => (
                 <View key={item.name} className="rounded-lg bg-brand-soft p-3" onClick={() => router.to(item.path)}>
+                  <View className="mb-2 flex h-9 w-9 items-center justify-center rounded-lg bg-white text-brand">
+                    <AppIcon name={item.icon} size={20} />
+                  </View>
                   <Text className="block text-sm font-bold text-brand">{item.name}</Text>
-                  {item.desc ? <Text className="mt-1 block text-xs text-muted">{item.desc}</Text> : null}
                 </View>
               ))}
             </View>
