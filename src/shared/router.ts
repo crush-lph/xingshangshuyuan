@@ -30,6 +30,7 @@ export const routes = {
   userBenefits: '/pages/user/benefits/index',
   userPoints: '/pages/user/points/index',
   userReviews: '/pages/user/reviews/index',
+  userSettings: '/pages/user/settings/index',
   adminCheckin: '/pages/admin/checkin/index',
   adminCert: '/pages/admin/cert/index',
   adminOrders: '/pages/admin/orders/index',

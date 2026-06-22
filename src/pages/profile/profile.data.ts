@@ -62,6 +62,7 @@ export const accountMenus: MenuItem[] = [
   {
     label: '设置',
     icon: '设',
-    iconClass: 'bg-line text-muted'
+    iconClass: 'bg-line text-muted',
+    path: routes.userSettings
   }
 ]

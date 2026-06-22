@@ -27,7 +27,6 @@ export function ActionBar({ actions }: ActionBarProps) {
         <Button
           key={action.label}
           block
-          size="small"
           className={getButtonClassName(action.variant)}
           disabled={action.disabled}
           {...getButtonProps(action.variant)}

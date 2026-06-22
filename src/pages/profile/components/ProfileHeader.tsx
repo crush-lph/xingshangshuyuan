@@ -1,38 +1,26 @@
-import { useEffect, useState } from 'react'
+import { useEffect } from 'react'
 import Taro from '@tarojs/taro'
 import { Text, View } from '@tarojs/components'
 import Avatar from '@nutui/nutui-react-taro/dist/es/packages/avatar'
 import Button from '@nutui/nutui-react-taro/dist/es/packages/button'
 import '@nutui/nutui-react-taro/dist/es/packages/avatar/style/css'
 import '@nutui/nutui-react-taro/dist/es/packages/button/style/css'
-import { getUserInfo, getUserProfile, wxLogin, type GetUserInfoData, type GetUserProfileData } from '@/services'
+import { useUserInfo } from '@/stores/user-info'
 import { textOrPlaceholder, textOf } from '@/shared/view-data'
 
 export function ProfileHeader() {
-  const [profile, setProfile] = useState<GetUserProfileData | null>(null)
-  const [userInfo, setUserInfo] = useState<GetUserInfoData | null>(null)
-  const [isLoggingIn, setIsLoggingIn] = useState(false)
+  const { error, isLoggingIn, loadUserInfo, loginWithWechat, profile, userInfo } = useUserInfo()
 
   useEffect(() => {
-    void getUserProfile()
-      .then((response) => setProfile(response.data.nickname ? response.data : null))
-      .catch(() => setProfile(null))
-    void getUserInfo()
-      .then((response) => setUserInfo(response.data.id ? response.data : null))
-      .catch(() => setUserInfo(null))
-  }, [])
+    void loadUserInfo()
+  }, [loadUserInfo])
 
   async function handleLogin() {
-    setIsLoggingIn(true)
-
     try {
-      const loginResult = await Taro.login()
-      await wxLogin({ code: loginResult.code })
-      const response = await getUserProfile()
-      setProfile(response.data.nickname ? response.data : null)
+      await loginWithWechat()
       Taro.showToast({ title: '登录成功', icon: 'success' })
-    } finally {
-      setIsLoggingIn(false)
+    } catch {
+      Taro.showToast({ title: '登录失败', icon: 'none' })
     }
   }
 
@@ -47,13 +35,13 @@ export function ProfileHeader() {
       <View>
         <Text className="block text-xl font-bold text-white">{nickname ?? '未登录'}</Text>
         <Text className="mt-1 block text-sm text-white/70">
-          {textOrPlaceholder(profile?.company_name, '暂无企业信息')}
+          {textOrPlaceholder(profile?.company_name, error ?? '暂无企业信息')}
         </Text>
       </View>
-      {profile ? (
+      {profile || userInfo ? (
         <View className="ml-auto rounded bg-white/15 px-2 py-1">
           <Text className="text-xs font-semibold text-white">
-            {textOrPlaceholder(profile.certification_status_text, '未认证')}
+            {textOrPlaceholder(profile?.certification_status_text, '未认证')}
           </Text>
         </View>
       ) : (

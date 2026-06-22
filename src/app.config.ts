@@ -26,7 +26,15 @@ export default defineAppConfig({
     },
     {
       root: 'pages/user',
-      pages: ['cert/index', 'orders/index', 'events/index', 'benefits/index', 'points/index', 'reviews/index']
+      pages: [
+        'cert/index',
+        'orders/index',
+        'events/index',
+        'benefits/index',
+        'points/index',
+        'reviews/index',
+        'settings/index'
+      ]
     },
     {
       root: 'pages/admin',
