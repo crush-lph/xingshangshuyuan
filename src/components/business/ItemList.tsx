@@ -14,8 +14,13 @@ export function ItemList({ items }: ItemListProps) {
           key={`${item.title}-${index}`}
           className={`px-4 py-4 ${index === items.length - 1 ? '' : 'border-b border-line'}`}
           onClick={() => {
+            if (item.onClick) {
+              void item.onClick()
+              return
+            }
+
             if (item.path) {
-              router.to(item.path)
+              router.to(item.path, item.query)
             }
           }}
         >

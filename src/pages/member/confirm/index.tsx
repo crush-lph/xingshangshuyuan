@@ -1,33 +1,65 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import Taro from '@tarojs/taro'
 import { Text, View } from '@tarojs/components'
-import { ActionBar, FieldList, SectionCard } from '@/components/business'
+import { ActionBar, EmptyState, FieldList, SectionCard } from '@/components/business'
 import { PageShell } from '@/components/PageShell'
-import { createMemberOrder, isFrontendMockEnabled, loginWithWechat, payMemberOrder } from '@/shared/frontend-test-flow'
+import { createProductOrder, getProducts, payOrder, type CreateProductOrderData } from '@/services'
 import { router, routes } from '@/shared/router'
+import { priceOf, textOrPlaceholder } from '@/shared/view-data'
+
+interface MemberProduct {
+  id: number
+  name: string
+  desc?: string
+  price?: string
+}
 
 export default function MemberConfirmPage() {
   const [isPaying, setIsPaying] = useState(false)
-  const [lastOrderId, setLastOrderId] = useState('')
+  const [product, setProduct] = useState<MemberProduct | null>(null)
+  const [order, setOrder] = useState<CreateProductOrderData | null>(null)
+
+  useEffect(() => {
+    async function loadProduct() {
+      const response = await getProducts({ page: 1, page_size: 1 })
+      const item = response.data.list?.[0]
+      setProduct(
+        item?.id
+          ? {
+              id: item.id,
+              name: textOrPlaceholder(item.name),
+              desc: item.description,
+              price: priceOf(item.vip_price ?? item.price, item.price_unit)
+            }
+          : null
+      )
+    }
+
+    void loadProduct().catch(() => setProduct(null))
+  }, [])
 
   async function handleWechatPayment() {
+    if (!product) {
+      Taro.showToast({ title: '暂无商品数据', icon: 'none' })
+      return
+    }
+
     setIsPaying(true)
     Taro.showLoading({ title: '生成订单中' })
 
     try {
-      await loginWithWechat()
-      const order = await createMemberOrder({
-        planId: 'elite-yearly',
-        paymentMethod: 'wechat'
+      const orderResult = await createProductOrder({
+        items: [{ product_id: product.id, quantity: 1 }]
       })
-      setLastOrderId(order.id)
-      Taro.showLoading({ title: '拉起支付中' })
-      await payMemberOrder(order.id)
-      Taro.showToast({
-        title: isFrontendMockEnabled() ? 'Mock 支付成功' : '支付成功',
-        icon: 'success'
-      })
-      router.redirect(routes.userBenefits, { orderId: order.id })
+      setOrder(orderResult.data)
+
+      if (orderResult.data.order_no) {
+        Taro.showLoading({ title: '拉起支付中' })
+        await payOrder({ order_no: orderResult.data.order_no, pay_method: 1 })
+      }
+
+      Taro.showToast({ title: '支付接口已调用', icon: 'success' })
+      router.redirect(routes.userBenefits)
     } finally {
       Taro.hideLoading()
       setIsPaying(false)
@@ -36,31 +68,39 @@ export default function MemberConfirmPage() {
 
   return (
     <PageShell title="会员开通确认" subtitle="确认会员方案与企业信息后生成订单。">
-      <View className="grid gap-3">
-        <SectionCard title="会员方案">
-          <Text className="block text-base font-bold text-ink">行商·菁英会员</Text>
-          <Text className="mt-2 block text-sm text-muted">有效期 12 个月，含资源、课程、商机优先权益。</Text>
-          {lastOrderId ? <Text className="mt-2 block text-xs text-brand">最近测试订单：{lastOrderId}</Text> : null}
-        </SectionCard>
-        <FieldList
-          fields={[
-            { label: '开通企业', value: '鑫财财税有限公司' },
-            { label: '会员费用', value: '¥4,980' },
-            { label: '开票类型', value: '增值税普通发票' },
-            { label: '支付方式', value: '微信支付 / 对公转账' }
-          ]}
-        />
-        <ActionBar
-          actions={[
-            { label: '对公转账', variant: 'outline', path: routes.paymentTransfer },
-            {
-              label: isPaying ? '支付处理中' : '微信支付开通',
-              disabled: isPaying,
-              onClick: handleWechatPayment
-            }
-          ]}
-        />
-      </View>
+      {product ? (
+        <View className="grid gap-3">
+          <SectionCard title="会员方案">
+            <Text className="block text-base font-bold text-ink">{product.name}</Text>
+            {product.desc ? <Text className="mt-2 block text-sm text-muted">{product.desc}</Text> : null}
+            {order?.order_no ? <Text className="mt-2 block text-xs text-brand">最近订单：{order.order_no}</Text> : null}
+          </SectionCard>
+          <FieldList
+            fields={[
+              { label: '商品价格', value: product.price ?? '未提供' },
+              { label: '支付方式', value: '微信支付 / 对公转账' },
+              { label: '订单状态', value: textOrPlaceholder(order?.status_text, '未生成') }
+            ]}
+          />
+          <ActionBar
+            actions={[
+              {
+                label: '对公转账',
+                variant: 'outline',
+                path: routes.paymentTransfer,
+                query: order?.order_no ? { order_no: order.order_no } : undefined
+              },
+              {
+                label: isPaying ? '支付处理中' : '微信支付开通',
+                disabled: isPaying,
+                onClick: handleWechatPayment
+              }
+            ]}
+          />
+        </View>
+      ) : (
+        <EmptyState title="暂无可开通商品" desc="Apifox mock 未返回商品列表数据。" />
+      )}
     </PageShell>
   )
 }

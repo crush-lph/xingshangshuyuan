@@ -1,0 +1,5486 @@
+{
+  "openapi": "3.0.1",
+  "info": {
+    "title": "默认模块",
+    "description": "管理后台 C 端用户 API 接口",
+    "version": "1.0.0"
+  },
+  "tags": [
+    {
+      "name": "系统"
+    },
+    {
+      "name": "认证"
+    },
+    {
+      "name": "用户"
+    },
+    {
+      "name": "首页"
+    },
+    {
+      "name": "消息通知"
+    },
+    {
+      "name": "个人中心"
+    },
+    {
+      "name": "订单"
+    },
+    {
+      "name": "学习中心"
+    },
+    {
+      "name": "商机对接(V2)"
+    },
+    {
+      "name": "服务商城"
+    }
+  ],
+  "paths": {
+    "/api/index/index": {
+      "get": {
+        "summary": "API 状态检测",
+        "deprecated": false,
+        "description": "",
+        "operationId": "59c85072f35d4e2fafa0a57487c88c93",
+        "tags": ["系统"],
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "code": {
+                      "description": "状态码",
+                      "type": "integer",
+                      "example": 1
+                    },
+                    "info": {
+                      "description": "提示信息",
+                      "type": "string",
+                      "example": "接口运行正常"
+                    },
+                    "data": {
+                      "description": "返回数据",
+                      "properties": {
+                        "app": {
+                          "description": "应用名称",
+                          "type": "string",
+                          "example": "ThinkAdmin"
+                        },
+                        "version": {
+                          "description": "系统版本",
+                          "type": "string",
+                          "example": "v6"
+                        },
+                        "time": {
+                          "description": "服务器时间",
+                          "type": "string",
+                          "example": "2026-06-18 12:00:00"
+                        }
+                      },
+                      "type": "object"
+                    }
+                  },
+                  "type": "object"
+                }
+              }
+            },
+            "headers": {}
+          }
+        },
+        "security": []
+      }
+    },
+    "/api/auth/wx_login": {
+      "post": {
+        "summary": "微信小程序登录（仅需 code）",
+        "deprecated": false,
+        "description": "",
+        "operationId": "1f09b64446aee997800b2279b82494ad",
+        "tags": ["认证"],
+        "parameters": [],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "properties": {
+                  "code": {
+                    "description": "wx.login 获取的临时 code",
+                    "type": "string"
+                  }
+                },
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "code": {
+                      "description": "状态码",
+                      "type": "integer",
+                      "example": 1
+                    },
+                    "info": {
+                      "description": "提示信息",
+                      "type": "string",
+                      "example": "登录成功"
+                    },
+                    "data": {
+                      "properties": {
+                        "token": {
+                          "description": "JWT 令牌",
+                          "type": "string"
+                        },
+                        "user_id": {
+                          "description": "用户ID",
+                          "type": "integer"
+                        },
+                        "nickname": {
+                          "description": "用户昵称",
+                          "type": "string"
+                        },
+                        "avatar": {
+                          "description": "头像地址",
+                          "type": "string"
+                        },
+                        "phone": {
+                          "description": "手机号（未绑定为空）",
+                          "type": "string"
+                        },
+                        "is_new": {
+                          "description": "是否新用户",
+                          "type": "boolean"
+                        }
+                      },
+                      "type": "object"
+                    }
+                  },
+                  "type": "object"
+                }
+              }
+            },
+            "headers": {}
+          }
+        },
+        "security": []
+      }
+    },
+    "/api/auth/bind_phone": {
+      "post": {
+        "summary": "绑定微信手机号（需登录态）",
+        "deprecated": false,
+        "description": "",
+        "operationId": "70f3e944e800e6b83b5e761176d62d4e",
+        "tags": ["认证"],
+        "parameters": [],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "properties": {
+                  "encrypted_data": {
+                    "description": "wx.getPhoneNumber 返回的加密数据",
+                    "type": "string"
+                  },
+                  "iv": {
+                    "description": "加密初始向量",
+                    "type": "string"
+                  }
+                },
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "code": {
+                      "description": "状态码",
+                      "type": "integer",
+                      "example": 1
+                    },
+                    "info": {
+                      "description": "提示信息",
+                      "type": "string",
+                      "example": "绑定成功"
+                    },
+                    "data": {
+                      "properties": {
+                        "phone": {
+                          "description": "手机号",
+                          "type": "string"
+                        }
+                      },
+                      "type": "object"
+                    }
+                  },
+                  "type": "object"
+                }
+              }
+            },
+            "headers": {}
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/api/auth/phone_login": {
+      "post": {
+        "summary": "手机号验证码登录",
+        "deprecated": false,
+        "description": "",
+        "operationId": "202a890d3d3772579efde9ac78c0dad1",
+        "tags": ["认证"],
+        "parameters": [],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "properties": {
+                  "phone": {
+                    "description": "手机号",
+                    "type": "string"
+                  },
+                  "sms_code": {
+                    "description": "短信验证码",
+                    "type": "string"
+                  }
+                },
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "code": {
+                      "description": "状态码",
+                      "type": "integer",
+                      "example": 1
+                    },
+                    "info": {
+                      "description": "提示信息",
+                      "type": "string",
+                      "example": "登录成功"
+                    },
+                    "data": {
+                      "properties": {
+                        "token": {
+                          "description": "JWT 令牌",
+                          "type": "string"
+                        },
+                        "user_id": {
+                          "description": "用户ID",
+                          "type": "integer"
+                        },
+                        "nickname": {
+                          "description": "用户昵称",
+                          "type": "string"
+                        },
+                        "avatar": {
+                          "description": "头像地址",
+                          "type": "string"
+                        },
+                        "phone": {
+                          "description": "手机号",
+                          "type": "string"
+                        },
+                        "is_new": {
+                          "description": "是否新用户",
+                          "type": "boolean"
+                        }
+                      },
+                      "type": "object"
+                    }
+                  },
+                  "type": "object"
+                }
+              }
+            },
+            "headers": {}
+          }
+        },
+        "security": []
+      }
+    },
+    "/api/auth/sms_code": {
+      "post": {
+        "summary": "发送短信验证码",
+        "deprecated": false,
+        "description": "",
+        "operationId": "ae7a44d602259a44485c190eb88d521a",
+        "tags": ["认证"],
+        "parameters": [],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "properties": {
+                  "phone": {
+                    "description": "手机号（11位）",
+                    "type": "string"
+                  },
+                  "scene": {
+                    "description": "场景: login/register/reset",
+                    "type": "string"
+                  }
+                },
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "code": {
+                      "description": "状态码",
+                      "type": "integer",
+                      "example": 1
+                    },
+                    "info": {
+                      "description": "提示信息",
+                      "type": "string",
+                      "example": "验证码已发送"
+                    },
+                    "data": {
+                      "properties": {
+                        "expire_in": {
+                          "description": "过期时间（秒）",
+                          "type": "integer",
+                          "example": 300
+                        }
+                      },
+                      "type": "object"
+                    }
+                  },
+                  "type": "object"
+                }
+              }
+            },
+            "headers": {}
+          }
+        },
+        "security": []
+      }
+    },
+    "/api/user/profile": {
+      "get": {
+        "summary": "获取个人信息",
+        "deprecated": false,
+        "description": "",
+        "operationId": "a524d5a82d99c4332cdc6836a8390934",
+        "tags": ["用户"],
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "code": {
+                      "description": "状态码",
+                      "type": "integer",
+                      "example": 1
+                    },
+                    "info": {
+                      "description": "提示信息",
+                      "type": "string",
+                      "example": ""
+                    },
+                    "data": {
+                      "properties": {
+                        "user_id": {
+                          "description": "用户ID",
+                          "type": "integer"
+                        },
+                        "nickname": {
+                          "description": "用户昵称",
+                          "type": "string"
+                        },
+                        "avatar": {
+                          "description": "头像地址",
+                          "type": "string"
+                        },
+                        "phone": {
+                          "description": "手机号",
+                          "type": "string"
+                        },
+                        "company_name": {
+                          "description": "所属公司",
+                          "type": "string"
+                        },
+                        "role": {
+                          "description": "角色(1普通,2联盟伙伴,3管理员)",
+                          "type": "integer"
+                        },
+                        "role_text": {
+                          "description": "角色文字",
+                          "type": "string"
+                        },
+                        "vip_level": {
+                          "description": "会员等级",
+                          "type": "integer"
+                        },
+                        "vip_level_text": {
+                          "description": "会员等级文字",
+                          "type": "string"
+                        },
+                        "certification_status": {
+                          "description": "认证状态",
+                          "type": "integer"
+                        },
+                        "certification_status_text": {
+                          "description": "认证状态文字",
+                          "type": "string"
+                        },
+                        "city": {
+                          "description": "所在城市",
+                          "type": "string"
+                        },
+                        "position": {
+                          "description": "职位",
+                          "type": "string"
+                        },
+                        "created_at": {
+                          "description": "创建时间",
+                          "type": "string"
+                        }
+                      },
+                      "type": "object"
+                    }
+                  },
+                  "type": "object"
+                }
+              }
+            },
+            "headers": {}
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      },
+      "post": {
+        "summary": "更新个人信息",
+        "deprecated": false,
+        "description": "",
+        "operationId": "1d358005034731422b77e1684bfbc1b4",
+        "tags": ["用户"],
+        "parameters": [],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "properties": {
+                  "nickname": {
+                    "description": "昵称",
+                    "type": "string"
+                  },
+                  "avatar": {
+                    "description": "头像URL",
+                    "type": "string"
+                  },
+                  "company_name": {
+                    "description": "公司名",
+                    "type": "string"
+                  },
+                  "city": {
+                    "description": "城市",
+                    "type": "string"
+                  },
+                  "position": {
+                    "description": "职位",
+                    "type": "string"
+                  }
+                },
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "code": {
+                      "description": "状态码",
+                      "type": "integer",
+                      "example": 1
+                    },
+                    "info": {
+                      "description": "提示信息",
+                      "type": "string",
+                      "example": "更新成功"
+                    },
+                    "data": {
+                      "type": "object",
+                      "properties": {}
+                    }
+                  },
+                  "type": "object"
+                }
+              }
+            },
+            "headers": {}
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/api/user/certification": {
+      "get": {
+        "summary": "获取企业认证状态",
+        "deprecated": false,
+        "description": "",
+        "operationId": "10f9f300707495d75cdc6fd425c88bae",
+        "tags": ["用户"],
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "code": {
+                      "description": "状态码",
+                      "type": "integer",
+                      "example": 1
+                    },
+                    "info": {
+                      "description": "提示信息",
+                      "type": "string",
+                      "example": ""
+                    },
+                    "data": {
+                      "properties": {
+                        "certification_id": {
+                          "description": "认证ID",
+                          "type": "integer"
+                        },
+                        "company_name": {
+                          "description": "企业名称",
+                          "type": "string"
+                        },
+                        "credit_code": {
+                          "description": "信用代码",
+                          "type": "string"
+                        },
+                        "legal_person": {
+                          "description": "法人姓名",
+                          "type": "string"
+                        },
+                        "status": {
+                          "description": "状态",
+                          "type": "integer"
+                        },
+                        "status_text": {
+                          "description": "状态文字",
+                          "type": "string"
+                        },
+                        "reject_reason": {
+                          "description": "拒绝原因",
+                          "type": "string"
+                        },
+                        "reviewed_at": {
+                          "description": "审核时间",
+                          "type": "string"
+                        },
+                        "created_at": {
+                          "description": "创建时间",
+                          "type": "string"
+                        }
+                      },
+                      "type": "object"
+                    }
+                  },
+                  "type": "object"
+                }
+              }
+            },
+            "headers": {}
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      },
+      "post": {
+        "summary": "提交企业认证",
+        "deprecated": false,
+        "description": "",
+        "operationId": "35c0352471b55dc87433df6873d4d224",
+        "tags": ["用户"],
+        "parameters": [],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "properties": {
+                  "company_name": {
+                    "description": "企业名称",
+                    "type": "string"
+                  },
+                  "credit_code": {
+                    "description": "统一社会信用代码",
+                    "type": "string"
+                  },
+                  "legal_person": {
+                    "description": "法人姓名",
+                    "type": "string"
+                  },
+                  "business_license_url": {
+                    "description": "营业执照图片URL",
+                    "type": "string"
+                  },
+                  "id_card_front_url": {
+                    "description": "身份证正面",
+                    "type": "string"
+                  },
+                  "id_card_back_url": {
+                    "description": "身份证反面",
+                    "type": "string"
+                  },
+                  "contact_phone": {
+                    "description": "联系电话",
+                    "type": "string"
+                  }
+                },
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "code": {
+                      "description": "状态码",
+                      "type": "integer",
+                      "example": 1
+                    },
+                    "info": {
+                      "description": "提示信息",
+                      "type": "string",
+                      "example": "认证申请已提交"
+                    },
+                    "data": {
+                      "properties": {
+                        "certification_id": {
+                          "description": "认证ID",
+                          "type": "integer"
+                        },
+                        "status": {
+                          "description": "状态",
+                          "type": "integer",
+                          "example": 0
+                        },
+                        "status_text": {
+                          "description": "状态文字",
+                          "type": "string",
+                          "example": "待审核"
+                        }
+                      },
+                      "type": "object"
+                    }
+                  },
+                  "type": "object"
+                }
+              }
+            },
+            "headers": {}
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/api/user/info": {
+      "get": {
+        "summary": "获取用户基本信息",
+        "deprecated": false,
+        "description": "",
+        "operationId": "38a9f11b45c4bbe7323142cdde8ab692",
+        "tags": ["用户"],
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "code": {
+                      "description": "状态码",
+                      "type": "integer",
+                      "example": 1
+                    },
+                    "info": {
+                      "description": "提示信息",
+                      "type": "string",
+                      "example": ""
+                    },
+                    "data": {
+                      "properties": {
+                        "id": {
+                          "description": "用户ID",
+                          "type": "integer"
+                        },
+                        "nickname": {
+                          "description": "昵称",
+                          "type": "string"
+                        },
+                        "avatar": {
+                          "description": "头像地址",
+                          "type": "string"
+                        },
+                        "phone": {
+                          "description": "手机号",
+                          "type": "string"
+                        },
+                        "last_login_at": {
+                          "description": "最后登录时间",
+                          "type": "string"
+                        }
+                      },
+                      "type": "object"
+                    }
+                  },
+                  "type": "object"
+                }
+              }
+            },
+            "headers": {}
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/api/banners": {
+      "get": {
+        "summary": "获取轮播图列表",
+        "deprecated": false,
+        "description": "",
+        "operationId": "28319f639047b6db0fbc3c56181dba0a",
+        "tags": ["首页"],
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "code": {
+                      "description": "状态码",
+                      "type": "integer",
+                      "example": 1
+                    },
+                    "info": {
+                      "description": "提示信息",
+                      "type": "string",
+                      "example": ""
+                    },
+                    "data": {
+                      "properties": {
+                        "list": {
+                          "type": "array",
+                          "items": {
+                            "properties": {
+                              "id": {
+                                "description": "轮播图ID",
+                                "type": "integer"
+                              },
+                              "title": {
+                                "description": "标题",
+                                "type": "string"
+                              },
+                              "subtitle": {
+                                "description": "副标题",
+                                "type": "string"
+                              },
+                              "image_url": {
+                                "description": "图片URL",
+                                "type": "string"
+                              },
+                              "action_type": {
+                                "description": "跳转类型(1页面,2外链,3小程序)",
+                                "type": "integer"
+                              },
+                              "action_url": {
+                                "description": "跳转地址",
+                                "type": "string"
+                              },
+                              "sort_order": {
+                                "description": "排序",
+                                "type": "integer"
+                              }
+                            },
+                            "type": "object"
+                          }
+                        }
+                      },
+                      "type": "object"
+                    }
+                  },
+                  "type": "object"
+                }
+              }
+            },
+            "headers": {}
+          }
+        },
+        "security": []
+      }
+    },
+    "/api/core-business": {
+      "get": {
+        "summary": "获取四大核心业务配置",
+        "deprecated": false,
+        "description": "",
+        "operationId": "1a5ccdbfb0bc7391d1ca11fab738f3cc",
+        "tags": ["首页"],
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "code": {
+                      "description": "状态码",
+                      "type": "integer",
+                      "example": 1
+                    },
+                    "info": {
+                      "description": "提示信息",
+                      "type": "string",
+                      "example": ""
+                    },
+                    "data": {
+                      "properties": {
+                        "list": {
+                          "type": "array",
+                          "items": {
+                            "properties": {
+                              "id": {
+                                "description": "记录ID",
+                                "type": "integer"
+                              },
+                              "title": {
+                                "description": "业务标题",
+                                "type": "string"
+                              },
+                              "subtitle": {
+                                "description": "副标题",
+                                "type": "string"
+                              },
+                              "action_text": {
+                                "description": "按钮文案",
+                                "type": "string"
+                              },
+                              "product_type": {
+                                "description": "关联商品类型(1工具,2课程,3咨询,4认证)",
+                                "type": "integer"
+                              },
+                              "product_type_text": {
+                                "description": "商品类型文字",
+                                "type": "string"
+                              },
+                              "sort_order": {
+                                "description": "排序",
+                                "type": "integer"
+                              }
+                            },
+                            "type": "object"
+                          }
+                        }
+                      },
+                      "type": "object"
+                    }
+                  },
+                  "type": "object"
+                }
+              }
+            },
+            "headers": {}
+          }
+        },
+        "security": []
+      }
+    },
+    "/api/notifications": {
+      "get": {
+        "summary": "获取平台动态列表",
+        "deprecated": false,
+        "description": "",
+        "operationId": "78892fbc9b937d54c9bd813af943e02b",
+        "tags": ["首页"],
+        "parameters": [
+          {
+            "name": "type",
+            "in": "query",
+            "description": "类型筛选(1公告,2政策解读,3成功案例,4活动预告,5新课通知)",
+            "required": false,
+            "example": "1",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "description": "页码",
+            "required": false,
+            "example": "1",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "page_size",
+            "in": "query",
+            "description": "每页数量",
+            "required": false,
+            "example": "10",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "code": {
+                      "description": "状态码",
+                      "type": "integer",
+                      "example": 1
+                    },
+                    "info": {
+                      "description": "提示信息",
+                      "type": "string",
+                      "example": ""
+                    },
+                    "data": {
+                      "properties": {
+                        "list": {
+                          "type": "array",
+                          "items": {
+                            "properties": {
+                              "id": {
+                                "description": "通知ID",
+                                "type": "integer"
+                              },
+                              "type": {
+                                "description": "类型",
+                                "type": "integer"
+                              },
+                              "type_text": {
+                                "description": "类型文字",
+                                "type": "string"
+                              },
+                              "title": {
+                                "description": "标题",
+                                "type": "string"
+                              },
+                              "summary": {
+                                "description": "摘要",
+                                "type": "string"
+                              },
+                              "is_top": {
+                                "description": "是否置顶(0否,1是)",
+                                "type": "integer"
+                              },
+                              "view_count": {
+                                "description": "浏览次数",
+                                "type": "integer"
+                              },
+                              "published_at": {
+                                "description": "发布时间",
+                                "type": "string"
+                              }
+                            },
+                            "type": "object"
+                          }
+                        },
+                        "total": {
+                          "description": "总数",
+                          "type": "integer"
+                        },
+                        "page": {
+                          "description": "当前页码",
+                          "type": "integer"
+                        },
+                        "page_size": {
+                          "description": "每页数量",
+                          "type": "integer"
+                        },
+                        "total_page": {
+                          "description": "总页数",
+                          "type": "integer"
+                        }
+                      },
+                      "type": "object"
+                    }
+                  },
+                  "type": "object"
+                }
+              }
+            },
+            "headers": {}
+          }
+        },
+        "security": []
+      }
+    },
+    "/api/quick-entries": {
+      "get": {
+        "summary": "获取快捷入口配置",
+        "deprecated": false,
+        "description": "",
+        "operationId": "a79062b6676f1ef36ddc0c1d097f7867",
+        "tags": ["首页"],
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "code": {
+                      "description": "状态码",
+                      "type": "integer",
+                      "example": 1
+                    },
+                    "info": {
+                      "description": "提示信息",
+                      "type": "string",
+                      "example": ""
+                    },
+                    "data": {
+                      "properties": {
+                        "list": {
+                          "type": "array",
+                          "items": {
+                            "properties": {
+                              "id": {
+                                "description": "记录ID",
+                                "type": "integer"
+                              },
+                              "name": {
+                                "description": "入口名称",
+                                "type": "string"
+                              },
+                              "icon": {
+                                "description": "图标标识",
+                                "type": "string"
+                              },
+                              "link_type": {
+                                "description": "跳转类型(page内部,external外链)",
+                                "type": "string"
+                              },
+                              "link_url": {
+                                "description": "跳转地址",
+                                "type": "string"
+                              }
+                            },
+                            "type": "object"
+                          }
+                        }
+                      },
+                      "type": "object"
+                    }
+                  },
+                  "type": "object"
+                }
+              }
+            },
+            "headers": {}
+          }
+        },
+        "security": []
+      }
+    },
+    "/api/search/suggest": {
+      "get": {
+        "summary": "搜索建议（商品/课程/商机）",
+        "deprecated": false,
+        "description": "",
+        "operationId": "78192b4fe46213b35540804c9eb93704",
+        "tags": ["首页"],
+        "parameters": [
+          {
+            "name": "keyword",
+            "in": "query",
+            "description": "搜索关键词",
+            "required": true,
+            "example": "代账",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "code": {
+                      "description": "状态码",
+                      "type": "integer",
+                      "example": 1
+                    },
+                    "info": {
+                      "description": "提示信息",
+                      "type": "string",
+                      "example": ""
+                    },
+                    "data": {
+                      "properties": {
+                        "products": {
+                          "type": "array",
+                          "items": {
+                            "properties": {
+                              "id": {
+                                "description": "商品ID",
+                                "type": "integer"
+                              },
+                              "name": {
+                                "description": "商品名称",
+                                "type": "string"
+                              },
+                              "type": {
+                                "description": "类型",
+                                "type": "string"
+                              },
+                              "price": {
+                                "description": "价格",
+                                "type": "string"
+                              }
+                            },
+                            "type": "object"
+                          }
+                        },
+                        "courses": {
+                          "type": "array",
+                          "items": {
+                            "properties": {
+                              "id": {
+                                "description": "课程ID",
+                                "type": "integer"
+                              },
+                              "title": {
+                                "description": "课程标题",
+                                "type": "string"
+                              },
+                              "teacher": {
+                                "description": "讲师",
+                                "type": "string"
+                              },
+                              "price": {
+                                "description": "价格",
+                                "type": "string"
+                              }
+                            },
+                            "type": "object"
+                          }
+                        },
+                        "opportunities": {
+                          "type": "array",
+                          "items": {
+                            "properties": {
+                              "id": {
+                                "description": "商机ID",
+                                "type": "integer"
+                              },
+                              "title": {
+                                "description": "商机标题",
+                                "type": "string"
+                              }
+                            },
+                            "type": "object"
+                          }
+                        }
+                      },
+                      "type": "object"
+                    }
+                  },
+                  "type": "object"
+                }
+              }
+            },
+            "headers": {}
+          }
+        },
+        "security": []
+      }
+    },
+    "/api/stats/platform": {
+      "get": {
+        "summary": "获取平台统计数据",
+        "deprecated": false,
+        "description": "",
+        "operationId": "29bc12aedad06d1f24aad2adcd5cc480",
+        "tags": ["首页"],
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "code": {
+                      "description": "状态码",
+                      "type": "integer",
+                      "example": 1
+                    },
+                    "info": {
+                      "description": "提示信息",
+                      "type": "string",
+                      "example": ""
+                    },
+                    "data": {
+                      "properties": {
+                        "list": {
+                          "type": "array",
+                          "items": {
+                            "properties": {
+                              "stat_key": {
+                                "description": "统计标识",
+                                "type": "string"
+                              },
+                              "stat_value": {
+                                "description": "统计值",
+                                "type": "string"
+                              },
+                              "stat_label": {
+                                "description": "展示标签",
+                                "type": "string"
+                              }
+                            },
+                            "type": "object"
+                          }
+                        }
+                      },
+                      "type": "object"
+                    }
+                  },
+                  "type": "object"
+                }
+              }
+            },
+            "headers": {}
+          }
+        },
+        "security": []
+      }
+    },
+    "/api/user/messages": {
+      "get": {
+        "summary": "获取消息列表",
+        "deprecated": false,
+        "description": "",
+        "operationId": "fbf43a16e35c70d9e680c8a56c5c3ae8",
+        "tags": ["消息通知"],
+        "parameters": [
+          {
+            "name": "type",
+            "in": "query",
+            "description": "类型筛选(1系统,2订单,3商机,4课程,5互动)",
+            "required": false,
+            "example": "0",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "description": "",
+            "required": false,
+            "example": "1",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "page_size",
+            "in": "query",
+            "description": "",
+            "required": false,
+            "example": "10",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "code": {
+                      "type": "integer",
+                      "example": 1
+                    },
+                    "info": {
+                      "type": "string",
+                      "example": ""
+                    },
+                    "data": {
+                      "type": "object",
+                      "properties": {}
+                    }
+                  },
+                  "type": "object"
+                }
+              }
+            },
+            "headers": {}
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/api/user/message/read": {
+      "post": {
+        "summary": "标记单条消息已读",
+        "deprecated": false,
+        "description": "",
+        "operationId": "dc637c06e578cf667894bdc6ebfc61c4",
+        "tags": ["消息通知"],
+        "parameters": [],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "properties": {
+                  "message_id": {
+                    "description": "消息ID",
+                    "type": "integer"
+                  }
+                },
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "code": {
+                      "type": "integer",
+                      "example": 1
+                    },
+                    "info": {
+                      "type": "string",
+                      "example": "已标记为已读"
+                    }
+                  },
+                  "type": "object"
+                }
+              }
+            },
+            "headers": {}
+          }
+        },
+        "security": []
+      }
+    },
+    "/api/user/messages/read-all": {
+      "post": {
+        "summary": "全部标记已读",
+        "deprecated": false,
+        "description": "",
+        "operationId": "3a35e151ca57d38b3af67a57fc9bf682",
+        "tags": ["消息通知"],
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "code": {
+                      "type": "integer",
+                      "example": 1
+                    },
+                    "info": {
+                      "type": "string",
+                      "example": "已全部标记为已读"
+                    }
+                  },
+                  "type": "object"
+                }
+              }
+            },
+            "headers": {}
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/api/user/vip": {
+      "get": {
+        "summary": "获取会员权益信息",
+        "deprecated": false,
+        "description": "",
+        "operationId": "d75a6672bcd8f5011d37d94c4e11ce10",
+        "tags": ["个人中心"],
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "code": {
+                      "type": "integer",
+                      "example": 1
+                    },
+                    "info": {
+                      "type": "string",
+                      "example": ""
+                    },
+                    "data": {
+                      "type": "object",
+                      "properties": {}
+                    }
+                  },
+                  "type": "object"
+                }
+              }
+            },
+            "headers": {}
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/api/orders": {
+      "get": {
+        "summary": "获取订单列表",
+        "deprecated": false,
+        "description": "",
+        "operationId": "728658f522bdea0e3094f99273ac5e36",
+        "tags": ["个人中心"],
+        "parameters": [
+          {
+            "name": "status",
+            "in": "query",
+            "description": "0待支付,1待服务,2已完成,3已取消",
+            "required": false,
+            "example": "0",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "description": "",
+            "required": false,
+            "example": "1",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "page_size",
+            "in": "query",
+            "description": "",
+            "required": false,
+            "example": "10",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "code": {
+                      "type": "integer",
+                      "example": 1
+                    },
+                    "info": {
+                      "type": "string",
+                      "example": ""
+                    },
+                    "data": {
+                      "type": "object",
+                      "properties": {}
+                    }
+                  },
+                  "type": "object"
+                }
+              }
+            },
+            "headers": {}
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/api/user/certificates": {
+      "get": {
+        "summary": "获取我的证书列表",
+        "deprecated": false,
+        "description": "",
+        "operationId": "21db554539133f00f004ba7bae684ee7",
+        "tags": ["个人中心"],
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "code": {
+                      "type": "integer",
+                      "example": 1
+                    },
+                    "info": {
+                      "type": "string",
+                      "example": ""
+                    },
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {}
+                      }
+                    }
+                  },
+                  "type": "object"
+                }
+              }
+            },
+            "headers": {}
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/api/user/customers": {
+      "get": {
+        "summary": "获取我的客户列表",
+        "deprecated": false,
+        "description": "",
+        "operationId": "5b06a992c2bfab48eb905fec0f0955ed",
+        "tags": ["个人中心"],
+        "parameters": [
+          {
+            "name": "status",
+            "in": "query",
+            "description": "0流失,1活跃,2潜在",
+            "required": false,
+            "example": "1",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "keyword",
+            "in": "query",
+            "description": "",
+            "required": false,
+            "example": "王",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "description": "",
+            "required": false,
+            "example": "1",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "page_size",
+            "in": "query",
+            "description": "",
+            "required": false,
+            "example": "10",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "code": {
+                      "type": "integer",
+                      "example": 1
+                    },
+                    "info": {
+                      "type": "string",
+                      "example": ""
+                    },
+                    "data": {
+                      "type": "object",
+                      "properties": {}
+                    }
+                  },
+                  "type": "object"
+                }
+              }
+            },
+            "headers": {}
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/api/contracts": {
+      "get": {
+        "summary": "获取合同列表",
+        "deprecated": false,
+        "description": "",
+        "operationId": "f86604cf748e50c5a4ce2c2f2de4a236",
+        "tags": ["个人中心"],
+        "parameters": [
+          {
+            "name": "status",
+            "in": "query",
+            "description": "0作废,1生效中,2到期",
+            "required": false,
+            "example": "1",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "description": "",
+            "required": false,
+            "example": "1",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "page_size",
+            "in": "query",
+            "description": "",
+            "required": false,
+            "example": "10",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "code": {
+                      "type": "integer",
+                      "example": 1
+                    },
+                    "info": {
+                      "type": "string",
+                      "example": ""
+                    },
+                    "data": {
+                      "type": "object",
+                      "properties": {}
+                    }
+                  },
+                  "type": "object"
+                }
+              }
+            },
+            "headers": {}
+          }
+        },
+        "security": []
+      }
+    },
+    "/api/contract/detail": {
+      "get": {
+        "summary": "获取合同详情",
+        "deprecated": false,
+        "description": "",
+        "operationId": "2d62a62f33e29305347db61f00d3dab1",
+        "tags": ["个人中心"],
+        "parameters": [
+          {
+            "name": "contract_id",
+            "in": "query",
+            "description": "合同ID",
+            "required": true,
+            "example": "1",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "code": {
+                      "type": "integer",
+                      "example": 1
+                    },
+                    "info": {
+                      "type": "string",
+                      "example": ""
+                    },
+                    "data": {
+                      "type": "object",
+                      "properties": {}
+                    }
+                  },
+                  "type": "object"
+                }
+              }
+            },
+            "headers": {}
+          }
+        },
+        "security": []
+      }
+    },
+    "/api/invoices": {
+      "get": {
+        "summary": "获取发票列表",
+        "deprecated": false,
+        "description": "",
+        "operationId": "6fab5e661b00e03ece847e9d37c7010e",
+        "tags": ["个人中心"],
+        "parameters": [
+          {
+            "name": "status",
+            "in": "query",
+            "description": "0待开具,1已开具",
+            "required": false,
+            "example": "1",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "description": "",
+            "required": false,
+            "example": "1",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "page_size",
+            "in": "query",
+            "description": "",
+            "required": false,
+            "example": "10",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "code": {
+                      "type": "integer",
+                      "example": 1
+                    },
+                    "info": {
+                      "type": "string",
+                      "example": ""
+                    },
+                    "data": {
+                      "type": "object",
+                      "properties": {}
+                    }
+                  },
+                  "type": "object"
+                }
+              }
+            },
+            "headers": {}
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/api/upload": {
+      "post": {
+        "summary": "文件上传",
+        "deprecated": false,
+        "description": "",
+        "operationId": "9a62a8040c2c611b9c84b02d3a7ba50b",
+        "tags": ["个人中心"],
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "code": {
+                      "type": "integer",
+                      "example": 1
+                    },
+                    "info": {
+                      "type": "string",
+                      "example": "上传成功"
+                    },
+                    "data": {
+                      "type": "object",
+                      "properties": {}
+                    }
+                  },
+                  "type": "object"
+                }
+              }
+            },
+            "headers": {}
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/api/customer-service/config": {
+      "get": {
+        "summary": "获取客服配置",
+        "deprecated": false,
+        "description": "",
+        "operationId": "3c8a9d2aa5ab163fd19d5d4986063e00",
+        "tags": ["个人中心"],
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "code": {
+                      "type": "integer",
+                      "example": 1
+                    },
+                    "info": {
+                      "type": "string",
+                      "example": ""
+                    },
+                    "data": {
+                      "type": "object",
+                      "properties": {}
+                    }
+                  },
+                  "type": "object"
+                }
+              }
+            },
+            "headers": {}
+          }
+        },
+        "security": []
+      }
+    },
+    "/api/about": {
+      "get": {
+        "summary": "获取关于平台信息",
+        "deprecated": false,
+        "description": "",
+        "operationId": "395234617c8657feb5b5bf3f4dba92dc",
+        "tags": ["个人中心"],
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "code": {
+                      "type": "integer",
+                      "example": 1
+                    },
+                    "info": {
+                      "type": "string",
+                      "example": ""
+                    },
+                    "data": {
+                      "type": "object",
+                      "properties": {}
+                    }
+                  },
+                  "type": "object"
+                }
+              }
+            },
+            "headers": {}
+          }
+        },
+        "security": []
+      }
+    },
+    "/api/user/vip/level-perks": {
+      "get": {
+        "summary": "获取会员等级权益配置",
+        "deprecated": false,
+        "description": "",
+        "operationId": "3da53908568a6c92b995143cf87b6422",
+        "tags": ["个人中心"],
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "code": {
+                      "type": "integer",
+                      "example": 1
+                    },
+                    "info": {
+                      "type": "string",
+                      "example": ""
+                    },
+                    "data": {
+                      "type": "object",
+                      "properties": {}
+                    }
+                  },
+                  "type": "object"
+                }
+              }
+            },
+            "headers": {}
+          }
+        },
+        "security": []
+      }
+    },
+    "/api/order/detail": {
+      "get": {
+        "summary": "获取订单详情",
+        "deprecated": false,
+        "description": "",
+        "operationId": "7593c52a16b0de1151ade4258fd26a27",
+        "tags": ["订单"],
+        "parameters": [
+          {
+            "name": "order_no",
+            "in": "query",
+            "description": "订单编号",
+            "required": true,
+            "example": "XS202606191234560001234567",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "code": {
+                      "description": "状态码",
+                      "type": "integer",
+                      "example": 1
+                    },
+                    "info": {
+                      "description": "提示信息",
+                      "type": "string",
+                      "example": ""
+                    },
+                    "data": {
+                      "properties": {
+                        "order_id": {
+                          "description": "订单ID",
+                          "type": "integer"
+                        },
+                        "order_no": {
+                          "description": "订单编号",
+                          "type": "string"
+                        },
+                        "user_id": {
+                          "description": "用户ID",
+                          "type": "integer"
+                        },
+                        "total_amount": {
+                          "description": "总金额",
+                          "type": "string"
+                        },
+                        "discount_amount": {
+                          "description": "优惠金额",
+                          "type": "string"
+                        },
+                        "pay_amount": {
+                          "description": "实付金额",
+                          "type": "string"
+                        },
+                        "status": {
+                          "description": "状态",
+                          "type": "integer"
+                        },
+                        "status_text": {
+                          "description": "状态文字",
+                          "type": "string"
+                        },
+                        "pay_method": {
+                          "description": "支付方式",
+                          "type": "integer",
+                          "nullable": true
+                        },
+                        "pay_time": {
+                          "description": "支付时间",
+                          "type": "string",
+                          "nullable": true
+                        },
+                        "remark": {
+                          "description": "备注",
+                          "type": "string"
+                        },
+                        "items": {
+                          "type": "array",
+                          "items": {
+                            "properties": {
+                              "product_id": {
+                                "description": "商品ID",
+                                "type": "integer"
+                              },
+                              "product_name": {
+                                "description": "商品名称",
+                                "type": "string"
+                              },
+                              "spec_name": {
+                                "description": "规格名称",
+                                "type": "string"
+                              },
+                              "price": {
+                                "description": "单价",
+                                "type": "string"
+                              },
+                              "quantity": {
+                                "description": "数量",
+                                "type": "integer"
+                              },
+                              "subtotal": {
+                                "description": "小计",
+                                "type": "string"
+                              }
+                            },
+                            "type": "object"
+                          }
+                        },
+                        "created_at": {
+                          "description": "创建时间",
+                          "type": "string"
+                        }
+                      },
+                      "type": "object"
+                    }
+                  },
+                  "type": "object"
+                }
+              }
+            },
+            "headers": {}
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/api/order/pay": {
+      "post": {
+        "summary": "发起支付",
+        "deprecated": false,
+        "description": "",
+        "operationId": "00d2a23ba5571fd86322863f2ed29fcc",
+        "tags": ["订单"],
+        "parameters": [],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "properties": {
+                  "order_no": {
+                    "description": "订单编号",
+                    "type": "string"
+                  },
+                  "pay_method": {
+                    "description": "支付方式(1微信支付)",
+                    "type": "integer"
+                  }
+                },
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "code": {
+                      "description": "状态码",
+                      "type": "integer",
+                      "example": 1
+                    },
+                    "info": {
+                      "description": "提示信息",
+                      "type": "string",
+                      "example": ""
+                    },
+                    "data": {
+                      "properties": {
+                        "order_no": {
+                          "description": "订单编号",
+                          "type": "string"
+                        },
+                        "pay_method": {
+                          "description": "支付方式",
+                          "type": "integer"
+                        },
+                        "pay_params": {
+                          "properties": {
+                            "timeStamp": {
+                              "type": "string"
+                            },
+                            "nonceStr": {
+                              "type": "string"
+                            },
+                            "package": {
+                              "type": "string"
+                            },
+                            "signType": {
+                              "type": "string"
+                            },
+                            "paySign": {
+                              "type": "string"
+                            }
+                          },
+                          "type": "object"
+                        }
+                      },
+                      "type": "object"
+                    }
+                  },
+                  "type": "object"
+                }
+              }
+            },
+            "headers": {}
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/api/order/cancel": {
+      "post": {
+        "summary": "取消订单",
+        "deprecated": false,
+        "description": "",
+        "operationId": "c41ac6ffb55b502e4d4d02ba9efbe7b2",
+        "tags": ["订单"],
+        "parameters": [],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "properties": {
+                  "order_no": {
+                    "description": "订单编号",
+                    "type": "string"
+                  },
+                  "cancel_reason": {
+                    "description": "取消原因",
+                    "type": "string"
+                  }
+                },
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "code": {
+                      "description": "状态码",
+                      "type": "integer",
+                      "example": 1
+                    },
+                    "info": {
+                      "description": "提示信息",
+                      "type": "string",
+                      "example": "订单已取消"
+                    },
+                    "data": {
+                      "type": "object",
+                      "properties": {}
+                    }
+                  },
+                  "type": "object"
+                }
+              }
+            },
+            "headers": {}
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/api/payment/callback": {
+      "post": {
+        "summary": "微信支付回调（内部接口）",
+        "deprecated": false,
+        "description": "",
+        "operationId": "431805dbeba15ffc2cf31d295c694eae",
+        "tags": ["订单"],
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "code": {
+                      "description": "状态码",
+                      "type": "integer",
+                      "example": 1
+                    },
+                    "info": {
+                      "description": "提示信息",
+                      "type": "string",
+                      "example": "success"
+                    }
+                  },
+                  "type": "object"
+                }
+              }
+            },
+            "headers": {}
+          }
+        },
+        "security": []
+      }
+    },
+    "/api/course/categories": {
+      "get": {
+        "summary": "获取课程分类列表",
+        "deprecated": false,
+        "description": "",
+        "operationId": "0603dab7523370e063d3ed32e791081c",
+        "tags": ["学习中心"],
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "code": {
+                      "description": "状态码",
+                      "type": "integer",
+                      "example": 1
+                    },
+                    "info": {
+                      "description": "提示信息",
+                      "type": "string",
+                      "example": ""
+                    },
+                    "data": {
+                      "description": "响应数据",
+                      "type": "array",
+                      "items": {
+                        "properties": {
+                          "id": {
+                            "description": "分类ID",
+                            "type": "integer"
+                          },
+                          "name": {
+                            "description": "分类名称",
+                            "type": "string"
+                          }
+                        },
+                        "type": "object"
+                      }
+                    }
+                  },
+                  "type": "object"
+                }
+              }
+            },
+            "headers": {}
+          }
+        },
+        "security": []
+      }
+    },
+    "/api/courses": {
+      "get": {
+        "summary": "获取课程列表",
+        "deprecated": false,
+        "description": "",
+        "operationId": "6bb8c867e9c0e2bb791c0a126080b5ac",
+        "tags": ["学习中心"],
+        "parameters": [
+          {
+            "name": "category_id",
+            "in": "query",
+            "description": "分类ID",
+            "required": false,
+            "example": "1",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "course_type",
+            "in": "query",
+            "description": "1直播,2录播,3训练营,4考证类,5线下活动",
+            "required": false,
+            "example": "0",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "keyword",
+            "in": "query",
+            "description": "关键字搜索",
+            "required": false,
+            "example": "代账",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "sort",
+            "in": "query",
+            "description": "排序(default/hot/price_asc/price_desc/newest)",
+            "required": false,
+            "example": "default",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "description": "页码",
+            "required": false,
+            "example": "1",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "page_size",
+            "in": "query",
+            "description": "每页条数",
+            "required": false,
+            "example": "10",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "code": {
+                      "description": "状态码",
+                      "type": "integer",
+                      "example": 1
+                    },
+                    "info": {
+                      "description": "提示信息",
+                      "type": "string",
+                      "example": ""
+                    },
+                    "data": {
+                      "description": "响应数据",
+                      "properties": {
+                        "total": {
+                          "description": "总数",
+                          "type": "integer",
+                          "example": 42
+                        },
+                        "page": {
+                          "description": "当前页码",
+                          "type": "integer",
+                          "example": 1
+                        },
+                        "page_size": {
+                          "description": "每页条数",
+                          "type": "integer",
+                          "example": 10
+                        },
+                        "total_page": {
+                          "description": "总页数",
+                          "type": "integer",
+                          "example": 5
+                        },
+                        "list": {
+                          "description": "课程列表",
+                          "type": "array",
+                          "items": {
+                            "properties": {
+                              "id": {
+                                "description": "课程ID",
+                                "type": "integer"
+                              },
+                              "title": {
+                                "description": "课程标题",
+                                "type": "string"
+                              },
+                              "description": {
+                                "description": "课程简介",
+                                "type": "string"
+                              },
+                              "thumbnail": {
+                                "description": "封面图URL",
+                                "type": "string"
+                              },
+                              "course_type": {
+                                "description": "类型(1直播,2录播,3训练营,4考证类,5线下活动)",
+                                "type": "integer"
+                              },
+                              "course_type_text": {
+                                "description": "类型文字",
+                                "type": "string"
+                              },
+                              "teacher_name": {
+                                "description": "讲师姓名",
+                                "type": "string"
+                              },
+                              "teacher_avatar": {
+                                "description": "讲师头像",
+                                "type": "string"
+                              },
+                              "price": {
+                                "description": "价格",
+                                "type": "string"
+                              },
+                              "original_price": {
+                                "description": "原价",
+                                "type": "string",
+                                "nullable": true
+                              },
+                              "student_count": {
+                                "description": "报名人数",
+                                "type": "integer"
+                              },
+                              "is_live": {
+                                "description": "是否直播中(0否,1是)",
+                                "type": "integer"
+                              },
+                              "live_start_time": {
+                                "description": "直播开始时间",
+                                "type": "string",
+                                "nullable": true
+                              },
+                              "total_duration": {
+                                "description": "总时长(秒)",
+                                "type": "integer"
+                              },
+                              "section_count": {
+                                "description": "课时数",
+                                "type": "integer"
+                              },
+                              "category_id": {
+                                "description": "分类ID",
+                                "type": "integer"
+                              }
+                            },
+                            "type": "object"
+                          }
+                        }
+                      },
+                      "type": "object"
+                    }
+                  },
+                  "type": "object"
+                }
+              }
+            },
+            "headers": {}
+          }
+        },
+        "security": []
+      }
+    },
+    "/api/course/detail": {
+      "get": {
+        "summary": "获取课程详情",
+        "deprecated": false,
+        "description": "",
+        "operationId": "081c0a57c7835ff37096c59e70ad71c8",
+        "tags": ["学习中心"],
+        "parameters": [
+          {
+            "name": "course_id",
+            "in": "query",
+            "description": "课程ID",
+            "required": true,
+            "example": "1",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "code": {
+                      "description": "状态码",
+                      "type": "integer",
+                      "example": 1
+                    },
+                    "info": {
+                      "description": "提示信息",
+                      "type": "string",
+                      "example": ""
+                    },
+                    "data": {
+                      "description": "响应数据",
+                      "properties": {
+                        "id": {
+                          "description": "课程ID",
+                          "type": "integer"
+                        },
+                        "title": {
+                          "description": "课程标题",
+                          "type": "string"
+                        },
+                        "description": {
+                          "description": "课程简介",
+                          "type": "string"
+                        },
+                        "detail": {
+                          "description": "课程详情(富文本)",
+                          "type": "string"
+                        },
+                        "thumbnail": {
+                          "description": "封面图URL",
+                          "type": "string"
+                        },
+                        "course_type": {
+                          "description": "类型(1直播,2录播,3训练营,4考证类,5线下活动)",
+                          "type": "integer"
+                        },
+                        "course_type_text": {
+                          "description": "类型文字",
+                          "type": "string"
+                        },
+                        "teacher_name": {
+                          "description": "讲师姓名",
+                          "type": "string"
+                        },
+                        "teacher_avatar": {
+                          "description": "讲师头像",
+                          "type": "string"
+                        },
+                        "teacher_intro": {
+                          "description": "讲师简介",
+                          "type": "string"
+                        },
+                        "price": {
+                          "description": "价格",
+                          "type": "string"
+                        },
+                        "original_price": {
+                          "description": "原价",
+                          "type": "string",
+                          "nullable": true
+                        },
+                        "student_count": {
+                          "description": "报名人数",
+                          "type": "integer"
+                        },
+                        "total_duration": {
+                          "description": "总时长(秒)",
+                          "type": "integer"
+                        },
+                        "section_count": {
+                          "description": "课时数",
+                          "type": "integer"
+                        },
+                        "is_live": {
+                          "description": "是否直播中(0否,1是)",
+                          "type": "integer"
+                        },
+                        "live_start_time": {
+                          "description": "直播开始时间",
+                          "type": "string",
+                          "nullable": true
+                        },
+                        "is_bought": {
+                          "description": "当前用户是否已购买",
+                          "type": "boolean"
+                        },
+                        "category_id": {
+                          "description": "分类ID",
+                          "type": "integer"
+                        }
+                      },
+                      "type": "object"
+                    }
+                  },
+                  "type": "object"
+                }
+              }
+            },
+            "headers": {}
+          }
+        },
+        "security": []
+      }
+    },
+    "/api/course/sections": {
+      "get": {
+        "summary": "获取课程章节列表（需登录且已购买）",
+        "deprecated": false,
+        "description": "",
+        "operationId": "f3cfe616db11d6882f29f2f11c2a7755",
+        "tags": ["学习中心"],
+        "parameters": [
+          {
+            "name": "course_id",
+            "in": "query",
+            "description": "课程ID",
+            "required": true,
+            "example": "1",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "code": {
+                      "description": "状态码",
+                      "type": "integer",
+                      "example": 1
+                    },
+                    "info": {
+                      "description": "提示信息",
+                      "type": "string",
+                      "example": ""
+                    },
+                    "data": {
+                      "description": "响应数据",
+                      "type": "array",
+                      "items": {
+                        "properties": {
+                          "id": {
+                            "description": "章节ID",
+                            "type": "integer"
+                          },
+                          "title": {
+                            "description": "课时标题",
+                            "type": "string"
+                          },
+                          "parent_id": {
+                            "description": "父级章节ID(0为顶级)",
+                            "type": "integer"
+                          },
+                          "video_url": {
+                            "description": "视频URL(未购买/非免费章节返回空)",
+                            "type": "string"
+                          },
+                          "duration": {
+                            "description": "时长(秒)",
+                            "type": "integer"
+                          },
+                          "duration_text": {
+                            "description": "时长(文本)",
+                            "type": "string"
+                          },
+                          "is_free": {
+                            "description": "是否免费试看(0否,1是)",
+                            "type": "integer"
+                          },
+                          "is_completed": {
+                            "description": "是否已学完",
+                            "type": "boolean"
+                          },
+                          "last_position": {
+                            "description": "上次播放位置(秒)",
+                            "type": "integer"
+                          },
+                          "sort_order": {
+                            "description": "排序",
+                            "type": "integer"
+                          },
+                          "children": {
+                            "description": "子章节列表",
+                            "type": "array",
+                            "items": {
+                              "type": "object",
+                              "properties": {}
+                            }
+                          }
+                        },
+                        "type": "object"
+                      }
+                    }
+                  },
+                  "type": "object"
+                }
+              }
+            },
+            "headers": {}
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/api/course/buy": {
+      "post": {
+        "summary": "购买课程",
+        "deprecated": false,
+        "description": "",
+        "operationId": "22c0df06dd09a5957c4cbd3504cb12ed",
+        "tags": ["学习中心"],
+        "parameters": [],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "properties": {
+                  "course_id": {
+                    "description": "课程ID",
+                    "type": "integer"
+                  },
+                  "spec_id": {
+                    "description": "规格ID(课程有规格时必传)",
+                    "type": "integer"
+                  }
+                },
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "code": {
+                      "description": "状态码",
+                      "type": "integer",
+                      "example": 1
+                    },
+                    "info": {
+                      "description": "提示信息",
+                      "type": "string",
+                      "example": ""
+                    },
+                    "data": {
+                      "description": "响应数据",
+                      "properties": {
+                        "order_id": {
+                          "description": "订单ID",
+                          "type": "integer"
+                        },
+                        "order_no": {
+                          "description": "订单编号",
+                          "type": "string"
+                        },
+                        "pay_amount": {
+                          "description": "支付金额",
+                          "type": "string"
+                        },
+                        "status": {
+                          "description": "订单状态(0待支付,1待服务,2已完成)",
+                          "type": "integer"
+                        },
+                        "status_text": {
+                          "description": "状态文字",
+                          "type": "string"
+                        }
+                      },
+                      "type": "object"
+                    }
+                  },
+                  "type": "object"
+                }
+              }
+            },
+            "headers": {}
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/api/user/courses": {
+      "get": {
+        "summary": "我的课程列表",
+        "deprecated": false,
+        "description": "",
+        "operationId": "06ef1235dd4f5283f6224dc7cccac806",
+        "tags": ["学习中心"],
+        "parameters": [
+          {
+            "name": "is_completed",
+            "in": "query",
+            "description": "筛选(0学习中,1已完成,不传全部)",
+            "required": false,
+            "example": "0",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "description": "页码",
+            "required": false,
+            "example": "1",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "page_size",
+            "in": "query",
+            "description": "每页条数",
+            "required": false,
+            "example": "10",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "code": {
+                      "description": "状态码",
+                      "type": "integer",
+                      "example": 1
+                    },
+                    "info": {
+                      "description": "提示信息",
+                      "type": "string",
+                      "example": ""
+                    },
+                    "data": {
+                      "description": "响应数据",
+                      "properties": {
+                        "total": {
+                          "description": "总数",
+                          "type": "integer",
+                          "example": 10
+                        },
+                        "page": {
+                          "description": "当前页码",
+                          "type": "integer",
+                          "example": 1
+                        },
+                        "page_size": {
+                          "description": "每页条数",
+                          "type": "integer",
+                          "example": 10
+                        },
+                        "total_page": {
+                          "description": "总页数",
+                          "type": "integer",
+                          "example": 1
+                        },
+                        "list": {
+                          "description": "课程列表",
+                          "type": "array",
+                          "items": {
+                            "properties": {
+                              "course_id": {
+                                "description": "课程ID",
+                                "type": "integer"
+                              },
+                              "title": {
+                                "description": "课程标题",
+                                "type": "string"
+                              },
+                              "thumbnail": {
+                                "description": "封面图",
+                                "type": "string"
+                              },
+                              "teacher_name": {
+                                "description": "讲师姓名",
+                                "type": "string"
+                              },
+                              "progress": {
+                                "description": "学习进度百分比",
+                                "type": "number",
+                                "format": "float"
+                              },
+                              "total_duration": {
+                                "description": "总时长(秒)",
+                                "type": "integer"
+                              },
+                              "learned_duration": {
+                                "description": "已学习时长(秒)",
+                                "type": "integer"
+                              },
+                              "is_completed": {
+                                "description": "是否已完成(0否,1是)",
+                                "type": "integer"
+                              },
+                              "last_section_id": {
+                                "description": "上次学习课时ID",
+                                "type": "integer"
+                              },
+                              "expire_at": {
+                                "description": "课程到期时间",
+                                "type": "string",
+                                "nullable": true
+                              },
+                              "bought_at": {
+                                "description": "购买时间",
+                                "type": "string"
+                              }
+                            },
+                            "type": "object"
+                          }
+                        }
+                      },
+                      "type": "object"
+                    }
+                  },
+                  "type": "object"
+                }
+              }
+            },
+            "headers": {}
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/api/user/course/progress": {
+      "get": {
+        "summary": "获取课程学习进度",
+        "deprecated": false,
+        "description": "",
+        "operationId": "de13f4d83c1ee8ebf218efb21cd9558d",
+        "tags": ["学习中心"],
+        "parameters": [
+          {
+            "name": "course_id",
+            "in": "query",
+            "description": "课程ID",
+            "required": true,
+            "example": "1",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "code": {
+                      "description": "状态码",
+                      "type": "integer",
+                      "example": 1
+                    },
+                    "info": {
+                      "description": "提示信息",
+                      "type": "string",
+                      "example": ""
+                    },
+                    "data": {
+                      "description": "响应数据",
+                      "properties": {
+                        "course_id": {
+                          "description": "课程ID",
+                          "type": "integer"
+                        },
+                        "progress": {
+                          "description": "总进度百分比",
+                          "type": "number",
+                          "format": "float"
+                        },
+                        "total_learn_duration": {
+                          "description": "总学习时长(秒)",
+                          "type": "integer"
+                        },
+                        "total_learn_duration_text": {
+                          "description": "总学习时长(文本)",
+                          "type": "string"
+                        },
+                        "is_completed": {
+                          "description": "是否已完成",
+                          "type": "integer"
+                        },
+                        "last_section_id": {
+                          "description": "上次学习课时ID",
+                          "type": "integer"
+                        },
+                        "sections_progress": {
+                          "description": "各章节进度列表",
+                          "type": "array",
+                          "items": {
+                            "properties": {
+                              "section_id": {
+                                "description": "课时ID",
+                                "type": "integer"
+                              },
+                              "progress": {
+                                "description": "课时进度百分比",
+                                "type": "number",
+                                "format": "float"
+                              },
+                              "is_completed": {
+                                "description": "是否已看完",
+                                "type": "boolean"
+                              },
+                              "last_position": {
+                                "description": "上次播放位置(秒)",
+                                "type": "integer"
+                              }
+                            },
+                            "type": "object"
+                          }
+                        }
+                      },
+                      "type": "object"
+                    }
+                  },
+                  "type": "object"
+                }
+              }
+            },
+            "headers": {}
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      },
+      "post": {
+        "summary": "更新学习进度",
+        "deprecated": false,
+        "description": "",
+        "operationId": "676693803501b180722301c99c4b68fd",
+        "tags": ["学习中心"],
+        "parameters": [],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "properties": {
+                  "course_id": {
+                    "description": "课程ID",
+                    "type": "integer"
+                  },
+                  "section_id": {
+                    "description": "课时ID",
+                    "type": "integer"
+                  },
+                  "watched_duration": {
+                    "description": "已观看时长(秒)",
+                    "type": "integer"
+                  },
+                  "last_position": {
+                    "description": "上次播放位置(秒)",
+                    "type": "integer"
+                  },
+                  "is_completed": {
+                    "description": "是否看完(0否,1是)",
+                    "type": "integer"
+                  }
+                },
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "code": {
+                      "description": "状态码",
+                      "type": "integer",
+                      "example": 1
+                    },
+                    "info": {
+                      "description": "提示信息",
+                      "type": "string",
+                      "example": "进度已更新"
+                    },
+                    "data": {
+                      "description": "响应数据",
+                      "properties": {
+                        "section_progress": {
+                          "description": "章节进度百分比",
+                          "type": "number",
+                          "format": "float"
+                        },
+                        "course_progress": {
+                          "description": "课程总进度百分比",
+                          "type": "number",
+                          "format": "float"
+                        }
+                      },
+                      "type": "object"
+                    }
+                  },
+                  "type": "object"
+                }
+              }
+            },
+            "headers": {}
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/api/events": {
+      "get": {
+        "summary": "获取线下活动列表",
+        "deprecated": false,
+        "description": "",
+        "operationId": "7c54d59b428cf7608283947026bd65c1",
+        "tags": ["学习中心"],
+        "parameters": [
+          {
+            "name": "status",
+            "in": "query",
+            "description": "筛选(1报名中,2已满员,0或空全部)",
+            "required": false,
+            "example": "1",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "description": "页码",
+            "required": false,
+            "example": "1",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "page_size",
+            "in": "query",
+            "description": "每页条数",
+            "required": false,
+            "example": "10",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "code": {
+                      "description": "状态码",
+                      "type": "integer",
+                      "example": 1
+                    },
+                    "info": {
+                      "description": "提示信息",
+                      "type": "string",
+                      "example": ""
+                    },
+                    "data": {
+                      "description": "响应数据",
+                      "properties": {
+                        "total": {
+                          "description": "总数",
+                          "type": "integer",
+                          "example": 5
+                        },
+                        "page": {
+                          "description": "当前页码",
+                          "type": "integer",
+                          "example": 1
+                        },
+                        "page_size": {
+                          "description": "每页条数",
+                          "type": "integer",
+                          "example": 10
+                        },
+                        "total_page": {
+                          "description": "总页数",
+                          "type": "integer",
+                          "example": 1
+                        },
+                        "list": {
+                          "description": "活动列表",
+                          "type": "array",
+                          "items": {
+                            "properties": {
+                              "id": {
+                                "description": "活动ID",
+                                "type": "integer"
+                              },
+                              "title": {
+                                "description": "活动标题",
+                                "type": "string"
+                              },
+                              "cover_image": {
+                                "description": "封面图URL",
+                                "type": "string"
+                              },
+                              "event_date": {
+                                "description": "活动日期",
+                                "type": "string"
+                              },
+                              "start_time": {
+                                "description": "开始时间",
+                                "type": "string"
+                              },
+                              "location": {
+                                "description": "活动地点",
+                                "type": "string"
+                              },
+                              "city": {
+                                "description": "所在城市",
+                                "type": "string"
+                              },
+                              "max_participants": {
+                                "description": "最大参与人数",
+                                "type": "integer",
+                                "nullable": true
+                              },
+                              "current_count": {
+                                "description": "当前报名人数",
+                                "type": "integer"
+                              },
+                              "price": {
+                                "description": "报名费用",
+                                "type": "string"
+                              },
+                              "status": {
+                                "description": "状态(0已结束,1报名中,2已满员)",
+                                "type": "integer"
+                              },
+                              "status_text": {
+                                "description": "状态文字",
+                                "type": "string"
+                              }
+                            },
+                            "type": "object"
+                          }
+                        }
+                      },
+                      "type": "object"
+                    }
+                  },
+                  "type": "object"
+                }
+              }
+            },
+            "headers": {}
+          }
+        },
+        "security": []
+      }
+    },
+    "/api/event/detail": {
+      "get": {
+        "summary": "获取活动详情",
+        "deprecated": false,
+        "description": "",
+        "operationId": "b8b809e2aad85eef6a729bd5cb856052",
+        "tags": ["学习中心"],
+        "parameters": [
+          {
+            "name": "event_id",
+            "in": "query",
+            "description": "活动ID",
+            "required": true,
+            "example": "1",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "code": {
+                      "description": "状态码",
+                      "type": "integer",
+                      "example": 1
+                    },
+                    "info": {
+                      "description": "提示信息",
+                      "type": "string",
+                      "example": ""
+                    },
+                    "data": {
+                      "description": "响应数据",
+                      "properties": {
+                        "id": {
+                          "description": "活动ID",
+                          "type": "integer"
+                        },
+                        "title": {
+                          "description": "活动标题",
+                          "type": "string"
+                        },
+                        "description": {
+                          "description": "活动描述",
+                          "type": "string"
+                        },
+                        "cover_image": {
+                          "description": "封面图URL",
+                          "type": "string"
+                        },
+                        "event_date": {
+                          "description": "活动日期",
+                          "type": "string"
+                        },
+                        "start_time": {
+                          "description": "开始时间",
+                          "type": "string"
+                        },
+                        "end_time": {
+                          "description": "结束时间",
+                          "type": "string",
+                          "nullable": true
+                        },
+                        "location": {
+                          "description": "活动地点",
+                          "type": "string"
+                        },
+                        "city": {
+                          "description": "所在城市",
+                          "type": "string"
+                        },
+                        "longitude": {
+                          "description": "经度",
+                          "type": "number",
+                          "format": "float",
+                          "nullable": true
+                        },
+                        "latitude": {
+                          "description": "纬度",
+                          "type": "number",
+                          "format": "float",
+                          "nullable": true
+                        },
+                        "max_participants": {
+                          "description": "最大参与人数",
+                          "type": "integer",
+                          "nullable": true
+                        },
+                        "current_count": {
+                          "description": "当前报名人数",
+                          "type": "integer"
+                        },
+                        "price": {
+                          "description": "报名费用",
+                          "type": "string"
+                        },
+                        "status": {
+                          "description": "状态(0已结束,1报名中,2已满员)",
+                          "type": "integer"
+                        },
+                        "status_text": {
+                          "description": "状态文字",
+                          "type": "string"
+                        },
+                        "is_registered": {
+                          "description": "当前用户是否已报名",
+                          "type": "boolean"
+                        }
+                      },
+                      "type": "object"
+                    }
+                  },
+                  "type": "object"
+                }
+              }
+            },
+            "headers": {}
+          }
+        },
+        "security": []
+      }
+    },
+    "/api/event/register": {
+      "post": {
+        "summary": "活动报名",
+        "deprecated": false,
+        "description": "",
+        "operationId": "4b19e3c1e6d3edb86c92eea28e988192",
+        "tags": ["学习中心"],
+        "parameters": [],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "properties": {
+                  "event_id": {
+                    "description": "活动ID",
+                    "type": "integer"
+                  },
+                  "real_name": {
+                    "description": "报名姓名",
+                    "type": "string"
+                  },
+                  "phone": {
+                    "description": "联系电话",
+                    "type": "string"
+                  },
+                  "company_name": {
+                    "description": "公司名称",
+                    "type": "string"
+                  }
+                },
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "code": {
+                      "description": "状态码",
+                      "type": "integer",
+                      "example": 1
+                    },
+                    "info": {
+                      "description": "提示信息",
+                      "type": "string",
+                      "example": "报名成功"
+                    },
+                    "data": {
+                      "description": "响应数据",
+                      "properties": {
+                        "status": {
+                          "description": "状态(0待支付,1已报名,2已签到)",
+                          "type": "integer",
+                          "example": 0
+                        },
+                        "status_text": {
+                          "description": "状态文字",
+                          "type": "string",
+                          "example": "待支付"
+                        },
+                        "registration_id": {
+                          "description": "报名记录ID（免费活动时返回）",
+                          "type": "integer",
+                          "nullable": true
+                        },
+                        "event_title": {
+                          "description": "活动标题（免费活动时返回）",
+                          "type": "string",
+                          "nullable": true
+                        },
+                        "event_date": {
+                          "description": "活动日期（免费活动时返回）",
+                          "type": "string",
+                          "nullable": true
+                        },
+                        "order_id": {
+                          "description": "订单ID（付费活动时返回）",
+                          "type": "integer",
+                          "nullable": true
+                        },
+                        "order_no": {
+                          "description": "订单编号（付费活动时返回）",
+                          "type": "string",
+                          "nullable": true
+                        },
+                        "pay_amount": {
+                          "description": "支付金额（付费活动时返回）",
+                          "type": "string",
+                          "nullable": true
+                        }
+                      },
+                      "type": "object"
+                    }
+                  },
+                  "type": "object"
+                }
+              }
+            },
+            "headers": {}
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/api/user/learning/stats": {
+      "get": {
+        "summary": "获取学习统计数据",
+        "deprecated": false,
+        "description": "",
+        "operationId": "88b9846fc599d542de4af4f801c1ad98",
+        "tags": ["学习中心"],
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "code": {
+                      "description": "状态码",
+                      "type": "integer",
+                      "example": 1
+                    },
+                    "info": {
+                      "description": "提示信息",
+                      "type": "string",
+                      "example": ""
+                    },
+                    "data": {
+                      "description": "响应数据",
+                      "properties": {
+                        "week_learn_duration": {
+                          "description": "本周学习时长(秒)",
+                          "type": "integer"
+                        },
+                        "week_learn_duration_text": {
+                          "description": "本周学习时长(文本)",
+                          "type": "string"
+                        },
+                        "week_target_duration": {
+                          "description": "本周目标时长(秒)",
+                          "type": "integer"
+                        },
+                        "week_target_duration_text": {
+                          "description": "本周目标时长(文本)",
+                          "type": "string"
+                        },
+                        "week_progress": {
+                          "description": "本周完成进度百分比",
+                          "type": "number",
+                          "format": "float"
+                        },
+                        "total_courses": {
+                          "description": "总课程数",
+                          "type": "integer"
+                        },
+                        "completed_courses": {
+                          "description": "已完成课程数",
+                          "type": "integer"
+                        },
+                        "total_learn_duration": {
+                          "description": "累计学习时长(秒)",
+                          "type": "integer"
+                        },
+                        "total_learn_duration_text": {
+                          "description": "累计学习时长(文本)",
+                          "type": "string"
+                        },
+                        "certificates_count": {
+                          "description": "获得证书数",
+                          "type": "integer"
+                        }
+                      },
+                      "type": "object"
+                    }
+                  },
+                  "type": "object"
+                }
+              }
+            },
+            "headers": {}
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/api/opportunities/stats": {
+      "get": {
+        "summary": "商机数据看板",
+        "deprecated": false,
+        "description": "",
+        "operationId": "81798fb182417386a8df9065d7edb33e",
+        "tags": ["商机对接(V2)"],
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "code": {
+                      "description": "状态码",
+                      "type": "integer",
+                      "example": 1
+                    },
+                    "info": {
+                      "description": "提示信息",
+                      "type": "string",
+                      "example": ""
+                    },
+                    "data": {
+                      "properties": {
+                        "total_match_count": {
+                          "description": "累计对接量",
+                          "type": "string",
+                          "example": "1000+"
+                        },
+                        "total_revenue": {
+                          "description": "促成营收",
+                          "type": "string",
+                          "example": "1000万+"
+                        },
+                        "satisfaction_rate": {
+                          "description": "合作好评率",
+                          "type": "string",
+                          "example": "98%"
+                        }
+                      },
+                      "type": "object"
+                    }
+                  },
+                  "type": "object"
+                }
+              }
+            },
+            "headers": {}
+          }
+        },
+        "security": []
+      }
+    },
+    "/api/opportunities": {
+      "get": {
+        "summary": "商机列表（展示中）",
+        "deprecated": false,
+        "description": "",
+        "operationId": "e2a426ad9988d11bf4517f7b90419010",
+        "tags": ["商机对接(V2)"],
+        "parameters": [
+          {
+            "name": "type",
+            "in": "query",
+            "description": "业务类型(1工商注册,2代账,3税筹,4股权,5资质,6知产,7会计工厂)",
+            "required": false,
+            "example": "0",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "city",
+            "in": "query",
+            "description": "城市筛选",
+            "required": false,
+            "example": "",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "sort",
+            "in": "query",
+            "description": "排序(default/newest)",
+            "required": false,
+            "example": "default",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "description": "页码",
+            "required": false,
+            "example": "1",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "page_size",
+            "in": "query",
+            "description": "每页数量(最大50)",
+            "required": false,
+            "example": "10",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "code": {
+                      "type": "integer",
+                      "example": 1
+                    },
+                    "info": {
+                      "type": "string",
+                      "example": ""
+                    },
+                    "data": {
+                      "properties": {
+                        "list": {
+                          "type": "array",
+                          "items": {
+                            "properties": {
+                              "id": {
+                                "description": "商机ID",
+                                "type": "integer"
+                              },
+                              "title": {
+                                "description": "商机标题",
+                                "type": "string"
+                              },
+                              "type": {
+                                "description": "业务类型",
+                                "type": "integer"
+                              },
+                              "type_text": {
+                                "description": "业务类型文字",
+                                "type": "string"
+                              },
+                              "city": {
+                                "description": "城市",
+                                "type": "string"
+                              },
+                              "tags": {
+                                "description": "标签数组",
+                                "type": "array",
+                                "items": {
+                                  "type": "string"
+                                }
+                              },
+                              "apply_count": {
+                                "description": "申请人数",
+                                "type": "integer"
+                              },
+                              "is_confidential": {
+                                "description": "是否保密",
+                                "type": "integer"
+                              },
+                              "time_ago": {
+                                "description": "发布时间",
+                                "type": "string"
+                              },
+                              "created_at": {
+                                "description": "创建时间",
+                                "type": "string"
+                              }
+                            },
+                            "type": "object"
+                          }
+                        },
+                        "total": {
+                          "description": "总数",
+                          "type": "integer"
+                        },
+                        "page": {
+                          "description": "当前页码",
+                          "type": "integer"
+                        },
+                        "page_size": {
+                          "description": "每页数量",
+                          "type": "integer"
+                        },
+                        "total_page": {
+                          "description": "总页数",
+                          "type": "integer"
+                        }
+                      },
+                      "type": "object"
+                    }
+                  },
+                  "type": "object"
+                }
+              }
+            },
+            "headers": {}
+          }
+        },
+        "security": []
+      },
+      "post": {
+        "summary": "发布商机（甩单）",
+        "deprecated": false,
+        "description": "",
+        "operationId": "5cf006013573eb2f9e51c05891052485",
+        "tags": ["商机对接(V2)"],
+        "parameters": [],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "properties": {
+                  "title": {
+                    "description": "商机标题",
+                    "type": "string"
+                  },
+                  "type": {
+                    "description": "业务类型(1工商注册,2代账,3税筹,4股权,5资质,6知产,7会计工厂)",
+                    "type": "integer"
+                  },
+                  "city": {
+                    "description": "客户城市",
+                    "type": "string"
+                  },
+                  "description": {
+                    "description": "需求描述",
+                    "type": "string"
+                  },
+                  "is_confidential": {
+                    "description": "是否保密联系方式",
+                    "type": "integer"
+                  }
+                },
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "code": {
+                      "type": "integer",
+                      "example": 1
+                    },
+                    "info": {
+                      "type": "string",
+                      "example": "商机已提交审核"
+                    },
+                    "data": {
+                      "properties": {
+                        "opportunity_id": {
+                          "description": "商机ID",
+                          "type": "integer"
+                        },
+                        "status": {
+                          "description": "状态(1待审核)",
+                          "type": "integer",
+                          "example": 1
+                        },
+                        "status_text": {
+                          "description": "状态文字",
+                          "type": "string",
+                          "example": "待审核"
+                        }
+                      },
+                      "type": "object"
+                    }
+                  },
+                  "type": "object"
+                }
+              }
+            },
+            "headers": {}
+          }
+        },
+        "security": []
+      }
+    },
+    "/api/opportunity/detail": {
+      "get": {
+        "summary": "商机详情",
+        "deprecated": false,
+        "description": "",
+        "operationId": "0f9871f92309d111baeec7966e9fb378",
+        "tags": ["商机对接(V2)"],
+        "parameters": [
+          {
+            "name": "opportunity_id",
+            "in": "query",
+            "description": "商机ID",
+            "required": true,
+            "example": "1",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "code": {
+                      "type": "integer",
+                      "example": 1
+                    },
+                    "info": {
+                      "type": "string",
+                      "example": ""
+                    },
+                    "data": {
+                      "properties": {
+                        "id": {
+                          "description": "商机ID",
+                          "type": "integer"
+                        },
+                        "title": {
+                          "description": "商机标题",
+                          "type": "string"
+                        },
+                        "type": {
+                          "description": "业务类型",
+                          "type": "integer"
+                        },
+                        "type_text": {
+                          "description": "类型文字",
+                          "type": "string"
+                        },
+                        "city": {
+                          "description": "城市",
+                          "type": "string"
+                        },
+                        "description": {
+                          "description": "需求描述",
+                          "type": "string"
+                        },
+                        "is_confidential": {
+                          "description": "是否保密",
+                          "type": "integer"
+                        },
+                        "tags": {
+                          "description": "标签",
+                          "type": "array",
+                          "items": {
+                            "type": "string"
+                          }
+                        },
+                        "status": {
+                          "description": "状态(1待审核,2展示中,3撮合中,4已完成,5已关闭)",
+                          "type": "integer"
+                        },
+                        "status_text": {
+                          "description": "状态文字",
+                          "type": "string"
+                        },
+                        "publisher": {
+                          "properties": {
+                            "user_id": {
+                              "type": "integer"
+                            },
+                            "nickname": {
+                              "type": "string"
+                            },
+                            "company_name": {
+                              "type": "string"
+                            }
+                          },
+                          "type": "object"
+                        },
+                        "view_count": {
+                          "description": "浏览次数",
+                          "type": "integer"
+                        },
+                        "apply_count": {
+                          "description": "申请次数",
+                          "type": "integer"
+                        },
+                        "is_owner": {
+                          "description": "是否发布者",
+                          "type": "boolean"
+                        },
+                        "expired_at": {
+                          "description": "过期时间",
+                          "type": "string",
+                          "nullable": true
+                        },
+                        "created_at": {
+                          "description": "创建时间",
+                          "type": "string"
+                        }
+                      },
+                      "type": "object"
+                    }
+                  },
+                  "type": "object"
+                }
+              }
+            },
+            "headers": {}
+          }
+        },
+        "security": []
+      }
+    },
+    "/api/opportunity/apply": {
+      "post": {
+        "summary": "申请接单",
+        "deprecated": false,
+        "description": "",
+        "operationId": "1d6b822acd580171cf5b40e51dbc5cc2",
+        "tags": ["商机对接(V2)"],
+        "parameters": [],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "properties": {
+                  "opportunity_id": {
+                    "description": "商机ID",
+                    "type": "integer"
+                  },
+                  "reason": {
+                    "description": "接单优势说明",
+                    "type": "string"
+                  },
+                  "quote_type": {
+                    "description": "报价方式(0详谈后报价,1提供具体报价)",
+                    "type": "integer"
+                  },
+                  "quote_price": {
+                    "description": "具体报价金额",
+                    "type": "number"
+                  },
+                  "attachment_url": {
+                    "description": "案例资料附件URL",
+                    "type": "string"
+                  }
+                },
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "code": {
+                      "type": "integer",
+                      "example": 1
+                    },
+                    "info": {
+                      "type": "string",
+                      "example": "申请已提交"
+                    },
+                    "data": {
+                      "properties": {
+                        "application_id": {
+                          "description": "申请ID",
+                          "type": "integer"
+                        },
+                        "status": {
+                          "description": "状态(1待审核)",
+                          "type": "integer"
+                        },
+                        "status_text": {
+                          "description": "状态文字",
+                          "type": "string"
+                        }
+                      },
+                      "type": "object"
+                    }
+                  },
+                  "type": "object"
+                }
+              }
+            },
+            "headers": {}
+          }
+        },
+        "security": []
+      }
+    },
+    "/api/opportunities/mine": {
+      "get": {
+        "summary": "我发布的商机",
+        "deprecated": false,
+        "description": "",
+        "operationId": "1396e2c02b6052e741fc9d657d535cf5",
+        "tags": ["商机对接(V2)"],
+        "parameters": [
+          {
+            "name": "status",
+            "in": "query",
+            "description": "状态筛选(1待审核,2展示中,3撮合中,4已完成,5已关闭)",
+            "required": false,
+            "example": "0",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "description": "页码",
+            "required": false,
+            "example": "1",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "page_size",
+            "in": "query",
+            "description": "每页数量(最大50)",
+            "required": false,
+            "example": "10",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "code": {
+                      "type": "integer",
+                      "example": 1
+                    },
+                    "info": {
+                      "type": "string",
+                      "example": ""
+                    },
+                    "data": {
+                      "properties": {
+                        "list": {
+                          "type": "array",
+                          "items": {
+                            "properties": {
+                              "id": {
+                                "type": "integer"
+                              },
+                              "title": {
+                                "type": "string"
+                              },
+                              "type": {
+                                "type": "integer"
+                              },
+                              "type_text": {
+                                "type": "string"
+                              },
+                              "city": {
+                                "type": "string"
+                              },
+                              "status": {
+                                "type": "integer"
+                              },
+                              "status_text": {
+                                "type": "string"
+                              },
+                              "apply_count": {
+                                "type": "integer"
+                              },
+                              "view_count": {
+                                "type": "integer"
+                              },
+                              "created_at": {
+                                "type": "string"
+                              }
+                            },
+                            "type": "object"
+                          }
+                        },
+                        "total": {
+                          "type": "integer"
+                        },
+                        "page": {
+                          "type": "integer"
+                        },
+                        "page_size": {
+                          "type": "integer"
+                        },
+                        "total_page": {
+                          "type": "integer"
+                        }
+                      },
+                      "type": "object"
+                    }
+                  },
+                  "type": "object"
+                }
+              }
+            },
+            "headers": {}
+          }
+        },
+        "security": []
+      }
+    },
+    "/api/opportunity/applications": {
+      "get": {
+        "summary": "我收到的接单申请（发布者查看）",
+        "deprecated": false,
+        "description": "",
+        "operationId": "be12184f76a70b3ad7f7547421cea79d",
+        "tags": ["商机对接(V2)"],
+        "parameters": [
+          {
+            "name": "opportunity_id",
+            "in": "query",
+            "description": "商机ID",
+            "required": true,
+            "example": "1",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "code": {
+                      "type": "integer",
+                      "example": 1
+                    },
+                    "info": {
+                      "type": "string",
+                      "example": ""
+                    },
+                    "data": {
+                      "properties": {
+                        "list": {
+                          "type": "array",
+                          "items": {
+                            "properties": {
+                              "application_id": {
+                                "type": "integer"
+                              },
+                              "user_id": {
+                                "type": "integer"
+                              },
+                              "nickname": {
+                                "type": "string"
+                              },
+                              "company_name": {
+                                "type": "string"
+                              },
+                              "reason": {
+                                "type": "string"
+                              },
+                              "quote_type": {
+                                "type": "integer"
+                              },
+                              "quote_price": {
+                                "type": "string",
+                                "nullable": true
+                              },
+                              "attachment_url": {
+                                "type": "string"
+                              },
+                              "status": {
+                                "type": "integer"
+                              },
+                              "status_text": {
+                                "type": "string"
+                              },
+                              "created_at": {
+                                "type": "string"
+                              }
+                            },
+                            "type": "object"
+                          }
+                        },
+                        "total": {
+                          "type": "integer"
+                        }
+                      },
+                      "type": "object"
+                    }
+                  },
+                  "type": "object"
+                }
+              }
+            },
+            "headers": {}
+          }
+        },
+        "security": []
+      }
+    },
+    "/api/user/applications": {
+      "get": {
+        "summary": "我的申请记录（申请人查看）",
+        "deprecated": false,
+        "description": "",
+        "operationId": "45c05e3041b4e390139223dfed31829d",
+        "tags": ["商机对接(V2)"],
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "description": "页码",
+            "required": false,
+            "example": "1",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "page_size",
+            "in": "query",
+            "description": "每页数量(最大50)",
+            "required": false,
+            "example": "10",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "code": {
+                      "type": "integer",
+                      "example": 1
+                    },
+                    "info": {
+                      "type": "string",
+                      "example": ""
+                    },
+                    "data": {
+                      "properties": {
+                        "list": {
+                          "type": "array",
+                          "items": {
+                            "properties": {
+                              "application_id": {
+                                "type": "integer"
+                              },
+                              "opportunity_id": {
+                                "type": "integer"
+                              },
+                              "opportunity_title": {
+                                "type": "string"
+                              },
+                              "type_text": {
+                                "type": "string"
+                              },
+                              "city": {
+                                "type": "string"
+                              },
+                              "status": {
+                                "type": "integer"
+                              },
+                              "status_text": {
+                                "type": "string"
+                              },
+                              "created_at": {
+                                "type": "string"
+                              }
+                            },
+                            "type": "object"
+                          }
+                        },
+                        "total": {
+                          "type": "integer"
+                        },
+                        "page": {
+                          "type": "integer"
+                        },
+                        "page_size": {
+                          "type": "integer"
+                        },
+                        "total_page": {
+                          "type": "integer"
+                        }
+                      },
+                      "type": "object"
+                    }
+                  },
+                  "type": "object"
+                }
+              }
+            },
+            "headers": {}
+          }
+        },
+        "security": []
+      }
+    },
+    "/api/opportunity/status": {
+      "post": {
+        "summary": "关闭商机",
+        "deprecated": false,
+        "description": "",
+        "operationId": "85d2622251e7dc7ab96ac6c394aa126b",
+        "tags": ["商机对接(V2)"],
+        "parameters": [],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "properties": {
+                  "opportunity_id": {
+                    "description": "商机ID",
+                    "type": "integer"
+                  },
+                  "status": {
+                    "description": "目标状态(5-关闭)",
+                    "type": "integer",
+                    "example": 5
+                  }
+                },
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "code": {
+                      "type": "integer",
+                      "example": 1
+                    },
+                    "info": {
+                      "type": "string",
+                      "example": "商机已关闭"
+                    },
+                    "data": {
+                      "type": "object",
+                      "properties": {}
+                    }
+                  },
+                  "type": "object"
+                }
+              }
+            },
+            "headers": {}
+          }
+        },
+        "security": []
+      }
+    },
+    "/api/companies/profile": {
+      "get": {
+        "summary": "获取企业档案",
+        "deprecated": false,
+        "description": "",
+        "operationId": "0506a901c70cf1626c8e60e8f8630e0e",
+        "tags": ["商机对接(V2)"],
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "code": {
+                      "type": "integer",
+                      "example": 1
+                    },
+                    "info": {
+                      "type": "string",
+                      "example": ""
+                    },
+                    "data": {
+                      "properties": {
+                        "id": {
+                          "description": "企业ID",
+                          "type": "integer"
+                        },
+                        "name": {
+                          "description": "企业全称",
+                          "type": "string"
+                        },
+                        "credit_code": {
+                          "description": "统一社会信用代码",
+                          "type": "string"
+                        },
+                        "city": {
+                          "description": "注册城市",
+                          "type": "string"
+                        },
+                        "team_size": {
+                          "description": "团队人数",
+                          "type": "integer",
+                          "nullable": true
+                        },
+                        "client_count": {
+                          "description": "服务客户数",
+                          "type": "integer",
+                          "nullable": true
+                        },
+                        "business_scope": {
+                          "description": "擅长业务",
+                          "type": "string"
+                        },
+                        "service_cities": {
+                          "description": "可承接服务城市",
+                          "type": "string"
+                        },
+                        "is_cross_region": {
+                          "description": "是否可跨区域",
+                          "type": "integer"
+                        },
+                        "cert_status": {
+                          "description": "认证状态",
+                          "type": "integer"
+                        }
+                      },
+                      "type": "object"
+                    }
+                  },
+                  "type": "object"
+                }
+              }
+            },
+            "headers": {}
+          }
+        },
+        "security": []
+      },
+      "post": {
+        "summary": "创建/更新企业档案",
+        "deprecated": false,
+        "description": "",
+        "operationId": "fab165c69d1c089c57049d149e8d9290",
+        "tags": ["商机对接(V2)"],
+        "parameters": [],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "properties": {
+                  "name": {
+                    "description": "企业全称",
+                    "type": "string"
+                  },
+                  "credit_code": {
+                    "description": "统一社会信用代码",
+                    "type": "string"
+                  },
+                  "city": {
+                    "description": "注册城市",
+                    "type": "string"
+                  },
+                  "team_size": {
+                    "description": "团队人数",
+                    "type": "integer"
+                  },
+                  "client_count": {
+                    "description": "服务客户数",
+                    "type": "integer"
+                  },
+                  "business_scope": {
+                    "description": "擅长业务(逗号分隔)",
+                    "type": "string"
+                  },
+                  "service_cities": {
+                    "description": "可承接服务城市",
+                    "type": "string"
+                  },
+                  "is_cross_region": {
+                    "description": "是否可跨区域(0否,1是)",
+                    "type": "integer"
+                  }
+                },
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "code": {
+                      "type": "integer",
+                      "example": 1
+                    },
+                    "info": {
+                      "type": "string",
+                      "example": "企业档案已更新"
+                    },
+                    "data": {
+                      "properties": {
+                        "id": {
+                          "description": "企业ID",
+                          "type": "integer"
+                        },
+                        "is_new": {
+                          "description": "是否新建",
+                          "type": "boolean"
+                        }
+                      },
+                      "type": "object"
+                    }
+                  },
+                  "type": "object"
+                }
+              }
+            },
+            "headers": {}
+          }
+        },
+        "security": []
+      }
+    },
+    "/api/product/categories": {
+      "get": {
+        "summary": "获取商品分类列表",
+        "deprecated": false,
+        "description": "",
+        "operationId": "c20d908198ffbd8a94c74f92656452d4",
+        "tags": ["服务商城"],
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "code": {
+                      "description": "状态码",
+                      "type": "integer",
+                      "example": 1
+                    },
+                    "info": {
+                      "description": "提示信息",
+                      "type": "string",
+                      "example": ""
+                    },
+                    "data": {
+                      "properties": {
+                        "list": {
+                          "type": "array",
+                          "items": {
+                            "properties": {
+                              "id": {
+                                "description": "分类ID",
+                                "type": "integer"
+                              },
+                              "name": {
+                                "description": "分类名称",
+                                "type": "string"
+                              },
+                              "icon": {
+                                "description": "分类图标",
+                                "type": "string"
+                              },
+                              "sort_order": {
+                                "description": "排序",
+                                "type": "integer"
+                              }
+                            },
+                            "type": "object"
+                          }
+                        }
+                      },
+                      "type": "object"
+                    }
+                  },
+                  "type": "object"
+                }
+              }
+            },
+            "headers": {}
+          }
+        },
+        "security": []
+      }
+    },
+    "/api/products": {
+      "get": {
+        "summary": "获取商品列表",
+        "deprecated": false,
+        "description": "",
+        "operationId": "d387895af6811c5196df44c0c2dd5e1d",
+        "tags": ["服务商城"],
+        "parameters": [
+          {
+            "name": "category_id",
+            "in": "query",
+            "description": "分类ID",
+            "required": false,
+            "example": "1",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "product_type",
+            "in": "query",
+            "description": "类型(1工具,2课程,3咨询,4认证)",
+            "required": false,
+            "example": "0",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "keyword",
+            "in": "query",
+            "description": "搜索关键词",
+            "required": false,
+            "example": "发票",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "sort",
+            "in": "query",
+            "description": "排序(default/sales/price_asc/price_desc)",
+            "required": false,
+            "example": "default",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "description": "页码",
+            "required": false,
+            "example": "1",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "page_size",
+            "in": "query",
+            "description": "每页数量",
+            "required": false,
+            "example": "10",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "code": {
+                      "description": "状态码",
+                      "type": "integer",
+                      "example": 1
+                    },
+                    "info": {
+                      "description": "提示信息",
+                      "type": "string",
+                      "example": ""
+                    },
+                    "data": {
+                      "properties": {
+                        "list": {
+                          "type": "array",
+                          "items": {
+                            "properties": {
+                              "id": {
+                                "description": "商品ID",
+                                "type": "integer"
+                              },
+                              "category_id": {
+                                "description": "分类ID",
+                                "type": "integer"
+                              },
+                              "name": {
+                                "description": "商品名称",
+                                "type": "string"
+                              },
+                              "description": {
+                                "description": "商品描述",
+                                "type": "string"
+                              },
+                              "thumbnail": {
+                                "description": "缩略图",
+                                "type": "string"
+                              },
+                              "product_type": {
+                                "description": "商品类型",
+                                "type": "integer"
+                              },
+                              "product_type_text": {
+                                "description": "商品类型文字",
+                                "type": "string"
+                              },
+                              "price": {
+                                "description": "价格",
+                                "type": "string"
+                              },
+                              "original_price": {
+                                "description": "原价",
+                                "type": "string",
+                                "nullable": true
+                              },
+                              "vip_price": {
+                                "description": "会员价",
+                                "type": "string",
+                                "nullable": true
+                              },
+                              "price_unit": {
+                                "description": "价格单位",
+                                "type": "string"
+                              },
+                              "sales_count": {
+                                "description": "销量",
+                                "type": "integer"
+                              },
+                              "has_spec": {
+                                "description": "是否有规格",
+                                "type": "boolean"
+                              }
+                            },
+                            "type": "object"
+                          }
+                        },
+                        "total": {
+                          "description": "总数",
+                          "type": "integer"
+                        },
+                        "page": {
+                          "description": "页码",
+                          "type": "integer"
+                        },
+                        "page_size": {
+                          "description": "每页数量",
+                          "type": "integer"
+                        },
+                        "total_page": {
+                          "description": "总页数",
+                          "type": "integer"
+                        }
+                      },
+                      "type": "object"
+                    }
+                  },
+                  "type": "object"
+                }
+              }
+            },
+            "headers": {}
+          }
+        },
+        "security": []
+      }
+    },
+    "/api/product/detail": {
+      "get": {
+        "summary": "获取商品详情",
+        "deprecated": false,
+        "description": "",
+        "operationId": "bfbfbc81e8a0aae34a655af60b90690d",
+        "tags": ["服务商城"],
+        "parameters": [
+          {
+            "name": "product_id",
+            "in": "query",
+            "description": "商品ID",
+            "required": true,
+            "example": "1",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "code": {
+                      "description": "状态码",
+                      "type": "integer",
+                      "example": 1
+                    },
+                    "info": {
+                      "description": "提示信息",
+                      "type": "string",
+                      "example": ""
+                    },
+                    "data": {
+                      "properties": {
+                        "id": {
+                          "description": "商品ID",
+                          "type": "integer"
+                        },
+                        "category_id": {
+                          "description": "分类ID",
+                          "type": "integer"
+                        },
+                        "name": {
+                          "description": "商品名称",
+                          "type": "string"
+                        },
+                        "description": {
+                          "description": "商品描述",
+                          "type": "string"
+                        },
+                        "detail": {
+                          "description": "商品详情",
+                          "type": "string"
+                        },
+                        "thumbnail": {
+                          "description": "缩略图",
+                          "type": "string"
+                        },
+                        "images": {
+                          "description": "图片列表",
+                          "type": "array",
+                          "items": {
+                            "type": "string"
+                          }
+                        },
+                        "product_type": {
+                          "description": "商品类型",
+                          "type": "integer"
+                        },
+                        "product_type_text": {
+                          "description": "类型文字",
+                          "type": "string"
+                        },
+                        "price": {
+                          "description": "价格",
+                          "type": "string"
+                        },
+                        "original_price": {
+                          "description": "原价",
+                          "type": "string",
+                          "nullable": true
+                        },
+                        "vip_price": {
+                          "description": "会员价",
+                          "type": "string",
+                          "nullable": true
+                        },
+                        "price_unit": {
+                          "description": "价格单位",
+                          "type": "string"
+                        },
+                        "sales_count": {
+                          "description": "销量",
+                          "type": "integer"
+                        },
+                        "view_count": {
+                          "description": "浏览量",
+                          "type": "integer"
+                        },
+                        "specs": {
+                          "type": "array",
+                          "items": {
+                            "properties": {
+                              "id": {
+                                "description": "规格ID",
+                                "type": "integer"
+                              },
+                              "spec_name": {
+                                "description": "规格名称",
+                                "type": "string"
+                              },
+                              "price": {
+                                "description": "价格",
+                                "type": "string"
+                              },
+                              "original_price": {
+                                "description": "原价",
+                                "type": "string",
+                                "nullable": true
+                              },
+                              "vip_price": {
+                                "description": "会员价",
+                                "type": "string",
+                                "nullable": true
+                              },
+                              "price_unit": {
+                                "description": "价格单位",
+                                "type": "string"
+                              },
+                              "duration_days": {
+                                "description": "有效期天数",
+                                "type": "integer",
+                                "nullable": true
+                              }
+                            },
+                            "type": "object"
+                          }
+                        }
+                      },
+                      "type": "object"
+                    }
+                  },
+                  "type": "object"
+                }
+              }
+            },
+            "headers": {}
+          }
+        },
+        "security": []
+      }
+    },
+    "/api/product/order": {
+      "post": {
+        "summary": "购买商品/提交订单",
+        "deprecated": false,
+        "description": "",
+        "operationId": "609394fbda7b688e6d2401b0c6fe65ad",
+        "tags": ["服务商城"],
+        "parameters": [],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "properties": {
+                  "items": {
+                    "type": "array",
+                    "items": {
+                      "properties": {
+                        "product_id": {
+                          "description": "商品ID",
+                          "type": "integer"
+                        },
+                        "spec_id": {
+                          "description": "规格ID",
+                          "type": "integer"
+                        },
+                        "quantity": {
+                          "description": "数量",
+                          "type": "integer"
+                        }
+                      },
+                      "type": "object"
+                    }
+                  },
+                  "remark": {
+                    "description": "备注",
+                    "type": "string"
+                  }
+                },
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "code": {
+                      "description": "状态码",
+                      "type": "integer",
+                      "example": 1
+                    },
+                    "info": {
+                      "description": "提示信息",
+                      "type": "string",
+                      "example": "订单创建成功"
+                    },
+                    "data": {
+                      "properties": {
+                        "order_id": {
+                          "description": "订单ID",
+                          "type": "integer"
+                        },
+                        "order_no": {
+                          "description": "订单编号",
+                          "type": "string"
+                        },
+                        "total_amount": {
+                          "description": "订单总金额",
+                          "type": "string"
+                        },
+                        "discount_amount": {
+                          "description": "优惠金额",
+                          "type": "string"
+                        },
+                        "pay_amount": {
+                          "description": "实付金额",
+                          "type": "string"
+                        },
+                        "status": {
+                          "description": "状态",
+                          "type": "integer"
+                        },
+                        "status_text": {
+                          "description": "状态文字",
+                          "type": "string"
+                        },
+                        "items": {
+                          "type": "array",
+                          "items": {
+                            "properties": {
+                              "product_id": {
+                                "description": "商品ID",
+                                "type": "integer"
+                              },
+                              "product_name": {
+                                "description": "商品名称",
+                                "type": "string"
+                              },
+                              "spec_name": {
+                                "description": "规格名称",
+                                "type": "string"
+                              },
+                              "price": {
+                                "description": "单价",
+                                "type": "string"
+                              },
+                              "quantity": {
+                                "description": "数量",
+                                "type": "integer"
+                              },
+                              "subtotal": {
+                                "description": "小计",
+                                "type": "string"
+                              }
+                            },
+                            "type": "object"
+                          }
+                        },
+                        "expire_at": {
+                          "description": "支付过期时间",
+                          "type": "string"
+                        }
+                      },
+                      "type": "object"
+                    }
+                  },
+                  "type": "object"
+                }
+              }
+            },
+            "headers": {}
+          }
+        },
+        "security": []
+      }
+    },
+    "/api/user/messages/unread-count": {
+      "get": {
+        "summary": "获取未读消息数",
+        "deprecated": false,
+        "description": "",
+        "operationId": "d3e16a2c359de0dfe11bb6b3a7696d4b",
+        "tags": ["消息通知"],
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "code": {
+                      "description": "状态码",
+                      "type": "integer",
+                      "example": 1
+                    },
+                    "info": {
+                      "description": "提示信息",
+                      "type": "string",
+                      "example": ""
+                    },
+                    "data": {
+                      "properties": {
+                        "unread_count": {
+                          "description": "未读消息数量",
+                          "type": "integer",
+                          "example": 3
+                        }
+                      },
+                      "type": "object"
+                    }
+                  },
+                  "type": "object"
+                }
+              }
+            },
+            "headers": {}
+          }
+        },
+        "security": []
+      }
+    }
+  },
+  "components": {
+    "schemas": {},
+    "responses": {},
+    "securitySchemes": {
+      "bearerAuth": {
+        "type": "http",
+        "description": "输入登录接口返回的 JWT 令牌",
+        "bearerFormat": "JWT",
+        "scheme": "bearer"
+      }
+    }
+  },
+  "servers": [],
+  "security": []
+}

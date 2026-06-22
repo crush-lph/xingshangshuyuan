@@ -4,6 +4,7 @@
 
 ## 使用约定
 
+- 当前本地 Mock 地址：`http://127.0.0.1:4523/m1/8464015-8236035-default`，维护在 `src/shared/api-config.ts`。
 - 基础路径：接口文档中未提供固定服务地址，项目内接口均使用 `/api/...` 相对路径；运行时通过 `setRequestConfig({ baseURL })` 注入后端地址。
 - 响应结构：除特别说明外，接口返回 `ApiResponse<T>`：`{ code: number; info: string; data: T }`。
 - 认证：文档中标记为需认证的接口应携带后端约定的登录 token，具体 header 由 `src/shared/request.ts` 全局配置或请求 options 注入。

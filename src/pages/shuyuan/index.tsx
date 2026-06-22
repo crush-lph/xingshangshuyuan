@@ -1,88 +1,149 @@
+import { useEffect, useState } from 'react'
 import { Text, View } from '@tarojs/components'
-import { ActionBar, ItemList, SectionCard, StatGrid } from '@/components/business'
+import {
+  ActionBar,
+  EmptyState,
+  ItemList,
+  SectionCard,
+  StatGrid,
+  type ListItem,
+  type StatItem
+} from '@/components/business'
 import { PageShell } from '@/components/PageShell'
-import { router, routes } from '@/shared/router'
-
-const tracks = ['经营增长', '专业交付', '团队管理', '商机撮合', '会员私董会', '服务标准']
+import { getCourseCategories, getCourses, getEvents, getUserLearningStats } from '@/services'
+import { routes } from '@/shared/router'
+import { compactJoin, priceOf, textOrPlaceholder, textOf } from '@/shared/view-data'
 
 export default function ShuyuanPage() {
+  const [categories, setCategories] = useState<string[]>([])
+  const [recommendation, setRecommendation] = useState<{
+    id?: number
+    title: string
+    desc: string
+    eyebrow?: string
+  } | null>(null)
+  const [stats, setStats] = useState<StatItem[]>([])
+  const [items, setItems] = useState<ListItem[]>([])
+
+  useEffect(() => {
+    async function loadShuyuanData() {
+      const [categoriesResult, coursesResult, eventsResult, statsResult] = await Promise.allSettled([
+        getCourseCategories(),
+        getCourses({ page: 1, page_size: 3 }),
+        getEvents({ page: 1, page_size: 1 }),
+        getUserLearningStats()
+      ])
+
+      if (categoriesResult.status === 'fulfilled') {
+        setCategories(categoriesResult.value.data.map((item) => textOrPlaceholder(item.name, '未命名分类')))
+      }
+
+      if (eventsResult.status === 'fulfilled') {
+        const event = eventsResult.value.data.list?.[0]
+        setRecommendation(
+          event
+            ? {
+                id: event.id,
+                eyebrow: textOf(event.status_text),
+                title: textOrPlaceholder(event.title, '未命名活动'),
+                desc: compactJoin([event.city, event.location, event.start_time]) || '接口未返回推荐活动信息'
+              }
+            : null
+        )
+      }
+
+      if (statsResult.status === 'fulfilled') {
+        const data = statsResult.value.data
+        const nextStats = [
+          { label: '课程专题', value: data.total_courses, tone: 'brand' as const },
+          { label: '已完成', value: data.completed_courses, tone: 'success' as const },
+          { label: '证书', value: data.certificates_count, tone: 'gold' as const }
+        ]
+          .filter((item) => item.value !== undefined && item.value !== null)
+          .map((item) => ({ ...item, value: String(item.value) }))
+        setStats(nextStats)
+      }
+
+      if (coursesResult.status === 'fulfilled') {
+        setItems(
+          (coursesResult.value.data.list ?? []).slice(0, 3).map((course) => ({
+            title: textOrPlaceholder(course.title, '未命名课程'),
+            desc: textOrPlaceholder(course.description, '接口未返回课程描述'),
+            meta:
+              compactJoin([
+                course.teacher_name,
+                course.student_count ? `${course.student_count}人学习` : '',
+                priceOf(course.price)
+              ]) || undefined,
+            tag: textOf(course.course_type_text),
+            path: routes.eventDetail,
+            query: course.id ? { course_id: course.id } : undefined,
+            action: '查看'
+          }))
+        )
+      }
+    }
+
+    void loadShuyuanData()
+  }, [])
+
   return (
     <PageShell title="行商书苑" subtitle="财税机构课程、活动和服务标准沉淀。">
       <View className="grid gap-3">
-        <View className="rounded-lg bg-brand-deep p-4 shadow-medium">
-          <Text className="block text-xs font-semibold text-gold-light">本周推荐</Text>
-          <Text className="mt-2 block text-xl font-bold text-white">老客户升单训练营 · 深圳站</Text>
-          <Text className="mt-2 block text-sm leading-5 text-white/65">
-            课程、案例拆解、现场演练和同城资源对接一体化。
-          </Text>
-          <View className="mt-3">
-            <ActionBar actions={[{ label: '立即报名', variant: 'gold', path: routes.eventDetail }]} />
+        {recommendation ? (
+          <View className="rounded-lg bg-brand-deep p-4 shadow-medium">
+            {recommendation.eyebrow ? (
+              <Text className="block text-xs font-semibold text-gold-light">{recommendation.eyebrow}</Text>
+            ) : null}
+            <Text className="mt-2 block text-xl font-bold text-white">{recommendation.title}</Text>
+            <Text className="mt-2 block text-sm leading-5 text-white/65">{recommendation.desc}</Text>
+            <View className="mt-3">
+              <ActionBar
+                actions={[
+                  {
+                    label: '立即报名',
+                    variant: 'gold',
+                    path: routes.eventDetail,
+                    query: recommendation.id ? { event_id: recommendation.id } : undefined
+                  }
+                ]}
+              />
+            </View>
           </View>
-        </View>
+        ) : (
+          <EmptyState title="暂无推荐活动" desc="Apifox mock 未返回推荐活动数据。" />
+        )}
 
-        <StatGrid
-          items={[
-            { label: '课程专题', value: '36', tone: 'brand' },
-            { label: '线下活动', value: '8', tone: 'success' },
-            { label: '会员私享', value: '12', tone: 'gold' }
-          ]}
-        />
+        {stats.length ? (
+          <StatGrid items={stats} />
+        ) : (
+          <EmptyState title="暂无学习统计" desc="Apifox mock 未返回学习统计数据。" />
+        )}
 
-        <SectionCard title="学习路径">
-          <View className="grid grid-cols-3 gap-2">
-            {tracks.map((item, index) => (
-              <View
-                key={item}
-                className={`rounded-lg px-3 py-3 text-center ${index === 0 ? 'bg-brand' : 'bg-brand-soft'}`}
-                onClick={() => router.to(index === 4 ? routes.memberBenefit : routes.eventHome)}
-              >
-                <Text className={`text-sm font-semibold ${index === 0 ? 'text-white' : 'text-brand'}`}>{item}</Text>
-              </View>
-            ))}
-          </View>
+        <SectionCard title="学习分类">
+          {categories.length ? (
+            <View className="grid grid-cols-3 gap-2">
+              {categories.map((item) => (
+                <View key={item} className="rounded-lg bg-brand-soft px-3 py-3 text-center">
+                  <Text className="text-xs font-semibold text-brand">{item}</Text>
+                </View>
+              ))}
+            </View>
+          ) : (
+            <EmptyState title="暂无课程分类" desc="Apifox mock 未返回课程分类数据。" />
+          )}
         </SectionCard>
 
-        <ItemList
-          items={[
-            {
-              title: '财税公司老客户升单训练营',
-              desc: '续费、增购、客户分层和销售话术现场演练。',
-              meta: '深圳 · 7月12日 · 会员¥598',
-              tag: '线下课',
-              path: routes.eventDetail,
-              action: '报名'
-            },
-            {
-              title: '代账交付标准化手册',
-              desc: '从客户资料、票据归档到申报复核的标准流程。',
-              meta: '会员可查看完整模板',
-              tag: '资料',
-              path: routes.userBenefits,
-              action: '查看'
-            },
-            {
-              title: '城市会长私享会',
-              desc: '本地资源互换、商机拆解和合作项目路演。',
-              meta: '会员优先 · 限30人',
-              tag: '私董会',
-              path: routes.memberBenefit,
-              action: '了解'
-            }
-          ]}
-        />
+        {items.length ? (
+          <ItemList items={items} />
+        ) : (
+          <EmptyState title="暂无课程" desc="Apifox mock 未返回课程列表数据。" />
+        )}
 
         <SectionCard title="服务标准">
-          <View className="grid gap-2">
-            {[
-              '认证服务商需要完成企业认证、案例审核和服务承诺。',
-              '课程资料与资源模板优先向会员开放。',
-              '平台沉淀活动签到、报名、评价与权益核销记录。'
-            ].map((item) => (
-              <Text key={item} className="block text-sm leading-6 text-muted">
-                {item}
-              </Text>
-            ))}
-          </View>
+          <Text className="block text-sm leading-6 text-muted">
+            课程资料与资源模板优先向会员开放，具体权益以接口返回的会员配置为准。
+          </Text>
         </SectionCard>
       </View>
     </PageShell>

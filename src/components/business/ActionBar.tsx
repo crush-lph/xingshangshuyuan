@@ -42,7 +42,7 @@ export function ActionBar({ actions }: ActionBarProps) {
             }
 
             if (action.path) {
-              router.to(action.path)
+              router.to(action.path, action.query)
             }
           }}
         >

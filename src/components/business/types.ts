@@ -1,4 +1,4 @@
-import type { RoutePath } from '@/shared/router'
+import type { Query, RoutePath } from '@/shared/router'
 
 export interface StatItem {
   label: string
@@ -9,6 +9,7 @@ export interface StatItem {
 export interface ActionItem {
   label: string
   path?: RoutePath
+  query?: Query
   variant?: 'primary' | 'gold' | 'outline'
   disabled?: boolean
   onClick?: () => void | Promise<void>
@@ -21,7 +22,9 @@ export interface ListItem {
   price?: string
   tag?: string
   path?: RoutePath
+  query?: Query
   action?: string
+  onClick?: () => void | Promise<void>
 }
 
 export interface FieldItem {

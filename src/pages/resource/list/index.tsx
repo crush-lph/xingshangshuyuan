@@ -1,56 +1,72 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { Input, Text, View } from '@tarojs/components'
-import { ItemList, SectionCard } from '@/components/business'
+import { EmptyState, ItemList, SectionCard, type ListItem } from '@/components/business'
 import { PageShell } from '@/components/PageShell'
+import { getProductCategories, getProducts, getSearchSuggest } from '@/services'
 import { routes } from '@/shared/router'
+import { compactJoin, priceOf, textOf, textOrPlaceholder } from '@/shared/view-data'
 
-const filters = ['全部', '软件工具', '会计工厂', '资质许可', '财税咨询', '会员专享']
-
-const resources = [
-  {
-    title: '财税公司一体化经营系统',
-    desc: '客户、账套、申报、工单、收款与交付进度统一管理。',
-    price: '¥2,980',
-    tag: '战略级',
-    meta: '会员省 ¥1,000 · 7天交付 · 可开票',
-    category: '软件工具',
-    path: routes.resourceStandardDetail,
-    action: '查看'
-  },
-  {
-    title: '会计工厂交付外包服务',
-    desc: '旺季账务交付补位，支持批量账套、老账整理和月度交付。',
-    price: '面议',
-    tag: '非标',
-    meta: '客户经理 1 小时内响应',
-    category: '会计工厂',
-    path: routes.resourceNonstandardDetail,
-    action: '提需求'
-  },
-  {
-    title: '代理记账许可证代办',
-    desc: '材料预审、人员资质梳理、现场辅导与进度跟踪。',
-    price: '¥4,800',
-    tag: '认证级',
-    meta: '平台监管 · 标准流程 · 售后保障',
-    category: '资质许可',
-    path: routes.resourceStandardDetail,
-    action: '采购'
-  },
-  {
-    title: '专精特新申报辅导',
-    desc: '政策匹配、材料梳理、专家预审，适合科创客户增值服务。',
-    price: '¥12,800 起',
-    meta: '会员优先排期',
-    category: '会员专享',
-    path: routes.resourceNonstandardDetail,
-    action: '咨询'
-  }
-]
+interface ResourceItem extends ListItem {
+  category: string
+}
 
 export default function ResourceListPage() {
   const [query, setQuery] = useState('')
-  const [activeFilter, setActiveFilter] = useState(filters[0])
+  const [filters, setFilters] = useState(['全部'])
+  const [activeFilter, setActiveFilter] = useState('全部')
+  const [resources, setResources] = useState<ResourceItem[]>([])
+
+  useEffect(() => {
+    async function loadResources() {
+      const [categoriesResult, productsResult] = await Promise.allSettled([
+        getProductCategories(),
+        getProducts({ page: 1, page_size: 20 })
+      ])
+
+      if (categoriesResult.status === 'fulfilled') {
+        setFilters([
+          '全部',
+          ...Array.from(
+            new Set(
+              (categoriesResult.value.data.list ?? []).map((item) => textOf(item.name)).filter(Boolean) as string[]
+            )
+          )
+        ])
+      }
+
+      if (productsResult.status === 'fulfilled') {
+        setResources(
+          (productsResult.value.data.list ?? []).map((item) => {
+            const category = textOrPlaceholder(item.product_type_text, '未分类')
+
+            return {
+              title: textOrPlaceholder(item.name, '未命名资源'),
+              desc: textOrPlaceholder(item.description, '接口未返回资源描述'),
+              price: priceOf(item.vip_price ?? item.price, item.price_unit),
+              tag: category,
+              meta: compactJoin([item.sales_count ? `${item.sales_count}人购买` : '', item.price_unit]),
+              category,
+              path: routes.resourceStandardDetail,
+              query: item.id ? { product_id: item.id } : undefined,
+              action: '查看'
+            }
+          })
+        )
+      }
+    }
+
+    void loadResources()
+  }, [])
+
+  useEffect(() => {
+    const keyword = query.trim()
+
+    if (!keyword) {
+      return
+    }
+
+    void getSearchSuggest({ keyword }).catch(() => undefined)
+  }, [query])
 
   const visibleResources = useMemo(() => {
     const keyword = query.trim().toLowerCase()
@@ -65,21 +81,17 @@ export default function ResourceListPage() {
 
       return matchesFilter && matchesKeyword
     })
-  }, [activeFilter, query])
+  }, [activeFilter, query, resources])
 
   return (
     <PageShell title="资源列表" subtitle="按业务场景筛选供应商、工具和标准化服务。">
       <View className="grid gap-3">
         <View className="rounded-full bg-white px-4 py-3 shadow-soft">
           <Input
-            className="h-5 text-sm text-ink"
-            confirmType="search"
-            placeholder="搜索资源名称、服务商、适用场景"
-            placeholderClass="text-muted"
             value={query}
-            onInput={(event) => {
-              setQuery(event.detail.value)
-            }}
+            placeholder="搜索资源名称、分类或描述"
+            className="text-sm"
+            onInput={(event) => setQuery(event.detail.value)}
           />
         </View>
 
@@ -97,18 +109,12 @@ export default function ResourceListPage() {
               </View>
             ))}
           </View>
-          <View className="mt-3 flex items-center justify-between border-t border-line pt-3">
-            <Text className="text-xs text-muted">综合排序</Text>
-            <Text className="text-xs text-muted">销量优先 · 价格区间 · 供应商等级</Text>
-          </View>
         </SectionCard>
 
         {visibleResources.length ? (
           <ItemList items={visibleResources} />
         ) : (
-          <View className="rounded-lg bg-white px-4 py-8 text-center shadow-soft">
-            <Text className="text-sm text-muted">暂无匹配资源</Text>
-          </View>
+          <EmptyState title="暂无资源" desc="当前接口或筛选条件没有返回可展示资源。" />
         )}
       </View>
     </PageShell>

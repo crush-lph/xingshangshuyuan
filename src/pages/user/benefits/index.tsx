@@ -1,44 +1,60 @@
 import { useEffect, useState } from 'react'
 import { Text, View } from '@tarojs/components'
-import { ActionBar, FieldList, SectionCard } from '@/components/business'
+import { ActionBar, EmptyState, FieldList, SectionCard } from '@/components/business'
 import { PageShell } from '@/components/PageShell'
-import { getCurrentAuthSession, getMockOrders, type AuthSession } from '@/shared/frontend-test-flow'
+import { getUserProfile, getUserVip } from '@/services'
 import { routes } from '@/shared/router'
+import { firstRecordList, isRecord, textOf, textOrPlaceholder } from '@/shared/view-data'
 
 export default function UserBenefitsPage() {
-  const [session, setSession] = useState<AuthSession | null>(null)
-  const [paidOrderId, setPaidOrderId] = useState('')
+  const [levelText, setLevelText] = useState('')
+  const [fields, setFields] = useState<Array<{ label: string; value: string }>>([])
 
   useEffect(() => {
-    void getCurrentAuthSession().then(setSession)
-    void getMockOrders().then((orders) => {
-      const paidOrder = orders.find((order) => order.status === 'paid')
-      setPaidOrderId(paidOrder?.id ?? '')
+    async function loadBenefits() {
+      const [profileResult, vipResult] = await Promise.allSettled([getUserProfile(), getUserVip()])
+
+      if (profileResult.status === 'fulfilled') {
+        setLevelText(textOf(profileResult.value.data.vip_level_text) ?? '')
+      }
+
+      if (vipResult.status === 'fulfilled') {
+        const data = vipResult.value.data
+
+        if (isRecord(data)) {
+          const records = firstRecordList(data.perks, data.rights, data.items, data.list)
+          setFields(
+            records.map((item, index) => ({
+              label: textOrPlaceholder(item.label ?? item.name ?? item.title, `权益${index + 1}`),
+              value: textOrPlaceholder(item.value ?? item.desc ?? item.description ?? item.status_text)
+            }))
+          )
+        }
+      }
+    }
+
+    void loadBenefits().catch(() => {
+      setLevelText('')
+      setFields([])
     })
   }, [])
 
   return (
     <PageShell title="我的权益" subtitle="查看当前会员等级、权益使用情况和升级入口。">
       <View className="grid gap-3">
-        <SectionCard title="当前会员">
-          <Text className="block text-lg font-bold text-gold">行商·菁英会员</Text>
-          <Text className="mt-2 block text-sm text-muted">
-            {paidOrderId ? 'Mock 支付已完成，有效期至 2027-06-20' : '测试流程未完成支付'}
-          </Text>
-          {session ? (
-            <Text className="mt-1 block text-xs text-muted">绑定企业：{session.profile.companyName}</Text>
-          ) : null}
-          {paidOrderId ? <Text className="mt-1 block text-xs text-brand">开通订单：{paidOrderId}</Text> : null}
-        </SectionCard>
-        <FieldList
-          fields={[
-            { label: '课程权益', value: '3 次可用' },
-            { label: '资源采购', value: '会员价' },
-            { label: '商机申请', value: '优先' },
-            { label: '客户经理', value: '专属支持' }
-          ]}
-        />
-        <ActionBar actions={[{ label: '升级领航会员', variant: 'gold', path: routes.memberBenefit }]} />
+        {levelText ? (
+          <SectionCard title="当前会员">
+            <Text className="block text-lg font-bold text-gold">{levelText}</Text>
+          </SectionCard>
+        ) : (
+          <EmptyState title="暂无会员信息" desc="Apifox mock 未返回用户会员等级。" />
+        )}
+        {fields.length ? (
+          <FieldList fields={fields} />
+        ) : (
+          <EmptyState title="暂无权益明细" desc="Apifox mock 未返回会员权益数据。" />
+        )}
+        <ActionBar actions={[{ label: '升级会员', variant: 'gold', path: routes.memberBenefit }]} />
       </View>
     </PageShell>
   )

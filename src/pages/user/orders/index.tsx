@@ -1,41 +1,37 @@
 import { useEffect, useState } from 'react'
 import { Text, View } from '@tarojs/components'
-import { ItemList, SectionCard } from '@/components/business'
+import { EmptyState, ItemList, SectionCard, type ListItem } from '@/components/business'
 import { PageShell } from '@/components/PageShell'
-import { getMockOrders, type MemberOrder, type OrderStatus } from '@/shared/frontend-test-flow'
+import { getOrders } from '@/services'
 import { routes } from '@/shared/router'
-
-function getStatusLabel(status: OrderStatus) {
-  const labels: Record<OrderStatus, string> = {
-    paid: '已完成',
-    pending: '待支付',
-    transfer_pending: '待确认'
-  }
-
-  return labels[status]
-}
+import { firstRecordList, priceOf, textOf, textOrPlaceholder } from '@/shared/view-data'
 
 export default function UserOrdersPage() {
-  const [orders, setOrders] = useState<MemberOrder[]>([])
+  const [items, setItems] = useState<ListItem[]>([])
 
   useEffect(() => {
-    void getMockOrders().then(setOrders)
-  }, [])
+    async function loadOrders() {
+      const response = await getOrders({ page: 1, page_size: 20 })
+      setItems(
+        firstRecordList(response.data).map((order) => {
+          const orderNo = textOf(order.order_no ?? order.id)
 
-  const mockOrderItems = orders.map((order) => ({
-    title: order.title,
-    desc:
-      order.status === 'paid'
-        ? '微信支付已完成，会员权益已开通。'
-        : order.status === 'transfer_pending'
-          ? '转账凭证已提交，等待财务确认。'
-          : '会员开通订单，等待支付。',
-    meta: order.id,
-    price: `¥${order.amount.toLocaleString()}`,
-    tag: getStatusLabel(order.status),
-    path: order.status === 'pending' ? routes.paymentTransfer : routes.userBenefits,
-    action: order.status === 'pending' ? '去支付' : '查看'
-  }))
+          return {
+            title: textOrPlaceholder(order.title ?? order.order_no ?? order.id, '未命名订单'),
+            desc: textOrPlaceholder(order.description ?? order.remark ?? order.status_text, '接口未返回订单描述'),
+            meta: orderNo,
+            price: priceOf(order.pay_amount ?? order.total_amount ?? order.amount),
+            tag: textOf(order.status_text),
+            path: routes.paymentTransfer,
+            query: orderNo ? { order_no: orderNo } : undefined,
+            action: '查看'
+          }
+        })
+      )
+    }
+
+    void loadOrders().catch(() => setItems([]))
+  }, [])
 
   return (
     <PageShell title="我的订单" subtitle="查看资源采购、活动报名和会员订单。">
@@ -43,35 +39,17 @@ export default function UserOrdersPage() {
         <SectionCard>
           <View className="grid grid-cols-3 gap-2 text-center">
             {['全部', '待支付', '已完成'].map((item, index) => (
-              <View key={item} className={`rounded-lg px-3 py-2 ${index === 1 ? 'bg-brand text-white' : 'bg-canvas'}`}>
-                <Text className={`text-xs font-semibold ${index === 1 ? 'text-white' : 'text-muted'}`}>{item}</Text>
+              <View key={item} className={`rounded-lg px-3 py-2 ${index === 0 ? 'bg-brand text-white' : 'bg-canvas'}`}>
+                <Text className={`text-xs font-semibold ${index === 0 ? 'text-white' : 'text-muted'}`}>{item}</Text>
               </View>
             ))}
           </View>
         </SectionCard>
-        <ItemList
-          items={[
-            ...mockOrderItems,
-            {
-              title: '行商·菁英会员',
-              desc: '会员开通订单，等待对公转账确认。',
-              meta: 'XS20260620001',
-              price: '¥4,980',
-              tag: '待支付',
-              path: routes.paymentTransfer,
-              action: '去支付'
-            },
-            {
-              title: '数字化转型峰会报名',
-              desc: '普通票 1 张，电子票已生成。',
-              meta: 'XS20260618008',
-              price: '¥598',
-              tag: '已完成',
-              path: routes.eventTicket,
-              action: '查看'
-            }
-          ]}
-        />
+        {items.length ? (
+          <ItemList items={items} />
+        ) : (
+          <EmptyState title="暂无订单" desc="Apifox mock 未返回订单列表数据。" />
+        )}
       </View>
     </PageShell>
   )

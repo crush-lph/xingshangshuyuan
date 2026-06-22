@@ -1,10 +1,4 @@
-import {
-  api,
-  request,
-  setRequestConfig,
-  type RequestOptions,
-  type HttpMethod
-} from '../src/shared/request'
+import { api, request, setRequestConfig, type RequestOptions, type HttpMethod } from '../src/shared/request'
 import { buildUrl, router, routes, type RoutePath } from '../src/shared/router'
 
 interface UserProfile {
