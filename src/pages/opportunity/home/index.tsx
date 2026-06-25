@@ -50,6 +50,8 @@ export default function OpportunityHomePage() {
             desc: compactJoin([item.type_text, item.city, item.tags?.join('/')]) || '接口未返回商机摘要',
             meta: `${item.apply_count ?? 0} 人申请`,
             tag: item.is_confidential ? '保密' : textOf(item.type_text),
+            icon: 'briefcase-4-line',
+            tone: item.is_confidential ? 'gold' : 'brand',
             path: routes.opportunityDetail,
             query: item.id ? { opportunity_id: item.id } : undefined,
             action: '详情'
@@ -64,6 +66,8 @@ export default function OpportunityHomePage() {
             desc: compactJoin([item.type_text, item.city]) || '接口未返回申请摘要',
             meta: textOrPlaceholder(item.created_at),
             tag: textOf(item.status_text),
+            icon: 'hand-heart-line',
+            tone: 'success',
             path: routes.opportunityDetail,
             query: item.opportunity_id ? { opportunity_id: item.opportunity_id } : undefined,
             action: '查看'
@@ -80,14 +84,10 @@ export default function OpportunityHomePage() {
       <View className="grid gap-3">
         <View className="rounded-lg bg-brand-deep p-4 shadow-medium">
           <Text className="block text-base font-bold text-white">商机对接</Text>
-          <Text className="mt-2 block text-sm leading-5 text-white/65">商机数据直接来自 Apifox mock 接口。</Text>
+          <Text className="mt-2 block text-sm leading-5 text-white/65">实时展示平台商机数据。</Text>
         </View>
 
-        {stats.length ? (
-          <StatGrid items={stats} />
-        ) : (
-          <EmptyState title="暂无商机统计" desc="Apifox mock 未返回商机看板数据。" />
-        )}
+        {stats.length ? <StatGrid items={stats} /> : <EmptyState title="暂无商机统计" />}
 
         <ActionBar
           actions={[
@@ -110,11 +110,7 @@ export default function OpportunityHomePage() {
           )}
         </SectionCard>
 
-        {items.length ? (
-          <ItemList items={items} />
-        ) : (
-          <EmptyState title="暂无商机" desc="Apifox mock 未返回商机列表数据。" />
-        )}
+        {items.length ? <ItemList items={items} /> : <EmptyState title="暂无商机" />}
 
         {applicationItems.length ? (
           <SectionCard title="我的申请">

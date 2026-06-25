@@ -1,17 +1,24 @@
 import { useEffect, useState } from 'react'
 import Taro from '@tarojs/taro'
-import { EmptyState, FormPreview } from '@/components/business'
+import { View } from '@tarojs/components'
+import { ActionBar, EmptyState, FieldList, FormSection, FormTextField } from '@/components/business'
 import { PageShell } from '@/components/PageShell'
-import {
-  getEventDetail,
-  getEvents,
-  getUserProfile,
-  registerEvent,
-  type GetEventDetailData,
-  type GetUserProfileData
-} from '@/services'
+import { getEventDetail, getEvents, getUserProfile, registerEvent, type GetEventDetailData } from '@/services'
+import { ensureLoggedIn } from '@/shared/auth-guard'
 import { router, routes } from '@/shared/router'
-import { getPageParam, priceOf, textOrPlaceholder } from '@/shared/view-data'
+import { getPageParam, priceOf, textOf, textOrPlaceholder } from '@/shared/view-data'
+
+interface SignupForm {
+  realName: string
+  phone: string
+  companyName: string
+}
+
+const initialForm: SignupForm = {
+  realName: '',
+  phone: '',
+  companyName: ''
+}
 
 async function resolveEventId() {
   const pageId = getPageParam('event_id')
@@ -26,7 +33,7 @@ async function resolveEventId() {
 
 export default function EventSignupPage() {
   const [event, setEvent] = useState<GetEventDetailData | null>(null)
-  const [profile, setProfile] = useState<GetUserProfileData | null>(null)
+  const [form, setForm] = useState<SignupForm>(initialForm)
   const [isSubmitting, setIsSubmitting] = useState(false)
 
   useEffect(() => {
@@ -34,7 +41,11 @@ export default function EventSignupPage() {
       const [eventId, profileResult] = await Promise.all([resolveEventId(), getUserProfile().catch(() => null)])
 
       if (profileResult) {
-        setProfile(profileResult.data)
+        setForm({
+          realName: textOf(profileResult.data.nickname) ?? '',
+          phone: textOf(profileResult.data.phone) ?? '',
+          companyName: textOf(profileResult.data.company_name) ?? ''
+        })
       }
 
       if (!eventId) {
@@ -50,8 +61,22 @@ export default function EventSignupPage() {
   }, [])
 
   async function handleRegister() {
+    if (!(await ensureLoggedIn('登录后才能报名活动'))) {
+      return
+    }
+
     if (!event?.id) {
       Taro.showToast({ title: '暂无活动数据', icon: 'none' })
+      return
+    }
+
+    if (!textOf(form.realName)) {
+      Taro.showToast({ title: '请填写参会人', icon: 'none' })
+      return
+    }
+
+    if (!textOf(form.phone)) {
+      Taro.showToast({ title: '请填写手机号', icon: 'none' })
       return
     }
 
@@ -61,9 +86,9 @@ export default function EventSignupPage() {
     try {
       await registerEvent({
         event_id: event.id,
-        real_name: profile?.nickname,
-        phone: profile?.phone,
-        company_name: profile?.company_name
+        real_name: form.realName.trim(),
+        phone: form.phone.trim(),
+        company_name: textOf(form.companyName)
       })
       Taro.showToast({ title: '报名已提交', icon: 'success' })
       router.redirect(routes.eventTicket, { event_id: event.id })
@@ -76,23 +101,49 @@ export default function EventSignupPage() {
   return (
     <PageShell title="活动报名" subtitle="确认参会人和票务信息。">
       {event ? (
-        <FormPreview
-          title="报名信息"
-          desc="提交后使用 Apifox mock 活动报名接口生成报名结果。"
-          fields={[
-            { label: '活动', value: textOrPlaceholder(event.title) },
-            { label: '参会人', value: textOrPlaceholder(profile?.nickname) },
-            { label: '手机号', value: textOrPlaceholder(profile?.phone) },
-            { label: '公司', value: textOrPlaceholder(profile?.company_name) },
-            { label: '票价', value: priceOf(event.price) ?? '未提供' }
-          ]}
-          actions={[
-            { label: '对公转账', variant: 'outline', path: routes.paymentTransfer },
-            { label: isSubmitting ? '提交中' : '确认报名', disabled: isSubmitting, onClick: handleRegister }
-          ]}
-        />
+        <View className="grid gap-3">
+          <FieldList
+            fields={[
+              { label: '活动', value: textOrPlaceholder(event.title) },
+              { label: '时间', value: textOrPlaceholder(event.start_time ?? event.event_date) },
+              { label: '地点', value: textOrPlaceholder(event.location ?? event.city) },
+              { label: '票价', value: priceOf(event.price) ?? '未提供' }
+            ]}
+          />
+
+          <FormSection title="参会信息" desc="已根据个人资料预填，可按本次报名实际参会人修改。">
+            <FormTextField
+              label="参会人"
+              required
+              value={form.realName}
+              placeholder="请输入姓名"
+              onChange={(value) => setForm((current) => ({ ...current, realName: value }))}
+            />
+            <FormTextField
+              label="手机号"
+              required
+              type="number"
+              value={form.phone}
+              placeholder="请输入联系手机号"
+              onChange={(value) => setForm((current) => ({ ...current, phone: value }))}
+            />
+            <FormTextField
+              label="公司"
+              value={form.companyName}
+              placeholder="请输入公司名称"
+              onChange={(value) => setForm((current) => ({ ...current, companyName: value }))}
+            />
+          </FormSection>
+
+          <ActionBar
+            actions={[
+              { label: '对公转账', variant: 'outline', path: routes.paymentTransfer },
+              { label: isSubmitting ? '提交中' : '确认报名', disabled: isSubmitting, onClick: handleRegister }
+            ]}
+          />
+        </View>
       ) : (
-        <EmptyState title="暂无可报名活动" desc="Apifox mock 未返回活动详情数据。" />
+        <EmptyState title="暂无可报名活动" />
       )}
     </PageShell>
   )

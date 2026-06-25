@@ -47,13 +47,9 @@ export default function UserBenefitsPage() {
             <Text className="block text-lg font-bold text-gold">{levelText}</Text>
           </SectionCard>
         ) : (
-          <EmptyState title="暂无会员信息" desc="Apifox mock 未返回用户会员等级。" />
+          <EmptyState title="暂无会员信息" />
         )}
-        {fields.length ? (
-          <FieldList fields={fields} />
-        ) : (
-          <EmptyState title="暂无权益明细" desc="Apifox mock 未返回会员权益数据。" />
-        )}
+        {fields.length ? <FieldList fields={fields} /> : <EmptyState title="暂无权益明细" />}
         <ActionBar actions={[{ label: '升级会员', variant: 'gold', path: routes.memberBenefit }]} />
       </View>
     </PageShell>

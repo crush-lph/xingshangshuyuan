@@ -59,7 +59,7 @@ export default function EventGroupPage() {
           />
         </View>
       ) : (
-        <EmptyState title="暂无拼团活动" desc="Apifox mock 未返回活动详情数据。" />
+        <EmptyState title="暂无拼团活动" />
       )}
     </PageShell>
   )

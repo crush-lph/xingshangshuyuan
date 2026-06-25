@@ -62,7 +62,7 @@ export default function EventTicketPage() {
           <ActionBar actions={[{ label: '查看我的活动', path: routes.userEvents }]} />
         </View>
       ) : (
-        <EmptyState title="暂无电子票" desc="Apifox mock 未返回活动详情数据。" />
+        <EmptyState title="暂无电子票" />
       )}
     </PageShell>
   )

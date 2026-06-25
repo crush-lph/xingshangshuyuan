@@ -1,6 +1,6 @@
 # Project Architecture
 
-本文档记录行尚书苑小程序当前的工程结构约定。后续新增页面、接口和通用能力时，优先遵守这里的边界。
+本文档记录行商书苑小程序当前的工程结构约定。后续新增页面、接口和通用能力时，优先遵守这里的边界。
 
 ## 技术栈
 
@@ -193,7 +193,7 @@ setRequestConfig({
 
 - 页面样式优先使用 Tailwind class。
 - 全局视觉 token 在 `tailwind.config.js` 中维护。
-- 视觉规范参考 [design-system/行尚书苑/MASTER.md](../design-system/行尚书苑/MASTER.md)。
+- 视觉规范参考 [design-system/行商书苑/MASTER.md](../design-system/行商书苑/MASTER.md)。
 - 原始需求和原型文件保存在 [docs/reference](./reference)。
 
 ## 新增页面流程

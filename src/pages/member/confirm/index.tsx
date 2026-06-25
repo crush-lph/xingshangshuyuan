@@ -4,6 +4,7 @@ import { Text, View } from '@tarojs/components'
 import { ActionBar, EmptyState, FieldList, SectionCard } from '@/components/business'
 import { PageShell } from '@/components/PageShell'
 import { createProductOrder, getProducts, payOrder, type CreateProductOrderData } from '@/services'
+import { ensureLoggedIn } from '@/shared/auth-guard'
 import { router, routes } from '@/shared/router'
 import { priceOf, textOrPlaceholder } from '@/shared/view-data'
 
@@ -38,28 +39,59 @@ export default function MemberConfirmPage() {
     void loadProduct().catch(() => setProduct(null))
   }, [])
 
-  async function handleWechatPayment() {
-    if (!product) {
-      Taro.showToast({ title: '暂无商品数据', icon: 'none' })
-      return
+  async function ensureOrder() {
+    if (!(await ensureLoggedIn('登录后才能开通会员'))) {
+      return null
     }
 
-    setIsPaying(true)
+    if (!product) {
+      Taro.showToast({ title: '暂无商品数据', icon: 'none' })
+      return null
+    }
+
+    if (order?.order_no) {
+      return order
+    }
+
     Taro.showLoading({ title: '生成订单中' })
+    const orderResult = await createProductOrder({
+      items: [{ product_id: product.id, quantity: 1 }]
+    })
+    setOrder(orderResult.data)
+    return orderResult.data
+  }
+
+  async function handleWechatPayment() {
+    setIsPaying(true)
 
     try {
-      const orderResult = await createProductOrder({
-        items: [{ product_id: product.id, quantity: 1 }]
-      })
-      setOrder(orderResult.data)
+      const nextOrder = await ensureOrder()
 
-      if (orderResult.data.order_no) {
+      if (nextOrder?.order_no) {
         Taro.showLoading({ title: '拉起支付中' })
-        await payOrder({ order_no: orderResult.data.order_no, pay_method: 1 })
+        await payOrder({ order_no: nextOrder.order_no, pay_method: 1 })
       }
 
       Taro.showToast({ title: '支付接口已调用', icon: 'success' })
       router.redirect(routes.userBenefits)
+    } finally {
+      Taro.hideLoading()
+      setIsPaying(false)
+    }
+  }
+
+  async function handleTransferPayment() {
+    setIsPaying(true)
+
+    try {
+      const nextOrder = await ensureOrder()
+
+      if (!nextOrder?.order_no) {
+        Taro.showToast({ title: '订单生成失败', icon: 'none' })
+        return
+      }
+
+      router.to(routes.paymentTransfer, { order_no: nextOrder.order_no })
     } finally {
       Taro.hideLoading()
       setIsPaying(false)
@@ -87,8 +119,8 @@ export default function MemberConfirmPage() {
               {
                 label: '对公转账',
                 variant: 'outline',
-                path: routes.paymentTransfer,
-                query: order?.order_no ? { order_no: order.order_no } : undefined
+                disabled: isPaying,
+                onClick: handleTransferPayment
               },
               {
                 label: isPaying ? '支付处理中' : '微信支付开通',
@@ -99,7 +131,7 @@ export default function MemberConfirmPage() {
           />
         </View>
       ) : (
-        <EmptyState title="暂无可开通商品" desc="Apifox mock 未返回商品列表数据。" />
+        <EmptyState title="暂无可开通商品" />
       )}
     </PageShell>
   )

@@ -12,8 +12,11 @@ export function SectionCard({ title, more, children }: SectionCardProps) {
     <View className="rounded-lg bg-white p-4 shadow-soft">
       {title ? (
         <View className="mb-3 flex items-center justify-between">
-          <Text className="text-base font-bold text-ink">{title}</Text>
-          {more ? <Text className="text-xs font-medium text-tech">{more}</Text> : null}
+          <View className="flex items-center gap-2">
+            <View className="h-4 w-1 rounded bg-gold" />
+            <Text className="text-base font-bold text-ink">{title}</Text>
+          </View>
+          {more ? <Text className="text-xs font-semibold text-tech">{more}</Text> : null}
         </View>
       ) : null}
       {children}

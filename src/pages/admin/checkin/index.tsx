@@ -44,7 +44,7 @@ export default function AdminCheckinPage() {
           />
         </View>
       ) : (
-        <EmptyState title="暂无核销活动" desc="Apifox mock 未返回活动数据。" />
+        <EmptyState title="暂无核销活动" />
       )}
     </PageShell>
   )

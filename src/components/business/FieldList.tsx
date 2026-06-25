@@ -11,12 +11,12 @@ export function FieldList({ fields }: FieldListProps) {
       {fields.map((field, index) => (
         <View
           key={field.label}
-          className={`flex items-center justify-between gap-4 px-4 py-3 ${
+          className={`flex items-center justify-between gap-4 px-4 py-[14px] ${
             index === fields.length - 1 ? '' : 'border-b border-line'
           }`}
         >
-          <Text className="text-sm text-muted">{field.label}</Text>
-          <Text className="text-right text-sm font-semibold text-ink">{field.value}</Text>
+          <Text className="text-sm font-medium text-muted">{field.label}</Text>
+          <Text className="text-right text-sm font-bold text-ink">{field.value}</Text>
         </View>
       ))}
     </View>

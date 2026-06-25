@@ -17,6 +17,8 @@ export default function UserEventsPage() {
           desc: item.progress !== undefined ? `学习进度 ${item.progress}%` : '接口未返回学习进度',
           meta: compactJoin([item.teacher_name, item.bought_at, item.expire_at ? `有效期至 ${item.expire_at}` : '']),
           tag: item.is_completed ? '已完成' : '学习中',
+          icon: 'calendar-event-line',
+          tone: item.is_completed ? 'success' : 'brand',
           path: routes.userPoints,
           query: item.course_id ? { course_id: item.course_id } : undefined,
           action: '继续学习'
@@ -29,11 +31,7 @@ export default function UserEventsPage() {
 
   return (
     <PageShell title="我的活动" subtitle="管理报名记录、电子票和活动评价。">
-      {items.length ? (
-        <ItemList items={items} />
-      ) : (
-        <EmptyState title="暂无学习记录" desc="Apifox mock 未返回我的课程数据。" />
-      )}
+      {items.length ? <ItemList items={items} /> : <EmptyState title="暂无学习记录" />}
     </PageShell>
   )
 }

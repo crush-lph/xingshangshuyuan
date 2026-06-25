@@ -84,7 +84,7 @@ export default function EventDetailPage() {
           />
         </View>
       ) : (
-        <EmptyState title="暂无活动详情" desc="Apifox mock 未返回活动详情数据。" />
+        <EmptyState title="暂无活动详情" />
       )}
     </PageShell>
   )

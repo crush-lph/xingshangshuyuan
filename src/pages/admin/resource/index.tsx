@@ -27,6 +27,8 @@ export default function AdminResourcePage() {
           desc: textOrPlaceholder(item.description ?? item.company_name ?? item.status_text, '接口未返回客户说明'),
           meta: textOf(item.created_at),
           tag: textOf(item.status_text),
+          icon: 'user-3-line',
+          tone: 'brand' as const,
           action: '查看'
         })),
         ...contracts.map((item) => ({
@@ -39,6 +41,8 @@ export default function AdminResourcePage() {
           ),
           meta: textOf(item.created_at),
           tag: textOf(item.status_text),
+          icon: 'archive-line',
+          tone: 'tech' as const,
           action: '查看'
         }))
       ])
@@ -49,11 +53,7 @@ export default function AdminResourcePage() {
 
   return (
     <PageShell title="资源需求" subtitle="跟进非标需求、供应商报价和交付状态。">
-      {items.length ? (
-        <ItemList items={items} />
-      ) : (
-        <EmptyState title="暂无资源需求" desc="Apifox mock 未返回客户或合同数据。" />
-      )}
+      {items.length ? <ItemList items={items} /> : <EmptyState title="暂无资源需求" />}
     </PageShell>
   )
 }

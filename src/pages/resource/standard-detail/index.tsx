@@ -113,7 +113,7 @@ export default function ResourceStandardDetailPage() {
           />
         </View>
       ) : (
-        <EmptyState title="暂无资源详情" desc="Apifox mock 未返回商品详情数据。" />
+        <EmptyState title="暂无资源详情" />
       )}
     </PageShell>
   )

@@ -17,7 +17,15 @@ function getButtonProps(variant: ActionItem['variant']) {
 }
 
 function getButtonClassName(variant: ActionItem['variant']) {
-  return variant === 'gold' ? 'bg-gold border-gold' : ''
+  if (variant === 'gold') {
+    return 'h-11 border-gold bg-gold text-white'
+  }
+
+  if (variant === 'outline') {
+    return 'h-11 border-brand text-brand'
+  }
+
+  return 'h-11'
 }
 
 export function ActionBar({ actions }: ActionBarProps) {

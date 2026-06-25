@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import Taro from '@tarojs/taro'
-import { EmptyState, FormPreview } from '@/components/business'
+import { View } from '@tarojs/components'
+import { ActionBar, EmptyState, FieldList, FormSection, FormTextField, FormTextareaField } from '@/components/business'
 import { PageShell } from '@/components/PageShell'
 import {
   applyOpportunity,
@@ -10,8 +11,23 @@ import {
   type GetCompanyProfileData,
   type GetOpportunityDetailData
 } from '@/services'
+import { ensureLoggedIn } from '@/shared/auth-guard'
 import { router, routes } from '@/shared/router'
-import { getPageParam, textOrPlaceholder } from '@/shared/view-data'
+import { getPageParam, numberOf, textOf, textOrPlaceholder } from '@/shared/view-data'
+
+interface OpportunityApplyForm {
+  reason: string
+  quoteType: string
+  quotePrice: string
+  attachmentUrl: string
+}
+
+const initialForm: OpportunityApplyForm = {
+  reason: '',
+  quoteType: '1',
+  quotePrice: '',
+  attachmentUrl: ''
+}
 
 async function resolveOpportunityId() {
   const pageId = getPageParam('opportunity_id')
@@ -27,6 +43,7 @@ async function resolveOpportunityId() {
 export default function OpportunityApplyPage() {
   const [detail, setDetail] = useState<GetOpportunityDetailData | null>(null)
   const [company, setCompany] = useState<GetCompanyProfileData | null>(null)
+  const [form, setForm] = useState<OpportunityApplyForm>(initialForm)
   const [isSubmitting, setIsSubmitting] = useState(false)
 
   useEffect(() => {
@@ -38,6 +55,10 @@ export default function OpportunityApplyPage() {
 
       if (companyResult) {
         setCompany(companyResult.data)
+        setForm((current) => ({
+          ...current,
+          reason: textOf(companyResult.data.business_scope) ?? current.reason
+        }))
       }
 
       if (!opportunityId) {
@@ -53,8 +74,17 @@ export default function OpportunityApplyPage() {
   }, [])
 
   async function handleApply() {
+    if (!(await ensureLoggedIn('登录后才能申请接单'))) {
+      return
+    }
+
     if (!detail?.id) {
       Taro.showToast({ title: '暂无商机数据', icon: 'none' })
+      return
+    }
+
+    if (!textOf(form.reason)) {
+      Taro.showToast({ title: '请填写接单说明', icon: 'none' })
       return
     }
 
@@ -64,8 +94,10 @@ export default function OpportunityApplyPage() {
     try {
       await applyOpportunity({
         opportunity_id: detail.id,
-        reason: company?.business_scope,
-        quote_type: 1
+        reason: form.reason.trim(),
+        quote_type: numberOf(form.quoteType),
+        quote_price: numberOf(form.quotePrice),
+        attachment_url: textOf(form.attachmentUrl)
       })
       Taro.showToast({ title: '申请已提交', icon: 'success' })
       router.redirect(routes.profile)
@@ -78,23 +110,58 @@ export default function OpportunityApplyPage() {
   return (
     <PageShell title="申请接单" subtitle="提交服务能力说明，平台审核后推送给发布方。">
       {detail ? (
-        <FormPreview
-          title="申请信息"
-          desc="系统会带入企业档案接口信息。"
-          fields={[
-            { label: '申请商机', value: textOrPlaceholder(detail.title) },
-            { label: '申请企业', value: textOrPlaceholder(company?.name) },
-            { label: '认证状态', value: textOrPlaceholder(company?.cert_status) },
-            { label: '服务区域', value: textOrPlaceholder(company?.service_cities) },
-            { label: '业务范围', value: textOrPlaceholder(company?.business_scope) }
-          ]}
-          actions={[
-            { label: '查看认证', variant: 'outline', path: routes.userCert },
-            { label: isSubmitting ? '提交中' : '提交申请', disabled: isSubmitting, onClick: handleApply }
-          ]}
-        />
+        <View className="grid gap-3">
+          <FieldList
+            fields={[
+              { label: '申请商机', value: textOrPlaceholder(detail.title) },
+              { label: '申请企业', value: textOrPlaceholder(company?.name) },
+              { label: '认证状态', value: textOrPlaceholder(company?.cert_status) },
+              { label: '服务区域', value: textOrPlaceholder(company?.service_cities) },
+              { label: '业务范围', value: textOrPlaceholder(company?.business_scope) }
+            ]}
+          />
+
+          <FormSection title="接单申请" desc="说明你的服务能力、报价方式和可交付时间。">
+            <FormTextareaField
+              label="接单说明"
+              required
+              value={form.reason}
+              placeholder="说明过往经验、服务范围、交付优势和期望对接方式"
+              onChange={(value) => setForm((current) => ({ ...current, reason: value }))}
+            />
+            <View className="grid grid-cols-2 gap-3">
+              <FormTextField
+                label="报价类型"
+                type="number"
+                value={form.quoteType}
+                placeholder="例如：1"
+                onChange={(value) => setForm((current) => ({ ...current, quoteType: value }))}
+              />
+              <FormTextField
+                label="报价金额"
+                type="digit"
+                value={form.quotePrice}
+                placeholder="可选"
+                onChange={(value) => setForm((current) => ({ ...current, quotePrice: value }))}
+              />
+            </View>
+            <FormTextField
+              label="附件地址"
+              value={form.attachmentUrl}
+              placeholder="可选，填写方案或资质文件 URL"
+              onChange={(value) => setForm((current) => ({ ...current, attachmentUrl: value }))}
+            />
+          </FormSection>
+
+          <ActionBar
+            actions={[
+              { label: '查看认证', variant: 'outline', path: routes.userCert },
+              { label: isSubmitting ? '提交中' : '提交申请', disabled: isSubmitting, onClick: handleApply }
+            ]}
+          />
+        </View>
       ) : (
-        <EmptyState title="暂无可申请商机" desc="Apifox mock 未返回商机详情数据。" />
+        <EmptyState title="暂无可申请商机" />
       )}
     </PageShell>
   )

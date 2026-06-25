@@ -32,6 +32,8 @@ export default function EventListPage() {
             item.current_count ? `${item.current_count}人已报名` : ''
           ]),
           price: priceOf(item.price),
+          icon: 'calendar-event-line',
+          tone: item.price ? ('gold' as const) : ('success' as const),
           city,
           path: routes.eventDetail,
           query: item.id ? { event_id: item.id } : undefined,

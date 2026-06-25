@@ -4,6 +4,7 @@ import { EmptyState, ItemList, SectionCard, type ListItem } from '@/components/b
 import { PageShell } from '@/components/PageShell'
 import { getProductCategories, getProducts, getSearchSuggest } from '@/services'
 import { routes } from '@/shared/router'
+import { useDebouncedValue } from '@/shared/use-debounced-value'
 import { compactJoin, priceOf, textOf, textOrPlaceholder } from '@/shared/view-data'
 
 interface ResourceItem extends ListItem {
@@ -12,6 +13,7 @@ interface ResourceItem extends ListItem {
 
 export default function ResourceListPage() {
   const [query, setQuery] = useState('')
+  const debouncedQuery = useDebouncedValue(query)
   const [filters, setFilters] = useState(['全部'])
   const [activeFilter, setActiveFilter] = useState('全部')
   const [resources, setResources] = useState<ResourceItem[]>([])
@@ -44,6 +46,8 @@ export default function ResourceListPage() {
               desc: textOrPlaceholder(item.description, '接口未返回资源描述'),
               price: priceOf(item.vip_price ?? item.price, item.price_unit),
               tag: category,
+              icon: 'archive-line',
+              tone: item.vip_price ? 'gold' : 'tech',
               meta: compactJoin([item.sales_count ? `${item.sales_count}人购买` : '', item.price_unit]),
               category,
               path: routes.resourceStandardDetail,
@@ -59,17 +63,17 @@ export default function ResourceListPage() {
   }, [])
 
   useEffect(() => {
-    const keyword = query.trim()
+    const keyword = debouncedQuery.trim()
 
     if (!keyword) {
       return
     }
 
     void getSearchSuggest({ keyword }).catch(() => undefined)
-  }, [query])
+  }, [debouncedQuery])
 
   const visibleResources = useMemo(() => {
-    const keyword = query.trim().toLowerCase()
+    const keyword = debouncedQuery.trim().toLowerCase()
 
     return resources.filter((item) => {
       const matchesFilter = activeFilter === '全部' || item.category === activeFilter
@@ -81,7 +85,7 @@ export default function ResourceListPage() {
 
       return matchesFilter && matchesKeyword
     })
-  }, [activeFilter, query, resources])
+  }, [activeFilter, debouncedQuery, resources])
 
   return (
     <PageShell title="资源列表" subtitle="按业务场景筛选供应商、工具和标准化服务。">

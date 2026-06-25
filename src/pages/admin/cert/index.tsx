@@ -19,6 +19,8 @@ export default function AdminCertPage() {
                   desc: textOrPlaceholder(data.reject_reason, '接口未返回审核说明'),
                   meta: textOrPlaceholder(data.created_at),
                   tag: textOrPlaceholder(data.status_text),
+                  icon: 'building-2-line',
+                  tone: 'gold',
                   action: '处理'
                 }
               ]
@@ -30,11 +32,7 @@ export default function AdminCertPage() {
 
   return (
     <PageShell title="认证审核" subtitle="审核企业资料、服务能力和认证标签。">
-      {items.length ? (
-        <ItemList items={items} />
-      ) : (
-        <EmptyState title="暂无认证审核" desc="Apifox mock 未返回认证数据。" />
-      )}
+      {items.length ? <ItemList items={items} /> : <EmptyState title="暂无认证审核" />}
     </PageShell>
   )
 }

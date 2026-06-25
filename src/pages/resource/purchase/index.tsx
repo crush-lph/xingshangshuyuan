@@ -10,6 +10,7 @@ import {
   type CreateProductOrderData,
   type GetProductDetailData
 } from '@/services'
+import { ensureLoggedIn } from '@/shared/auth-guard'
 import { router, routes } from '@/shared/router'
 import { getPageParam, priceOf, textOrPlaceholder } from '@/shared/view-data'
 
@@ -45,10 +46,14 @@ export default function ResourcePurchasePage() {
     void loadProduct().catch(() => setProduct(null))
   }, [])
 
-  async function handleCreateOrder() {
+  async function handleCreateOrder(redirectToOrders = true) {
+    if (!(await ensureLoggedIn('登录后才能采购资源'))) {
+      return null
+    }
+
     if (!product?.id) {
       Taro.showToast({ title: '暂无商品数据', icon: 'none' })
-      return
+      return null
     }
 
     setIsSubmitting(true)
@@ -60,10 +65,26 @@ export default function ResourcePurchasePage() {
       })
       setOrder(response.data)
       Taro.showToast({ title: '订单已生成', icon: 'success' })
-      router.redirect(routes.userOrders)
+      if (redirectToOrders) {
+        router.redirect(routes.userOrders)
+      }
+      return response.data
     } finally {
       Taro.hideLoading()
       setIsSubmitting(false)
+    }
+  }
+
+  async function handleTransferPayment() {
+    if (order?.order_no) {
+      router.to(routes.paymentTransfer, { order_no: order.order_no })
+      return
+    }
+
+    const nextOrder = await handleCreateOrder(false)
+
+    if (nextOrder?.order_no) {
+      router.to(routes.paymentTransfer, { order_no: nextOrder.order_no })
     }
   }
 
@@ -91,15 +112,21 @@ export default function ResourcePurchasePage() {
               {
                 label: '对公转账',
                 variant: 'outline',
-                path: routes.paymentTransfer,
-                query: order?.order_no ? { order_no: order.order_no } : undefined
+                disabled: isSubmitting,
+                onClick: handleTransferPayment
               },
-              { label: isSubmitting ? '生成中' : '确认支付', disabled: isSubmitting, onClick: handleCreateOrder }
+              {
+                label: isSubmitting ? '生成中' : '确认支付',
+                disabled: isSubmitting,
+                onClick: async () => {
+                  await handleCreateOrder()
+                }
+              }
             ]}
           />
         </View>
       ) : (
-        <EmptyState title="暂无采购商品" desc="Apifox mock 未返回商品详情数据。" />
+        <EmptyState title="暂无采购商品" />
       )}
     </PageShell>
   )

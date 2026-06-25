@@ -15,7 +15,7 @@
 
 - 产品原型：`docs/reference/001-requirements.html`
 - 设计规范：`docs/reference/002-design-spec.html`
-- 视觉规范沉淀：`design-system/行尚书苑/MASTER.md`
+- 视觉规范沉淀：`design-system/行商书苑/MASTER.md`
 - 架构说明：`docs/architecture.md`
 - 接口文档：`docs/api.md`
 - 路由配置：`src/app.config.ts`
@@ -114,7 +114,7 @@
 ## 9. 提交前检查
 
 - `pnpm typecheck` 通过。
-- 涉及页面、路由、构建配置时执行 `pnpm build:weapp`。
+- 修改后不默认重新执行 `pnpm build:weapp`；仅在用户明确要求、变更构建配置/入口配置、需要排查构建问题，或准备发布验收时执行。
 - 不需要执行 H5 构建或 H5 适配检查，除非任务明确要求。
 - 新增页面已同步 `app.config.ts` 和 `shared/router.ts`。
 - 没有直接手写重复路由字符串。

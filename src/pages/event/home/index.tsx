@@ -44,6 +44,8 @@ export default function EventHomePage() {
             meta: compactJoin([item.city, item.location, item.start_time]) || '接口未返回活动时间地点',
             price: priceOf(item.price),
             tag: item.max_participants ? `限${item.max_participants}人` : undefined,
+            icon: 'calendar-event-line',
+            tone: item.price ? 'gold' : 'success',
             path: routes.eventDetail,
             query: item.id ? { event_id: item.id } : undefined,
             action: '报名'
@@ -69,11 +71,7 @@ export default function EventHomePage() {
           </View>
         ) : null}
 
-        {stats.length ? (
-          <StatGrid items={stats} />
-        ) : (
-          <EmptyState title="暂无活动统计" desc="Apifox mock 未返回活动列表数据。" />
-        )}
+        {stats.length ? <StatGrid items={stats} /> : <EmptyState title="暂无活动统计" />}
 
         <SectionCard title="活动城市">
           {cities.length ? (
@@ -89,11 +87,7 @@ export default function EventHomePage() {
           )}
         </SectionCard>
 
-        {items.length ? (
-          <ItemList items={items} />
-        ) : (
-          <EmptyState title="暂无活动" desc="Apifox mock 未返回活动列表数据。" />
-        )}
+        {items.length ? <ItemList items={items} /> : <EmptyState title="暂无活动" />}
       </View>
     </PageShell>
   )

@@ -1,9 +1,9 @@
 import { setRequestConfig } from './request'
 
-export const API_MOCK_BASE_URL = 'http://127.0.0.1:4523/m1/8464015-8236035-default'
+export const API_BASE_URL = 'http://152.136.125.82/'
 
 export function configureApi() {
   setRequestConfig({
-    baseURL: API_MOCK_BASE_URL
+    baseURL: API_BASE_URL
   })
 }

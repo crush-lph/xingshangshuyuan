@@ -1,6 +1,7 @@
 export * from './ActionBar'
 export * from './EmptyState'
 export * from './FieldList'
+export * from './FormFields'
 export * from './FormPreview'
 export * from './ItemList'
 export * from './SectionCard'

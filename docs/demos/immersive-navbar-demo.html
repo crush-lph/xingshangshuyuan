@@ -1,0 +1,665 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>商业撮合平台沉浸式 Navbar Demo</title>
+    <style>
+      * {
+        box-sizing: border-box;
+        -webkit-tap-highlight-color: transparent;
+      }
+
+      :root {
+        --brand: #0a1f5c;
+        --gold: #c8960c;
+        --tech: #1677ff;
+        --ink: #333d55;
+        --muted: #6b7a99;
+        --line: #e8ecf2;
+        --canvas: #f5f7fa;
+        --hero-image: url('https://images.unsplash.com/photo-1511578314322-379afb476865?auto=format&fit=crop&w=1000&q=82');
+      }
+
+      body {
+        min-height: 100vh;
+        margin: 0;
+        display: grid;
+        place-items: center;
+        padding: 18px;
+        background: #e9eef6;
+        color: var(--ink);
+        font-family: -apple-system, BlinkMacSystemFont, 'PingFang SC', 'Helvetica Neue', Arial, sans-serif;
+      }
+
+      button {
+        border: 0;
+        font: inherit;
+        cursor: pointer;
+      }
+
+      .phone {
+        width: 390px;
+        height: 844px;
+        overflow: hidden;
+        border-radius: 42px;
+        background: var(--canvas);
+        box-shadow:
+          0 24px 70px rgba(10, 31, 92, 0.22),
+          inset 0 0 0 1px rgba(255, 255, 255, 0.7);
+        position: relative;
+      }
+
+      .screen {
+        height: 100%;
+        overflow-y: auto;
+        scrollbar-width: none;
+      }
+
+      .screen::-webkit-scrollbar {
+        display: none;
+      }
+
+      .top-nav {
+        position: sticky;
+        top: 0;
+        z-index: 10;
+        height: 92px;
+        padding: 0 14px;
+        color: #fff;
+        background: rgba(10, 31, 92, 0);
+        transition:
+          background 180ms ease,
+          box-shadow 180ms ease,
+          color 180ms ease;
+      }
+
+      .top-nav.is-solid {
+        color: var(--ink);
+        background: rgba(255, 255, 255, 0.96);
+        box-shadow: 0 2px 16px rgba(10, 31, 92, 0.1);
+        backdrop-filter: blur(14px);
+      }
+
+      .status-bar {
+        height: 44px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 0 6px;
+        font-size: 14px;
+        font-weight: 700;
+      }
+
+      .status-icons {
+        display: flex;
+        align-items: center;
+        gap: 5px;
+        opacity: 0.9;
+      }
+
+      .nav-row {
+        height: 44px;
+        display: grid;
+        grid-template-columns: 1fr auto;
+        align-items: center;
+        gap: 12px;
+      }
+
+      .title-block {
+        min-width: 0;
+      }
+
+      .page-title {
+        margin: 0;
+        font-size: 18px;
+        font-weight: 800;
+        line-height: 1.2;
+      }
+
+      .page-meta {
+        margin: 3px 0 0;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        color: rgba(255, 255, 255, 0.72);
+        font-size: 11px;
+        font-weight: 500;
+      }
+
+      .top-nav.is-solid .page-meta {
+        color: var(--muted);
+      }
+
+      .capsule {
+        width: 88px;
+        height: 32px;
+        display: flex;
+        align-items: center;
+        justify-content: space-around;
+        border: 1px solid rgba(255, 255, 255, 0.42);
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.16);
+        backdrop-filter: blur(10px);
+      }
+
+      .top-nav.is-solid .capsule {
+        border-color: var(--line);
+        background: #fff;
+      }
+
+      .capsule span {
+        width: 4px;
+        height: 4px;
+        border-radius: 50%;
+        background: currentColor;
+        box-shadow:
+          9px 0 0 currentColor,
+          -9px 0 0 currentColor;
+      }
+
+      .capsule i {
+        width: 16px;
+        height: 16px;
+        border: 2px solid currentColor;
+        border-radius: 50%;
+      }
+
+      .hero {
+        min-height: 286px;
+        margin-top: -92px;
+        padding: 118px 16px 18px;
+        position: relative;
+        color: #fff;
+        background-image: var(--hero-image);
+        background-size: cover;
+        background-position: center;
+      }
+
+      .hero::after {
+        position: absolute;
+        inset: 0;
+        content: '';
+        background: rgba(5, 14, 46, 0.42);
+      }
+
+      .hero-content {
+        position: relative;
+        z-index: 1;
+      }
+
+      .hero h1 {
+        width: 270px;
+        margin: 0;
+        font-size: 26px;
+        line-height: 1.25;
+        letter-spacing: 0;
+      }
+
+      .hero p {
+        width: 285px;
+        margin: 10px 0 0;
+        color: rgba(255, 255, 255, 0.78);
+        font-size: 13px;
+        line-height: 1.6;
+      }
+
+      .search-card {
+        margin-top: 18px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        height: 42px;
+        padding: 0 14px;
+        border: 1px solid rgba(255, 255, 255, 0.34);
+        border-radius: 12px;
+        background: rgba(255, 255, 255, 0.18);
+        backdrop-filter: blur(14px);
+        color: rgba(255, 255, 255, 0.78);
+        font-size: 13px;
+      }
+
+      .search-card svg,
+      .icon-btn svg,
+      .bottom-icon svg {
+        width: 18px;
+        height: 18px;
+      }
+
+      .quick-stats {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 8px;
+        margin-top: 14px;
+      }
+
+      .stat {
+        padding: 10px 8px;
+        border-radius: 12px;
+        background: rgba(255, 255, 255, 0.16);
+        backdrop-filter: blur(12px);
+      }
+
+      .stat strong {
+        display: block;
+        color: #f0b429;
+        font-size: 16px;
+      }
+
+      .stat span {
+        display: block;
+        margin-top: 2px;
+        color: rgba(255, 255, 255, 0.72);
+        font-size: 10px;
+      }
+
+      .content {
+        padding: 14px 16px 92px;
+      }
+
+      .section-head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin: 10px 0 10px;
+      }
+
+      .section-title {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        margin: 0;
+        color: var(--ink);
+        font-size: 16px;
+        font-weight: 800;
+      }
+
+      .section-title::before {
+        width: 4px;
+        height: 16px;
+        border-radius: 4px;
+        background: var(--gold);
+        content: '';
+      }
+
+      .more {
+        color: var(--tech);
+        font-size: 12px;
+        font-weight: 600;
+      }
+
+      .event-card,
+      .match-card {
+        border-radius: 14px;
+        background: #fff;
+        box-shadow: 0 2px 16px rgba(10, 31, 92, 0.1);
+      }
+
+      .event-card {
+        display: grid;
+        grid-template-columns: 90px 1fr;
+        overflow: hidden;
+      }
+
+      .event-cover {
+        min-height: 118px;
+        background-image: url('https://images.unsplash.com/photo-1556761175-b413da4baf72?auto=format&fit=crop&w=420&q=80');
+        background-position: center;
+        background-size: cover;
+      }
+
+      .event-info {
+        padding: 13px 13px 12px;
+      }
+
+      .tag {
+        display: inline-flex;
+        align-items: center;
+        height: 22px;
+        padding: 0 8px;
+        border-radius: 5px;
+        background: #fff3d0;
+        color: var(--gold);
+        font-size: 11px;
+        font-weight: 700;
+      }
+
+      .event-info h3,
+      .match-card h3 {
+        margin: 8px 0 0;
+        color: var(--ink);
+        font-size: 15px;
+        line-height: 1.45;
+      }
+
+      .event-info p,
+      .match-card p {
+        margin: 6px 0 0;
+        color: var(--muted);
+        font-size: 12px;
+        line-height: 1.55;
+      }
+
+      .match-card {
+        margin-top: 10px;
+        padding: 14px;
+      }
+
+      .match-top {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+      }
+
+      .company {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+
+      .avatar {
+        width: 38px;
+        height: 38px;
+        display: grid;
+        place-items: center;
+        border-radius: 12px;
+        background: #e8f3ff;
+        color: var(--tech);
+        font-weight: 800;
+      }
+
+      .btn {
+        height: 32px;
+        padding: 0 12px;
+        border-radius: 8px;
+        background: var(--brand);
+        color: #fff;
+        font-size: 12px;
+        font-weight: 700;
+      }
+
+      .bg-switcher {
+        position: absolute;
+        right: 14px;
+        bottom: 84px;
+        z-index: 4;
+        display: flex;
+        gap: 7px;
+        padding: 6px;
+        border: 1px solid rgba(232, 236, 242, 0.9);
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.92);
+        box-shadow: 0 6px 22px rgba(10, 31, 92, 0.14);
+      }
+
+      .bg-dot {
+        width: 28px;
+        height: 28px;
+        border: 2px solid transparent;
+        border-radius: 50%;
+        background-image: var(--thumb);
+        background-size: cover;
+        background-position: center;
+      }
+
+      .bg-dot.active {
+        border-color: var(--gold);
+      }
+
+      .bottom-tab {
+        position: absolute;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        height: 76px;
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        padding: 7px 8px 10px;
+        border-top: 1px solid var(--line);
+        background: rgba(255, 255, 255, 0.96);
+        box-shadow: 0 -2px 12px rgba(10, 31, 92, 0.08);
+      }
+
+      .tab-item {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 3px;
+        color: #b0b8c9;
+        font-size: 11px;
+        font-weight: 600;
+      }
+
+      .tab-item.active {
+        color: var(--brand);
+      }
+
+      .bottom-icon {
+        width: 24px;
+        height: 24px;
+        display: grid;
+        place-items: center;
+      }
+
+      @media (max-width: 430px) {
+        body {
+          padding: 0;
+          background: var(--canvas);
+        }
+
+        .phone {
+          width: 100vw;
+          height: 100vh;
+          border-radius: 0;
+        }
+      }
+
+      @media (prefers-reduced-motion: reduce) {
+        *,
+        *::before,
+        *::after {
+          transition-duration: 0.01ms !important;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="phone">
+      <main class="screen" data-screen>
+        <header class="top-nav" data-nav>
+          <div class="status-bar">
+            <span>9:41</span>
+            <div class="status-icons" aria-hidden="true">
+              <span>5G</span>
+              <span>▰▰▰</span>
+            </div>
+          </div>
+          <div class="nav-row">
+            <div class="title-block">
+              <p class="page-title">行商书苑</p>
+              <p class="page-meta">上海 · 商业撮合与线下活动</p>
+            </div>
+            <div class="capsule" aria-label="微信胶囊按钮">
+              <span></span>
+              <i></i>
+            </div>
+          </div>
+        </header>
+
+        <section class="hero">
+          <div class="hero-content">
+            <h1>本周企业资源对接会</h1>
+            <p>围绕财税服务、渠道合作、客户转介绍，匹配机构负责人和服务商资源。</p>
+            <div class="search-card">
+              <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                <path
+                  d="M10.8 18.1a7.3 7.3 0 1 0 0-14.6 7.3 7.3 0 0 0 0 14.6ZM16.2 16.2l4.3 4.3"
+                  stroke="currentColor"
+                  stroke-width="1.8"
+                  stroke-linecap="round"
+                />
+              </svg>
+              <span>搜索活动、资源方、合作需求</span>
+            </div>
+            <div class="quick-stats">
+              <div class="stat"><strong>38</strong><span>本周活动</span></div>
+              <div class="stat"><strong>126</strong><span>撮合需求</span></div>
+              <div class="stat"><strong>2.4k</strong><span>机构会员</span></div>
+            </div>
+          </div>
+        </section>
+
+        <section class="content">
+          <div class="section-head">
+            <h2 class="section-title">推荐活动</h2>
+            <span class="more">全部</span>
+          </div>
+          <article class="event-card">
+            <div class="event-cover" aria-hidden="true"></div>
+            <div class="event-info">
+              <span class="tag">线下闭门会</span>
+              <h3>财税机构增长与渠道共创沙龙</h3>
+              <p>6月28日 · 上海静安 · 限 60 人</p>
+            </div>
+          </article>
+
+          <div class="section-head">
+            <h2 class="section-title">撮合机会</h2>
+            <span class="more">更多</span>
+          </div>
+          <article class="match-card">
+            <div class="match-top">
+              <div class="company">
+                <div class="avatar">企</div>
+                <div>
+                  <h3>寻找本地代账合作渠道</h3>
+                  <p>杭州 · 服务商 · 预算可谈</p>
+                </div>
+              </div>
+              <button class="btn" type="button">对接</button>
+            </div>
+          </article>
+          <article class="match-card">
+            <div class="match-top">
+              <div class="company">
+                <div class="avatar">税</div>
+                <div>
+                  <h3>税筹咨询项目联合交付</h3>
+                  <p>苏州 · 项目合作 · 7天内有效</p>
+                </div>
+              </div>
+              <button class="btn" type="button">对接</button>
+            </div>
+          </article>
+        </section>
+      </main>
+
+      <div class="bg-switcher" aria-label="切换首屏背景图">
+        <button
+          class="bg-dot active"
+          type="button"
+          data-bg="event"
+          aria-label="活动现场背景"
+          style="
+            --thumb: url('https://images.unsplash.com/photo-1511578314322-379afb476865?auto=format&fit=crop&w=160&q=80');
+          "
+        ></button>
+        <button
+          class="bg-dot"
+          type="button"
+          data-bg="meeting"
+          aria-label="商务会议背景"
+          style="
+            --thumb: url('https://images.unsplash.com/photo-1556761175-b413da4baf72?auto=format&fit=crop&w=160&q=80');
+          "
+        ></button>
+        <button
+          class="bg-dot"
+          type="button"
+          data-bg="network"
+          aria-label="商务交流背景"
+          style="
+            --thumb: url('https://images.unsplash.com/photo-1542744173-8e7e53415bb0?auto=format&fit=crop&w=160&q=80');
+          "
+        ></button>
+      </div>
+
+      <nav class="bottom-tab" aria-label="底部导航">
+        <div class="tab-item active">
+          <span class="bottom-icon">
+            <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+              <path
+                d="M4 10.5 12 4l8 6.5V20H5.5v-6.5"
+                stroke="currentColor"
+                stroke-width="1.7"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              />
+            </svg>
+          </span>
+          <span>首页</span>
+        </div>
+        <div class="tab-item">
+          <span class="bottom-icon">
+            <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+              <path d="M5 7h14M5 12h14M5 17h9" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" />
+            </svg>
+          </span>
+          <span>服务</span>
+        </div>
+        <div class="tab-item">
+          <span class="bottom-icon">
+            <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+              <path
+                d="M7 5h10v14H7zM10 8h4M10 12h4M10 16h2"
+                stroke="currentColor"
+                stroke-width="1.7"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              />
+            </svg>
+          </span>
+          <span>活动</span>
+        </div>
+        <div class="tab-item">
+          <span class="bottom-icon">
+            <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+              <path
+                d="M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8ZM5 20c1.3-3.3 4-5 7-5s5.7 1.7 7 5"
+                stroke="currentColor"
+                stroke-width="1.7"
+                stroke-linecap="round"
+              />
+            </svg>
+          </span>
+          <span>我的</span>
+        </div>
+      </nav>
+    </div>
+
+    <script>
+      const images = {
+        event: 'https://images.unsplash.com/photo-1511578314322-379afb476865?auto=format&fit=crop&w=1000&q=82',
+        meeting: 'https://images.unsplash.com/photo-1556761175-b413da4baf72?auto=format&fit=crop&w=1000&q=82',
+        network: 'https://images.unsplash.com/photo-1542744173-8e7e53415bb0?auto=format&fit=crop&w=1000&q=82'
+      }
+
+      const screen = document.querySelector('[data-screen]')
+      const nav = document.querySelector('[data-nav]')
+      const dots = Array.from(document.querySelectorAll('[data-bg]'))
+
+      screen.addEventListener('scroll', () => {
+        nav.classList.toggle('is-solid', screen.scrollTop > 74)
+      })
+
+      dots.forEach((dot) => {
+        dot.addEventListener('click', () => {
+          document.documentElement.style.setProperty('--hero-image', `url("${images[dot.dataset.bg]}")`)
+          dots.forEach((item) => item.classList.toggle('active', item === dot))
+        })
+      })
+    </script>
+  </body>
+</html>

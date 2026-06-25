@@ -1,8 +1,8 @@
 {
   "miniprogramRoot": "dist/",
   "projectname": "xingshangshuyuan",
-  "description": "行尚书苑 Taro mini program",
-  "appid": "touristappid",
+  "description": "行商书苑 Taro mini program",
+  "appid": "wxe9c4c41d104dc0ef",
   "setting": {
     "urlCheck": false,
     "es6": false,

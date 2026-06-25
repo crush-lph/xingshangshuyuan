@@ -76,6 +76,8 @@ export default function ShuyuanPage() {
                 priceOf(course.price)
               ]) || undefined,
             tag: textOf(course.course_type_text),
+            icon: 'book-open-line',
+            tone: course.price ? 'gold' : 'brand',
             path: routes.eventDetail,
             query: course.id ? { course_id: course.id } : undefined,
             action: '查看'
@@ -111,14 +113,10 @@ export default function ShuyuanPage() {
             </View>
           </View>
         ) : (
-          <EmptyState title="暂无推荐活动" desc="Apifox mock 未返回推荐活动数据。" />
+          <EmptyState title="暂无推荐活动" />
         )}
 
-        {stats.length ? (
-          <StatGrid items={stats} />
-        ) : (
-          <EmptyState title="暂无学习统计" desc="Apifox mock 未返回学习统计数据。" />
-        )}
+        {stats.length ? <StatGrid items={stats} /> : <EmptyState title="暂无学习统计" />}
 
         <SectionCard title="学习分类">
           {categories.length ? (
@@ -130,15 +128,11 @@ export default function ShuyuanPage() {
               ))}
             </View>
           ) : (
-            <EmptyState title="暂无课程分类" desc="Apifox mock 未返回课程分类数据。" />
+            <EmptyState title="暂无课程分类" />
           )}
         </SectionCard>
 
-        {items.length ? (
-          <ItemList items={items} />
-        ) : (
-          <EmptyState title="暂无课程" desc="Apifox mock 未返回课程列表数据。" />
-        )}
+        {items.length ? <ItemList items={items} /> : <EmptyState title="暂无课程" />}
 
         <SectionCard title="服务标准">
           <Text className="block text-sm leading-6 text-muted">

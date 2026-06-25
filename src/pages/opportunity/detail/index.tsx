@@ -98,7 +98,7 @@ export default function OpportunityDetailPage() {
           />
         </View>
       ) : (
-        <EmptyState title="暂无商机详情" desc="Apifox mock 未返回商机详情数据。" />
+        <EmptyState title="暂无商机详情" />
       )}
     </PageShell>
   )

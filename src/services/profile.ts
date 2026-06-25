@@ -109,12 +109,21 @@ export function getInvoices(params?: GetInvoicesQuery, options?: Omit<ApiRequest
   })
 }
 
+export interface UploadFileRecordPayload {
+  order_no?: string
+  file_path?: string
+  scene?: string
+}
+
 export type UploadFileRecordData = EmptyObject
 
 export type UploadFileRecordResponse = ApiResponse<UploadFileRecordData>
 
-export function uploadFileRecord(options?: ApiBodyRequestOptions) {
-  return api.post<UploadFileRecordResponse>('/api/upload', undefined, options)
+export function uploadFileRecord(
+  data?: UploadFileRecordPayload,
+  options?: ApiBodyRequestOptions<UploadFileRecordPayload>
+) {
+  return api.post<UploadFileRecordResponse, UploadFileRecordPayload>('/api/upload', data, options)
 }
 
 export type GetCustomerServiceConfigData = EmptyObject

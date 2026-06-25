@@ -26,6 +26,8 @@ export default function AdminOrdersPage() {
             desc: textOrPlaceholder(order.description ?? order.remark ?? order.status_text, '接口未返回订单描述'),
             price: priceOf(order.pay_amount ?? order.total_amount ?? order.amount),
             tag: textOf(order.status_text),
+            icon: 'file-list-3-line',
+            tone: 'gold' as const,
             path: routes.paymentTransfer,
             query: orderNo ? { order_no: orderNo } : undefined,
             action: '查看'
@@ -36,6 +38,8 @@ export default function AdminOrdersPage() {
           desc: textOrPlaceholder(invoice.description ?? invoice.status_text, '接口未返回发票说明'),
           price: priceOf(invoice.amount),
           tag: textOf(invoice.status_text),
+          icon: 'file-list-3-line',
+          tone: 'tech' as const,
           action: '查看'
         }))
       ])
@@ -46,11 +50,7 @@ export default function AdminOrdersPage() {
 
   return (
     <PageShell title="订单确认" subtitle="处理对公转账、会员开通和资源采购订单。">
-      {items.length ? (
-        <ItemList items={items} />
-      ) : (
-        <EmptyState title="暂无订单" desc="Apifox mock 未返回订单列表数据。" />
-      )}
+      {items.length ? <ItemList items={items} /> : <EmptyState title="暂无订单" />}
     </PageShell>
   )
 }

@@ -1,4 +1,5 @@
 import type { Query, RoutePath } from '@/shared/router'
+import type { AppIconName } from '@/shared/app-icons'
 
 export interface StatItem {
   label: string
@@ -21,6 +22,8 @@ export interface ListItem {
   meta?: string
   price?: string
   tag?: string
+  icon?: AppIconName
+  tone?: 'brand' | 'gold' | 'success' | 'danger' | 'tech' | 'neutral'
   path?: RoutePath
   query?: Query
   action?: string

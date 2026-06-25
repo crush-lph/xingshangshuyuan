@@ -36,6 +36,8 @@ export default function ResourceHomePage() {
             desc: textOrPlaceholder(item.description, '接口未返回资源描述'),
             price: priceOf(item.vip_price ?? item.price, item.price_unit),
             tag: textOf(item.product_type_text),
+            icon: 'archive-line',
+            tone: item.vip_price ? 'gold' : 'tech',
             action: '查看',
             path: routes.resourceStandardDetail,
             query: item.id ? { product_id: item.id } : undefined
@@ -74,15 +76,11 @@ export default function ResourceHomePage() {
               ))}
             </View>
           ) : (
-            <EmptyState title="暂无资源分类" desc="Apifox mock 未返回商品分类数据。" />
+            <EmptyState title="暂无资源分类" />
           )}
         </SectionCard>
         <SectionCard title="战略供应商推荐">
-          {items.length ? (
-            <ItemList items={items} />
-          ) : (
-            <EmptyState title="暂无资源" desc="Apifox mock 未返回商品列表数据。" />
-          )}
+          {items.length ? <ItemList items={items} /> : <EmptyState title="暂无资源" />}
         </SectionCard>
         <View className="rounded-lg bg-brand-deep p-4 shadow-medium">
           <Text className="block text-base font-bold text-gold-light">会员采购入口</Text>

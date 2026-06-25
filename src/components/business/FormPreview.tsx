@@ -14,7 +14,10 @@ export function FormPreview({ title, desc, fields, actions }: FormPreviewProps) 
   return (
     <View className="grid gap-3">
       <View className="rounded-lg bg-white p-4 shadow-soft">
-        <Text className="block text-base font-bold text-ink">{title}</Text>
+        <View className="flex items-center gap-2">
+          <View className="h-4 w-1 rounded bg-gold" />
+          <Text className="block text-base font-bold text-ink">{title}</Text>
+        </View>
         <Text className="mt-2 block text-sm leading-6 text-muted">{desc}</Text>
       </View>
       <FieldList fields={fields} />

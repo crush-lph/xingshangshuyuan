@@ -4,12 +4,13 @@ import { Text, View } from '@tarojs/components'
 import { ActionBar, EmptyState, FieldList, SectionCard } from '@/components/business'
 import { PageShell } from '@/components/PageShell'
 import { cancelOrder, getOrderDetail, paymentCallback, uploadFileRecord, type GetOrderDetailData } from '@/services'
+import { ensureLoggedIn } from '@/shared/auth-guard'
 import { router, routes } from '@/shared/router'
 import { getPageParam, priceOf, textOrPlaceholder } from '@/shared/view-data'
 
 export default function PaymentTransferPage() {
   const [order, setOrder] = useState<GetOrderDetailData | null>(null)
-  const [voucherSelected, setVoucherSelected] = useState(false)
+  const [voucherPath, setVoucherPath] = useState('')
   const [isSubmitting, setIsSubmitting] = useState(false)
 
   useEffect(() => {
@@ -28,18 +29,35 @@ export default function PaymentTransferPage() {
     void loadOrder().catch(() => setOrder(null))
   }, [])
 
-  function handlePickVoucher() {
-    setVoucherSelected(true)
-    Taro.showToast({ title: '已选择凭证', icon: 'success' })
+  async function handlePickVoucher() {
+    try {
+      const result = await Taro.chooseImage({
+        count: 1,
+        sizeType: ['compressed'],
+        sourceType: ['album', 'camera']
+      })
+      const selectedPath = result.tempFilePaths[0]
+
+      if (selectedPath) {
+        setVoucherPath(selectedPath)
+        Taro.showToast({ title: '已选择凭证', icon: 'success' })
+      }
+    } catch {
+      Taro.showToast({ title: '未选择凭证', icon: 'none' })
+    }
   }
 
   async function handleSubmitVoucher() {
+    if (!(await ensureLoggedIn('登录后才能提交支付凭证'))) {
+      return
+    }
+
     if (!order?.order_no) {
       Taro.showToast({ title: '暂无订单数据', icon: 'none' })
       return
     }
 
-    if (!voucherSelected) {
+    if (!voucherPath) {
       Taro.showToast({ title: '请先上传凭证', icon: 'none' })
       return
     }
@@ -48,9 +66,13 @@ export default function PaymentTransferPage() {
     Taro.showLoading({ title: '提交中' })
 
     try {
-      await uploadFileRecord()
+      await uploadFileRecord({
+        order_no: order.order_no,
+        file_path: voucherPath,
+        scene: 'bank_transfer_voucher'
+      })
       await paymentCallback()
-      Taro.showToast({ title: '凭证接口已调用', icon: 'success' })
+      Taro.showToast({ title: '凭证已提交', icon: 'success' })
       router.redirect(routes.userOrders)
     } finally {
       Taro.hideLoading()
@@ -59,6 +81,10 @@ export default function PaymentTransferPage() {
   }
 
   async function handleCancelOrder() {
+    if (!(await ensureLoggedIn('登录后才能取消订单'))) {
+      return
+    }
+
     if (!order?.order_no) {
       return
     }
@@ -86,8 +112,9 @@ export default function PaymentTransferPage() {
               onClick={handlePickVoucher}
             >
               <Text className="block text-center text-sm text-muted">
-                {voucherSelected ? '已选择凭证' : '点击上传银行回单截图'}
+                {voucherPath ? '已选择银行回单截图' : '点击上传银行回单截图'}
               </Text>
+              {voucherPath ? <Text className="mt-2 block text-center text-xs text-muted">{voucherPath}</Text> : null}
             </View>
           </SectionCard>
           <ActionBar
@@ -102,7 +129,7 @@ export default function PaymentTransferPage() {
           />
         </View>
       ) : (
-        <EmptyState title="暂无订单详情" desc="缺少订单编号，或 Apifox mock 未返回订单详情数据。" />
+        <EmptyState title="暂无订单详情" />
       )}
     </PageShell>
   )

@@ -19,9 +19,7 @@ export default function ResourceNonstandardDetailPage() {
     <PageShell title="非标资源需求" subtitle="非标资源由客户经理协同供应商报价和交付。">
       <View className="grid gap-3">
         <SectionCard title="需求说明">
-          <Text className="text-sm leading-6 text-muted">
-            提交需求后平台进行供应商匹配，企业档案信息来自 Apifox mock 接口。
-          </Text>
+          <Text className="text-sm leading-6 text-muted">提交需求后平台进行供应商匹配，企业档案信息来自平台接口。</Text>
         </SectionCard>
         {company ? (
           <FieldList
@@ -33,7 +31,7 @@ export default function ResourceNonstandardDetailPage() {
             ]}
           />
         ) : (
-          <EmptyState title="暂无企业档案" desc="Apifox mock 未返回企业档案数据。" />
+          <EmptyState title="暂无企业档案" />
         )}
         <ActionBar
           actions={[

@@ -44,6 +44,8 @@ export default function ServicesPage() {
             desc: textOrPlaceholder(item.description, '接口未返回服务描述'),
             price: priceOf(item.vip_price ?? item.price, item.price_unit),
             tag: textOf(item.product_type_text),
+            icon: 'service-line',
+            tone: item.vip_price ? 'gold' : 'tech',
             action: '查看',
             path: routes.resourceStandardDetail,
             query: item.id ? { product_id: item.id } : undefined
@@ -71,15 +73,11 @@ export default function ServicesPage() {
               ))}
             </View>
           ) : (
-            <EmptyState title="暂无服务分类" desc="Apifox mock 未返回商品分类数据。" />
+            <EmptyState title="暂无服务分类" />
           )}
         </SectionCard>
 
-        {items.length ? (
-          <ItemList items={items} />
-        ) : (
-          <EmptyState title="暂无服务商品" desc="Apifox mock 未返回商品列表数据。" />
-        )}
+        {items.length ? <ItemList items={items} /> : <EmptyState title="暂无服务商品" />}
 
         <View className="rounded-lg bg-brand-deep p-4 shadow-medium">
           <View className="flex items-center justify-between gap-3">

@@ -22,6 +22,8 @@ export default function UserOrdersPage() {
             meta: orderNo,
             price: priceOf(order.pay_amount ?? order.total_amount ?? order.amount),
             tag: textOf(order.status_text),
+            icon: 'file-list-3-line',
+            tone: 'gold',
             path: routes.paymentTransfer,
             query: orderNo ? { order_no: orderNo } : undefined,
             action: '查看'
@@ -45,11 +47,7 @@ export default function UserOrdersPage() {
             ))}
           </View>
         </SectionCard>
-        {items.length ? (
-          <ItemList items={items} />
-        ) : (
-          <EmptyState title="暂无订单" desc="Apifox mock 未返回订单列表数据。" />
-        )}
+        {items.length ? <ItemList items={items} /> : <EmptyState title="暂无订单" />}
       </View>
     </PageShell>
   )

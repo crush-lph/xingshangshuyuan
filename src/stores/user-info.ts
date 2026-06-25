@@ -1,6 +1,14 @@
 import Taro from '@tarojs/taro'
 import { create } from 'zustand'
-import { getUserInfo, getUserProfile, wxLogin, type GetUserInfoData, type GetUserProfileData } from '@/services'
+import {
+  bindPhone,
+  getUserInfo,
+  getUserProfile,
+  wxLogin,
+  type GetUserInfoData,
+  type GetUserProfileData
+} from '@/services'
+import { clearAuthToken, getAuthToken, onUnauthorized, setAuthToken } from '@/shared/auth-session'
 
 interface SetUserInfoPayload {
   userInfo?: GetUserInfoData | null
@@ -16,9 +24,11 @@ export interface UserInfoState {
   isLoggingIn: boolean
   isLoggedIn: boolean
   error?: string
+  hydrateFromStorage: () => Promise<void>
   loadUserInfo: () => Promise<void>
   refreshUserInfo: () => Promise<void>
   loginWithWechat: () => Promise<void>
+  bindWechatPhone: (payload: { encryptedData?: string; iv?: string }) => Promise<void>
   setUserInfo: (payload: SetUserInfoPayload) => void
   clearUserInfo: () => void
   logout: () => void
@@ -40,14 +50,43 @@ function getIsLoggedIn(userInfo: GetUserInfoData | null, profile: GetUserProfile
   return Boolean(token || hasUserInfo(userInfo) || hasUserProfile(profile))
 }
 
+let hasBoundUnauthorizedListener = false
+
 export const useUserInfo = create<UserInfoState>()((set, get) => ({
   userInfo: null,
   profile: null,
-  token: undefined,
+  token: getAuthToken(),
   isLoading: false,
   isLoggingIn: false,
-  isLoggedIn: false,
+  isLoggedIn: Boolean(getAuthToken()),
   error: undefined,
+
+  async hydrateFromStorage() {
+    const token = getAuthToken()
+
+    if (!hasBoundUnauthorizedListener) {
+      hasBoundUnauthorizedListener = true
+      onUnauthorized(() => {
+        set({
+          userInfo: null,
+          profile: null,
+          token: undefined,
+          isLoggedIn: false,
+          isLoading: false,
+          isLoggingIn: false,
+          error: '登录已失效，请重新登录'
+        })
+      })
+    }
+
+    if (!token) {
+      set({ token: undefined, isLoggedIn: false })
+      return
+    }
+
+    set({ token, isLoggedIn: true })
+    await get().loadUserInfo()
+  },
 
   async loadUserInfo() {
     set({ isLoading: true, error: undefined })
@@ -55,16 +94,17 @@ export const useUserInfo = create<UserInfoState>()((set, get) => ({
     const [userInfoResult, profileResult] = await Promise.allSettled([getUserInfo(), getUserProfile()])
     const userInfo = userInfoResult.status === 'fulfilled' ? userInfoResult.value.data : null
     const profile = profileResult.status === 'fulfilled' ? profileResult.value.data : null
-    const currentToken = get().token
     const error =
       userInfoResult.status === 'rejected' && profileResult.status === 'rejected'
         ? getErrorMessage(userInfoResult.reason)
         : undefined
+    const nextToken = getAuthToken()
 
     set({
       userInfo: hasUserInfo(userInfo) ? userInfo : null,
       profile: hasUserProfile(profile) ? profile : null,
-      isLoggedIn: getIsLoggedIn(userInfo, profile, currentToken),
+      token: nextToken,
+      isLoggedIn: getIsLoggedIn(userInfo, profile, nextToken),
       isLoading: false,
       error
     })
@@ -91,6 +131,8 @@ export const useUserInfo = create<UserInfoState>()((set, get) => ({
           }
         : null
 
+      setAuthToken(token)
+
       set({
         token,
         userInfo,
@@ -106,10 +148,32 @@ export const useUserInfo = create<UserInfoState>()((set, get) => ({
     }
   },
 
+  async bindWechatPhone(payload) {
+    if (!payload.encryptedData || !payload.iv) {
+      throw new Error('未获取到手机号授权信息')
+    }
+
+    const response = await bindPhone({
+      encrypted_data: payload.encryptedData,
+      iv: payload.iv
+    })
+    const phone = response.data.phone
+    const currentUserInfo = get().userInfo
+    const currentProfile = get().profile
+
+    set({
+      userInfo: currentUserInfo ? { ...currentUserInfo, phone } : currentUserInfo,
+      profile: currentProfile ? { ...currentProfile, phone } : currentProfile,
+      error: undefined
+    })
+  },
+
   setUserInfo(payload) {
     const nextUserInfo = payload.userInfo === undefined ? get().userInfo : payload.userInfo
     const nextProfile = payload.profile === undefined ? get().profile : payload.profile
     const nextToken = payload.token === undefined ? get().token : payload.token
+
+    setAuthToken(nextToken)
 
     set({
       userInfo: nextUserInfo,
@@ -121,6 +185,7 @@ export const useUserInfo = create<UserInfoState>()((set, get) => ({
   },
 
   clearUserInfo() {
+    clearAuthToken()
     set({
       userInfo: null,
       profile: null,

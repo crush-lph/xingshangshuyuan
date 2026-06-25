@@ -1,6 +1,6 @@
 # xingshangshuyuan
 
-行尚书苑小程序工程，基于 Taro 4、NutUI React Taro、Tailwind CSS v3 和 Webpack 5 初始化。
+行商书苑小程序工程，基于 Taro 4、NutUI React Taro、Tailwind CSS v3 和 Webpack 5 初始化。
 
 ## 技术栈
 
@@ -59,7 +59,7 @@ pnpm typecheck
 
 - 首页
 - 服务商城
-- 行尚书苑
+- 行商书苑
 - 我的
 
 ## 工程约定

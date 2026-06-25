@@ -17,6 +17,8 @@ export default function AdminOpportunityPage() {
           desc: compactJoin([item.type_text, item.city]) || '接口未返回商机摘要',
           meta: `${item.apply_count ?? 0} 人申请 · ${item.view_count ?? 0} 次浏览`,
           tag: textOrPlaceholder(item.status_text),
+          icon: 'briefcase-4-line',
+          tone: 'gold',
           action: '关闭',
           onClick: item.id
             ? async () => {
@@ -33,11 +35,7 @@ export default function AdminOpportunityPage() {
 
   return (
     <PageShell title="商机撮合" subtitle="审核商机、匹配服务商并跟踪撮合结果。">
-      {items.length ? (
-        <ItemList items={items} />
-      ) : (
-        <EmptyState title="暂无商机管理数据" desc="Apifox mock 未返回我发布的商机。" />
-      )}
+      {items.length ? <ItemList items={items} /> : <EmptyState title="暂无商机管理数据" />}
     </PageShell>
   )
 }

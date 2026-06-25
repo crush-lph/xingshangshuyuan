@@ -93,11 +93,7 @@ export default function ProfilePage() {
       </View>
 
       <View className="-mt-4 px-4">
-        {metricItems.length ? (
-          <MetricGrid items={metricItems} />
-        ) : (
-          <EmptyState title="暂无个人统计" desc="Apifox mock 未返回学习统计数据。" />
-        )}
+        {metricItems.length ? <MetricGrid items={metricItems} /> : <EmptyState title="暂无个人统计" />}
 
         <View className="mt-3">
           <MenuGroup items={serviceMenuItems} />

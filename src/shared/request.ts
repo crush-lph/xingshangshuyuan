@@ -1,4 +1,5 @@
 import Taro from '@tarojs/taro'
+import { getAuthToken, notifyUnauthorized } from './auth-session'
 
 export type RequestData = string | TaroGeneral.IAnyObject | ArrayBuffer
 
@@ -83,6 +84,8 @@ export async function request<TResponse = unknown, TData extends RequestData = T
   options: RequestOptions<TData>
 ): Promise<TResponse> {
   const { baseURL, data, dataType, header, method = 'GET', responseType, timeout, url } = options
+  const token = getAuthToken()
+  const authHeader = token ? { Authorization: `Bearer ${token}` } : undefined
 
   const response = await Taro.request<TResponse, TData>({
     data,
@@ -92,6 +95,7 @@ export async function request<TResponse = unknown, TData extends RequestData = T
     url: joinUrl(baseURL ?? requestConfig.baseURL, url),
     header: {
       ...requestConfig.header,
+      ...authHeader,
       ...header
     },
     timeout: timeout ?? requestConfig.timeout
@@ -99,6 +103,10 @@ export async function request<TResponse = unknown, TData extends RequestData = T
 
   if (isSuccessStatus(response.statusCode)) {
     return response.data
+  }
+
+  if (response.statusCode === 401) {
+    notifyUnauthorized()
   }
 
   throw createRequestError(response.statusCode, response.data)

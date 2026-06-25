@@ -44,7 +44,7 @@ export default defineAppConfig({
   window: {
     backgroundTextStyle: 'light',
     navigationBarBackgroundColor: '#ffffff',
-    navigationBarTitleText: '行尚书苑',
+    navigationBarTitleText: '行商书苑',
     navigationBarTextStyle: 'black'
   },
   tabBar: {
@@ -67,7 +67,7 @@ export default defineAppConfig({
       },
       {
         pagePath: 'pages/shuyuan/index',
-        text: '行尚书苑',
+        text: '行商书苑',
         iconPath: 'assets/tabbar/shuyuan.png',
         selectedIconPath: 'assets/tabbar/shuyuan-active.png'
       },

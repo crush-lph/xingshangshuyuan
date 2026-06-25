@@ -61,14 +61,10 @@ export default function MemberBenefitPage() {
             <Text className="mt-1 block text-2xl font-bold text-white">{levelText}</Text>
           </View>
         ) : (
-          <EmptyState title="暂无会员方案" desc="Apifox mock 未返回会员等级数据。" />
+          <EmptyState title="暂无会员方案" />
         )}
 
-        {fields.length ? (
-          <FieldList fields={fields} />
-        ) : (
-          <EmptyState title="暂无权益配置" desc="Apifox mock 未返回会员等级权益配置。" />
-        )}
+        {fields.length ? <FieldList fields={fields} /> : <EmptyState title="暂无权益配置" />}
 
         <SectionCard title="开通说明">
           <Text className="block text-sm leading-6 text-muted">
