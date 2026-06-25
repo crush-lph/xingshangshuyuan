@@ -27,6 +27,8 @@ export default defineAppConfig({
     {
       root: 'pages/user',
       pages: [
+        'login/index',
+        'bind-phone/index',
         'cert/index',
         'orders/index',
         'events/index',

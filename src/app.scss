@@ -30,8 +30,16 @@
   content: '\eb25';
 }
 
+.ri-checkbox-circle-line::before {
+  content: '\eb81';
+}
+
 .ri-coins-line::before {
   content: '\ebb4';
+}
+
+.ri-customer-service-2-line::before {
+  content: '\ec0c';
 }
 
 .ri-file-list-3-line::before {
@@ -46,12 +54,32 @@
   content: '\edf3';
 }
 
+.ri-lock-line::before {
+  content: '\eece';
+}
+
+.ri-login-circle-line::before {
+  content: '\eed6';
+}
+
+.ri-phone-line::before {
+  content: '\efec';
+}
+
 .ri-search-line::before {
   content: '\f0d1';
 }
 
 .ri-service-line::before {
   content: '\f0e2';
+}
+
+.ri-shield-check-line::before {
+  content: '\f100';
+}
+
+.ri-smartphone-line::before {
+  content: '\f15a';
 }
 
 .ri-settings-3-line::before {
@@ -78,6 +106,10 @@
   content: '\f28e';
 }
 
+.ri-wechat-fill::before {
+  content: '\f2b5';
+}
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -95,6 +127,42 @@ page {
 
 .nut-button--primary {
   --nutui-color-primary: #0a1f5c;
+  --nutui-color-primary-disabled: #9aa7bd;
+  --nutui-color-primary-disabled-special: #9aa7bd;
   --nutui-color-primary-stop-1: #0a1f5c;
   --nutui-color-primary-stop-2: #1a3580;
+  --nutui-button-primary-background-color: linear-gradient(135deg, #0a1f5c 0%, #1a3580 100%);
+  --nutui-button-primary-border-color: #0a1f5c;
+  --nutui-button-primary-disabled: #9aa7bd;
+}
+
+.app-action-button-primary.nut-button,
+.app-action-button-primary.nut-button--primary {
+  color: #ffffff;
+  border-color: #0a1f5c;
+  background: linear-gradient(135deg, #0a1f5c 0%, #1a3580 100%);
+}
+
+.app-action-button-outline.nut-button {
+  color: #0a1f5c;
+  border-color: #b0b8c9;
+  background: transparent;
+}
+
+.auth-primary-button {
+  padding-bottom: 0;
+  padding-top: 0;
+  line-height: 96rpx;
+}
+
+.auth-primary-button::after {
+  border: 0;
+}
+
+.profile-avatar-button {
+  line-height: normal;
+}
+
+.profile-avatar-button::after {
+  border: 0;
 }

@@ -18,19 +18,21 @@ function getButtonProps(variant: ActionItem['variant']) {
 
 function getButtonClassName(variant: ActionItem['variant']) {
   if (variant === 'gold') {
-    return 'h-11 border-gold bg-gold text-white'
+    return 'h-12 border-gold bg-gold text-white'
   }
 
   if (variant === 'outline') {
-    return 'h-11 border-brand text-brand'
+    return 'app-action-button app-action-button-outline h-12 border-brand text-brand'
   }
 
-  return 'h-11'
+  return 'app-action-button app-action-button-primary h-12'
 }
 
 export function ActionBar({ actions }: ActionBarProps) {
+  const layoutClassName = actions.length === 2 ? 'grid grid-cols-2 gap-2' : 'grid gap-2'
+
   return (
-    <View className="flex gap-2">
+    <View className={layoutClassName}>
       {actions.map((action) => (
         <Button
           key={action.label}

@@ -15,6 +15,13 @@
 - Modify `src/services/auth.ts`: add `code?: string` to `BindPhonePayload`.
 - Modify `src/stores/user-info.ts`: add `isPhoneBound`, compute it from `userInfo.phone` or `profile.phone`, and support phone binding with new `code`.
 - Modify `src/shared/auth-guard.ts`: add `ensurePhoneBound()` for core business actions.
+- Create `src/pages/user/login/index.tsx`: dedicated WeChat login page.
+- Create `src/pages/user/login/index.config.ts`: login page navigation title.
+- Create `src/pages/user/bind-phone/index.tsx`: dedicated phone binding page.
+- Create `src/pages/user/bind-phone/index.config.ts`: phone binding page navigation title.
+- Create `src/pages/user/components/AuthShell.tsx`: restrained auth-page shell without decorative circles.
+- Modify `src/shared/router.ts`: parse redirect URLs into structured `{ path, query }` routes and drop query for tabBar redirects.
+- Modify `src/app.config.ts` and `src/shared/router.ts`: register the auth page route.
 - Modify `src/pages/profile/components/ProfileHeader.tsx`: read `event.detail.code` from `onGetPhoneNumber` and pass it to `bindWechatPhone`.
 - Modify selected core action pages already using `ensureLoggedIn()`: switch actions that require a contact phone to `ensurePhoneBound()`.
 - Verify with `pnpm typecheck` and `pnpm build:weapp`.
@@ -207,6 +214,7 @@ Expected: no new errors from `ProfileHeader.tsx`.
 - Modify pages that currently import `ensureLoggedIn` for phone-required actions:
   - `src/pages/resource/purchase/index.tsx`
   - `src/pages/resource/submit/index.tsx`
+  - `src/pages/event/signup/index.tsx`
   - `src/pages/member/confirm/index.tsx`
   - `src/pages/member/payment-transfer/index.tsx`
   - `src/pages/opportunity/apply/index.tsx`
@@ -276,7 +284,7 @@ Expected: passes because this touches WeChat-specific auth UI and page guards.
 Run:
 
 ```bash
-git diff -- src/services/auth.ts src/stores/user-info.ts src/shared/auth-guard.ts src/pages/profile/components/ProfileHeader.tsx src/pages/resource/purchase/index.tsx src/pages/resource/submit/index.tsx src/pages/member/confirm/index.tsx src/pages/member/payment-transfer/index.tsx src/pages/opportunity/apply/index.tsx src/pages/opportunity/publish/index.tsx src/pages/user/cert/index.tsx
+git diff -- src/services/auth.ts src/stores/user-info.ts src/shared/auth-guard.ts src/pages/profile/components/ProfileHeader.tsx src/pages/resource/purchase/index.tsx src/pages/resource/submit/index.tsx src/pages/event/signup/index.tsx src/pages/member/confirm/index.tsx src/pages/member/payment-transfer/index.tsx src/pages/opportunity/apply/index.tsx src/pages/opportunity/publish/index.tsx src/pages/user/cert/index.tsx
 ```
 
 Expected: diff only contains login, phone binding, and guard changes.

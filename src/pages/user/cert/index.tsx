@@ -1,15 +1,16 @@
 import { useEffect, useState } from 'react'
 import Taro from '@tarojs/taro'
-import { Text, View } from '@tarojs/components'
+import { Image, Text, View } from '@tarojs/components'
 import { ActionBar, FieldList, FormSection, FormTextField, SectionCard } from '@/components/business'
 import { PageShell } from '@/components/PageShell'
 import {
   getUserCertification,
   submitUserCertification,
+  uploadFile,
   type GetUserCertificationData,
   type SubmitUserCertificationPayload
 } from '@/services'
-import { ensureLoggedIn } from '@/shared/auth-guard'
+import { ensurePhoneBound } from '@/shared/auth-guard'
 import { routes } from '@/shared/router'
 import { textOf, textOrPlaceholder } from '@/shared/view-data'
 
@@ -23,6 +24,15 @@ interface CertificationForm {
   idCardBackUrl: string
 }
 
+type CertificationUploadKey = 'businessLicenseUrl' | 'idCardFrontUrl' | 'idCardBackUrl'
+
+interface CertificationUploadItem {
+  key: CertificationUploadKey
+  label: string
+  scene: string
+  placeholder: string
+}
+
 const initialForm: CertificationForm = {
   companyName: '',
   creditCode: '',
@@ -33,22 +43,83 @@ const initialForm: CertificationForm = {
   idCardBackUrl: ''
 }
 
+const uploadItems: CertificationUploadItem[] = [
+  {
+    key: 'businessLicenseUrl',
+    label: '营业执照',
+    scene: 'business_license',
+    placeholder: '上传营业执照照片'
+  },
+  {
+    key: 'idCardFrontUrl',
+    label: '身份证正面',
+    scene: 'id_card_front',
+    placeholder: '上传身份证人像面'
+  },
+  {
+    key: 'idCardBackUrl',
+    label: '身份证反面',
+    scene: 'id_card_back',
+    placeholder: '上传身份证国徽面'
+  }
+]
+
 function formFromCertification(certification: GetUserCertificationData | null): CertificationForm {
   return {
     companyName: textOf(certification?.company_name) ?? '',
     creditCode: textOf(certification?.credit_code) ?? '',
     legalPerson: textOf(certification?.legal_person) ?? '',
     contactPhone: '',
-    businessLicenseUrl: '',
-    idCardFrontUrl: '',
-    idCardBackUrl: ''
+    businessLicenseUrl: textOf(certification?.business_license_url) ?? '',
+    idCardFrontUrl: textOf(certification?.id_card_front_url) ?? '',
+    idCardBackUrl: textOf(certification?.id_card_back_url) ?? ''
   }
+}
+
+interface UploadCardProps {
+  label: string
+  placeholder: string
+  value: string
+  isUploading: boolean
+  onClick: () => void
+}
+
+function UploadCard({ label, placeholder, value, isUploading, onClick }: UploadCardProps) {
+  return (
+    <View>
+      <Text className="mb-2 block text-sm font-semibold text-ink">
+        {label}
+        <Text className="text-[#FF4D4F]">*</Text>
+      </Text>
+      <View
+        className="min-h-[112px] rounded-lg border border-dashed border-line bg-canvas px-3 py-4"
+        onClick={isUploading ? undefined : onClick}
+      >
+        {value ? (
+          <View className="flex items-center gap-3">
+            <Image className="h-16 w-16 shrink-0 rounded-lg bg-white" src={value} mode="aspectFill" />
+            <View className="min-w-0 flex-1">
+              <Text className="block text-sm font-semibold text-ink">{isUploading ? '上传中' : '已上传'}</Text>
+              <Text className="mt-1 block text-xs leading-5 text-muted">点击可重新上传</Text>
+            </View>
+          </View>
+        ) : (
+          <View className="flex min-h-[80px] flex-col items-center justify-center text-center">
+            <Text className="text-2xl font-light text-muted">+</Text>
+            <Text className="mt-1 block text-sm font-semibold text-ink">{isUploading ? '上传中' : placeholder}</Text>
+            <Text className="mt-1 block text-xs leading-5 text-muted">支持相册选择或拍照上传</Text>
+          </View>
+        )}
+      </View>
+    </View>
+  )
 }
 
 export default function UserCertPage() {
   const [certification, setCertification] = useState<GetUserCertificationData | null>(null)
   const [form, setForm] = useState<CertificationForm>(initialForm)
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [uploadingKey, setUploadingKey] = useState<CertificationUploadKey | null>(null)
 
   useEffect(() => {
     void getUserCertification()
@@ -84,11 +155,61 @@ export default function UserCertPage() {
       return '请填写联系人手机号'
     }
 
+    if (!textOf(form.businessLicenseUrl)) {
+      return '请上传营业执照'
+    }
+
+    if (!textOf(form.idCardFrontUrl)) {
+      return '请上传身份证正面'
+    }
+
+    if (!textOf(form.idCardBackUrl)) {
+      return '请上传身份证反面'
+    }
+
     return undefined
   }
 
+  async function handleUploadDocument(item: CertificationUploadItem) {
+    if (uploadingKey) {
+      return
+    }
+
+    try {
+      const selected = await Taro.chooseImage({
+        count: 1,
+        sizeType: ['compressed'],
+        sourceType: ['album', 'camera']
+      })
+      const filePath = selected.tempFilePaths[0] ?? selected.tempFiles?.[0]?.path
+
+      if (!filePath) {
+        Taro.showToast({ title: '未选择图片', icon: 'none' })
+        return
+      }
+
+      setUploadingKey(item.key)
+      Taro.showLoading({ title: '上传中' })
+
+      const result = await uploadFile({
+        filePath,
+        scene: item.scene
+      })
+
+      updateField(item.key, result.fileUrl)
+      Taro.hideLoading()
+      Taro.showToast({ title: '上传成功', icon: 'success' })
+    } catch (error) {
+      Taro.hideLoading()
+      const title = error instanceof Error && error.message ? error.message : '上传失败，请重试'
+      Taro.showToast({ title, icon: 'none' })
+    } finally {
+      setUploadingKey(null)
+    }
+  }
+
   async function handleSubmit() {
-    if (!(await ensureLoggedIn('登录后才能提交企业认证'))) {
+    if (!(await ensurePhoneBound('绑定手机号后才能提交企业认证'))) {
       return
     }
 
@@ -120,6 +241,9 @@ export default function UserCertPage() {
         company_name: payload.company_name,
         credit_code: payload.credit_code,
         legal_person: payload.legal_person,
+        business_license_url: payload.business_license_url,
+        id_card_front_url: payload.id_card_front_url,
+        id_card_back_url: payload.id_card_back_url,
         status: response.data.status,
         status_text: response.data.status_text
       })
@@ -155,7 +279,7 @@ export default function UserCertPage() {
 
         <FormSection
           title={certification ? '更新认证资料' : '提交认证资料'}
-          desc="营业执照和身份证图片字段先支持填写上传后的 URL；后续接入真实上传后可自动回填。"
+          desc="请上传营业执照及法人身份证正反面照片，上传成功后自动回填文件地址。"
         >
           <FormTextField
             label="企业名称"
@@ -186,30 +310,26 @@ export default function UserCertPage() {
             placeholder="用于审核沟通"
             onChange={(value) => updateField('contactPhone', value)}
           />
-          <FormTextField
-            label="营业执照 URL"
-            value={form.businessLicenseUrl}
-            placeholder="可选，填写已上传文件地址"
-            onChange={(value) => updateField('businessLicenseUrl', value)}
-          />
-          <FormTextField
-            label="身份证正面 URL"
-            value={form.idCardFrontUrl}
-            placeholder="可选，填写已上传文件地址"
-            onChange={(value) => updateField('idCardFrontUrl', value)}
-          />
-          <FormTextField
-            label="身份证反面 URL"
-            value={form.idCardBackUrl}
-            placeholder="可选，填写已上传文件地址"
-            onChange={(value) => updateField('idCardBackUrl', value)}
-          />
+          {uploadItems.map((item) => (
+            <UploadCard
+              key={item.key}
+              label={item.label}
+              placeholder={item.placeholder}
+              value={form[item.key]}
+              isUploading={uploadingKey === item.key}
+              onClick={() => void handleUploadDocument(item)}
+            />
+          ))}
         </FormSection>
 
         <ActionBar
           actions={[
             { label: '返回我的', variant: 'outline', path: routes.profile },
-            { label: isSubmitting ? '提交中' : '提交认证', disabled: isSubmitting, onClick: handleSubmit }
+            {
+              label: isSubmitting ? '提交中' : '提交认证',
+              disabled: isSubmitting || Boolean(uploadingKey),
+              onClick: handleSubmit
+            }
           ]}
         />
       </View>

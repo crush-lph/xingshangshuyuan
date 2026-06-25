@@ -4,6 +4,7 @@ import {
   bindPhone,
   getUserInfo,
   getUserProfile,
+  updateUserProfile,
   wxLogin,
   type GetUserInfoData,
   type GetUserProfileData
@@ -23,12 +24,14 @@ export interface UserInfoState {
   isLoading: boolean
   isLoggingIn: boolean
   isLoggedIn: boolean
+  isPhoneBound: boolean
   error?: string
   hydrateFromStorage: () => Promise<void>
   loadUserInfo: () => Promise<void>
   refreshUserInfo: () => Promise<void>
   loginWithWechat: () => Promise<void>
-  bindWechatPhone: (payload: { encryptedData?: string; iv?: string }) => Promise<void>
+  bindWechatPhone: (payload: { code?: string; encryptedData?: string; iv?: string }) => Promise<void>
+  updateWechatProfile: (payload: { nickname?: string; avatar?: string }) => Promise<void>
   setUserInfo: (payload: SetUserInfoPayload) => void
   clearUserInfo: () => void
   logout: () => void
@@ -50,6 +53,10 @@ function getIsLoggedIn(userInfo: GetUserInfoData | null, profile: GetUserProfile
   return Boolean(token || hasUserInfo(userInfo) || hasUserProfile(profile))
 }
 
+function getIsPhoneBound(userInfo: GetUserInfoData | null, profile: GetUserProfileData | null) {
+  return Boolean(userInfo?.phone || profile?.phone)
+}
+
 let hasBoundUnauthorizedListener = false
 
 export const useUserInfo = create<UserInfoState>()((set, get) => ({
@@ -59,6 +66,7 @@ export const useUserInfo = create<UserInfoState>()((set, get) => ({
   isLoading: false,
   isLoggingIn: false,
   isLoggedIn: Boolean(getAuthToken()),
+  isPhoneBound: false,
   error: undefined,
 
   async hydrateFromStorage() {
@@ -72,6 +80,7 @@ export const useUserInfo = create<UserInfoState>()((set, get) => ({
           profile: null,
           token: undefined,
           isLoggedIn: false,
+          isPhoneBound: false,
           isLoading: false,
           isLoggingIn: false,
           error: '登录已失效，请重新登录'
@@ -80,7 +89,7 @@ export const useUserInfo = create<UserInfoState>()((set, get) => ({
     }
 
     if (!token) {
-      set({ token: undefined, isLoggedIn: false })
+      set({ token: undefined, isLoggedIn: false, isPhoneBound: false })
       return
     }
 
@@ -105,6 +114,7 @@ export const useUserInfo = create<UserInfoState>()((set, get) => ({
       profile: hasUserProfile(profile) ? profile : null,
       token: nextToken,
       isLoggedIn: getIsLoggedIn(userInfo, profile, nextToken),
+      isPhoneBound: getIsPhoneBound(userInfo, profile),
       isLoading: false,
       error
     })
@@ -136,7 +146,8 @@ export const useUserInfo = create<UserInfoState>()((set, get) => ({
       set({
         token,
         userInfo,
-        isLoggedIn: getIsLoggedIn(userInfo, get().profile, token)
+        isLoggedIn: getIsLoggedIn(userInfo, get().profile, token),
+        isPhoneBound: getIsPhoneBound(userInfo, get().profile)
       })
 
       await get().loadUserInfo()
@@ -149,21 +160,63 @@ export const useUserInfo = create<UserInfoState>()((set, get) => ({
   },
 
   async bindWechatPhone(payload) {
-    if (!payload.encryptedData || !payload.iv) {
+    if (!payload.code && (!payload.encryptedData || !payload.iv)) {
       throw new Error('未获取到手机号授权信息')
     }
 
-    const response = await bindPhone({
-      encrypted_data: payload.encryptedData,
-      iv: payload.iv
-    })
+    const response = await bindPhone(
+      payload.code
+        ? { code: payload.code }
+        : {
+            encrypted_data: payload.encryptedData,
+            iv: payload.iv
+          }
+    )
     const phone = response.data.phone
+
+    if (!phone) {
+      throw new Error('未获取到绑定手机号')
+    }
+
     const currentUserInfo = get().userInfo
     const currentProfile = get().profile
+    const nextUserInfo = currentUserInfo
+      ? { ...currentUserInfo, phone }
+      : currentProfile
+        ? currentUserInfo
+        : ({ phone } as GetUserInfoData)
+    const nextProfile = currentProfile ? { ...currentProfile, phone } : currentProfile
 
     set({
-      userInfo: currentUserInfo ? { ...currentUserInfo, phone } : currentUserInfo,
-      profile: currentProfile ? { ...currentProfile, phone } : currentProfile,
+      userInfo: nextUserInfo,
+      profile: nextProfile,
+      isPhoneBound: getIsPhoneBound(nextUserInfo, nextProfile),
+      error: undefined
+    })
+  },
+
+  async updateWechatProfile(payload) {
+    const nextProfilePayload = {
+      ...(payload.nickname !== undefined ? { nickname: payload.nickname } : {}),
+      ...(payload.avatar !== undefined ? { avatar: payload.avatar } : {})
+    }
+
+    if (!nextProfilePayload.nickname && !nextProfilePayload.avatar) {
+      throw new Error('未获取到微信头像或昵称')
+    }
+
+    await updateUserProfile(nextProfilePayload)
+
+    const currentUserInfo = get().userInfo
+    const currentProfile = get().profile
+    const nextUserInfo = currentUserInfo ? { ...currentUserInfo, ...nextProfilePayload } : currentUserInfo
+    const nextProfile = currentProfile ? { ...currentProfile, ...nextProfilePayload } : currentProfile
+
+    set({
+      userInfo: nextUserInfo,
+      profile: nextProfile,
+      isLoggedIn: getIsLoggedIn(nextUserInfo, nextProfile, get().token),
+      isPhoneBound: getIsPhoneBound(nextUserInfo, nextProfile),
       error: undefined
     })
   },
@@ -180,6 +233,7 @@ export const useUserInfo = create<UserInfoState>()((set, get) => ({
       profile: nextProfile,
       token: nextToken,
       isLoggedIn: getIsLoggedIn(nextUserInfo, nextProfile, nextToken),
+      isPhoneBound: getIsPhoneBound(nextUserInfo, nextProfile),
       error: undefined
     })
   },
@@ -191,6 +245,7 @@ export const useUserInfo = create<UserInfoState>()((set, get) => ({
       profile: null,
       token: undefined,
       isLoggedIn: false,
+      isPhoneBound: false,
       isLoading: false,
       isLoggingIn: false,
       error: undefined

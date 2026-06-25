@@ -25,6 +25,8 @@ export const routes = {
   opportunityPublish: '/pages/opportunity/publish/index',
   opportunityApply: '/pages/opportunity/apply/index',
   userCert: '/pages/user/cert/index',
+  userLogin: '/pages/user/login/index',
+  userBindPhone: '/pages/user/bind-phone/index',
   userOrders: '/pages/user/orders/index',
   userEvents: '/pages/user/events/index',
   userBenefits: '/pages/user/benefits/index',
@@ -46,6 +48,10 @@ export type RoutePath = KnownRoutePath | `/${string}`
 export type PageRoutePath = Exclude<RoutePath, TabRoutePath>
 export type QueryValue = string | number | boolean | null | undefined
 export type Query = Record<string, QueryValue>
+export interface ParsedRoute {
+  path: RoutePath
+  query?: Query
+}
 
 const tabRoutes = new Set<string>(tabRoutePaths)
 
@@ -78,6 +84,60 @@ export function buildUrl(path: RoutePath, query?: Query) {
   return `${path}${path.includes('?') ? '&' : '?'}${search}`
 }
 
+function decodeRouteValue(value: string) {
+  try {
+    return decodeURIComponent(value)
+  } catch {
+    return value
+  }
+}
+
+function parseQuery(search: string) {
+  return search
+    .split('&')
+    .filter(Boolean)
+    .reduce<Query>((query, item) => {
+      const [rawKey, rawValue = ''] = item.split('=')
+      const key = decodeRouteValue(rawKey)
+
+      if (key) {
+        query[key] = decodeRouteValue(rawValue)
+      }
+
+      return query
+    }, {})
+}
+
+export function parseRouteUrl(url: string | undefined): ParsedRoute | undefined {
+  if (!url) {
+    return undefined
+  }
+
+  const normalizedUrl = url.startsWith('/pages/') ? url : decodeRouteValue(url)
+
+  if (!normalizedUrl.startsWith('/pages/')) {
+    return undefined
+  }
+
+  const [path, search = ''] = normalizedUrl.split('?')
+  const query = parseQuery(search)
+
+  return {
+    path: path as RoutePath,
+    query: tabRoutes.has(path) ? undefined : query
+  }
+}
+
+export function getSafeRedirectRoute(redirect: string | undefined, fallback: RoutePath = routes.profile): ParsedRoute {
+  const parsed = parseRouteUrl(redirect)
+
+  if (!parsed || parsed.path === routes.userLogin || parsed.path === routes.userBindPhone) {
+    return { path: fallback }
+  }
+
+  return parsed
+}
+
 export const router = {
   to(path: RoutePath, query?: Query) {
     if (tabRoutes.has(path)) {
@@ -100,5 +160,8 @@ export const router = {
   },
   back(delta = 1) {
     return Taro.navigateBack({ delta })
+  },
+  open(route: ParsedRoute) {
+    return router.to(route.path, route.query)
   }
 }

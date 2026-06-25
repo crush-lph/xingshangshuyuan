@@ -4,7 +4,7 @@ import { Text, View } from '@tarojs/components'
 import { ActionBar, EmptyState, FieldList, SectionCard } from '@/components/business'
 import { PageShell } from '@/components/PageShell'
 import { createProductOrder, getProducts, payOrder, type CreateProductOrderData } from '@/services'
-import { ensureLoggedIn } from '@/shared/auth-guard'
+import { ensurePhoneBound } from '@/shared/auth-guard'
 import { router, routes } from '@/shared/router'
 import { priceOf, textOrPlaceholder } from '@/shared/view-data'
 
@@ -40,7 +40,7 @@ export default function MemberConfirmPage() {
   }, [])
 
   async function ensureOrder() {
-    if (!(await ensureLoggedIn('登录后才能开通会员'))) {
+    if (!(await ensurePhoneBound('绑定手机号后才能开通会员'))) {
       return null
     }
 

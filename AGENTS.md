@@ -11,7 +11,14 @@
 - 不引入复杂架构、重状态机、重工程流，除非已有明确业务收益。
 - 先保持可维护性、可扩展性和原型还原度，再考虑抽象升级。
 
-## 1. 参考资料索引
+## 1. 工程设计原则
+
+- UI 实现优先使用 NutUI React Taro、项目已有业务组件和基础组件；组件库或项目组件能覆盖的场景，不重复手写等价控件。
+- 功能重复时优先复用项目中已有实现；没有合适实现时，先封装为清晰的工具函数、服务方法或业务组件，再在页面中使用。
+- 单文件原则上不超过 500 行；接近上限或逻辑复杂时，优先拆分为 `components/`、`*.data.ts`、`types.ts`、`services/` 或 `shared/` 工具模块。
+- 代码设计遵循 SOLID 原则：职责单一、对扩展开放、替换安全、接口聚焦、依赖稳定；不要为短期页面需求制造难以复用或难以测试的耦合。
+
+## 2. 参考资料索引
 
 - 产品原型：`docs/reference/001-requirements.html`
 - 设计规范：`docs/reference/002-design-spec.html`
@@ -22,7 +29,7 @@
 - 路由工具：`src/shared/router.ts`
 - 请求工具：`src/shared/request.ts`
 
-## 2. 目录职责
+## 3. 目录职责
 
 - `config/`：Taro、Webpack5、weapp-tailwindcss 构建配置。非构建问题不要改这里。
 - `src/app.config.ts`：页面、分包、tabBar、window 配置的唯一入口。
@@ -36,7 +43,7 @@
 - `src/assets/`：静态资源，tabBar 图标放 `src/assets/tabbar/`。
 - `types/`：全局类型补充。
 
-## 3. 页面与分包
+## 4. 页面与分包
 
 - 主包只保留 tabBar 与首屏关键页面：`home`、`services`、`shuyuan`、`profile`。
 - 新业务页优先放入对应分包；不要把非首屏业务页继续堆进主包。
@@ -48,7 +55,7 @@
 - tabBar 页面不要拼 query；跳转使用 `router.to` 或 `router.switchTab`。
 - 分包页面不要依赖其他分包页面内部组件；可依赖 `shared`、`components`、`services`、`assets`。
 
-## 4. 组件拆分
+## 5. 组件拆分
 
 - 页面 JSX 明显变长、重复区块出现 2 次以上，或同一块同时包含数据映射和复杂布局时，拆组件。
 - 跨页面复用放 `src/components/business/`。
@@ -57,7 +64,7 @@
 - 组件 props 保持显式类型；不要用宽泛 `any` 承接业务数据。
 - NutUI 组件继续按需引入组件和样式。
 
-## 5. 请求与路由
+## 6. 请求与路由
 
 - 请求统一走 `src/shared/request.ts` 暴露的 `api`，业务接口再封装到 `src/services/<domain>.ts`。
 - 期望业务调用形态：`api.get`、`api.post`、`api.put`、`api.delete`。
@@ -68,7 +75,7 @@
   - `redirect` 不用于 tabBar 页面。
 - 修改页面路径时，同步更新 `app.config.ts` 和 `router.ts`。
 
-## 6. Tailwind 小程序写法
+## 7. Tailwind 小程序写法
 
 - 继续使用 Tailwind v3 + `weapp-tailwindcss`。
 - `tailwind.config.js` 的 `content` 要覆盖新增源码路径。
@@ -78,7 +85,7 @@
 - 避免运行时拼接不可扫描的类名，例如 `text-${color}`；使用枚举映射。
 - 小程序布局优先使用稳定的 `flex`、`grid`、`gap`、`px/py`、`rounded-lg`、`shadow-soft`。
 
-## 7. 图标策略
+## 8. 图标策略
 
 - tabBar 图标使用 PNG，路径维护在 `src/app.config.ts`。
 - 通用 UI 图标优先使用 `@nutui/icons-react-taro`。
@@ -86,7 +93,7 @@
 - 复杂运营图、品牌图、彩色插画使用 PNG/WebP，不硬塞进 iconfont。
 - 不优先使用远程 iconfont；如必须使用，需要处理 HTTPS、CORS、加载失败和小程序兼容性。
 
-## 8. 代码质量工具
+## 9. 代码质量工具
 
 - ESLint 配置：`eslint.config.mjs`
 - Prettier 配置：`.prettierrc`
@@ -111,7 +118,7 @@
 - Prettier 只负责格式化，不和 ESLint 争夺风格规则。
 - Husky 只跑 staged 文件，不在 pre-commit 做全量构建。
 
-## 9. 提交前检查
+## 10. 提交前检查
 
 - `pnpm typecheck` 通过。
 - 修改后不默认重新执行 `pnpm build:weapp`；仅在用户明确要求、变更构建配置/入口配置、需要排查构建问题，或准备发布验收时执行。
@@ -122,6 +129,6 @@
 - NutUI 新组件已按需引入对应样式。
 - 不要假设工作区干净；只处理与当前任务相关的文件，不回滚他人改动。
 
-## 10. 外部文档查询
+## 11. 外部文档查询
 
 当问题涉及库、框架、SDK、API、CLI 或云服务的用法、配置、迁移和调试时，优先使用 Context7 查询当前文档，再给结论或改代码。

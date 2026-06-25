@@ -50,6 +50,9 @@ export interface GetUserCertificationData {
   company_name?: string
   credit_code?: string
   legal_person?: string
+  business_license_url?: string
+  id_card_front_url?: string
+  id_card_back_url?: string
   status?: number
   status_text?: string
   reject_reason?: string

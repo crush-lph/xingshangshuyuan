@@ -19,6 +19,7 @@ interface HomeBannerCarouselProps {
 export function HomeBannerCarousel({ items = [] }: HomeBannerCarouselProps) {
   const [activeIndex, setActiveIndex] = useState(0)
   const bannerItems = items.filter((item) => item.title)
+  const normalizedActiveIndex = bannerItems.length ? activeIndex % bannerItems.length : 0
 
   if (!bannerItems.length) {
     return null
@@ -61,7 +62,7 @@ export function HomeBannerCarousel({ items = [] }: HomeBannerCarouselProps) {
         {bannerItems.map((item, index) => (
           <View
             key={`${item.title}-indicator`}
-            className={`h-1 rounded-sm ${index === activeIndex ? 'w-6 bg-gold-light' : 'w-[18px] bg-white/35'}`}
+            className={`h-[4rpx] rounded-sm ${index === normalizedActiveIndex ? 'w-6 bg-gold-light' : 'w-[18px] bg-white/35'}`}
           />
         ))}
       </View>

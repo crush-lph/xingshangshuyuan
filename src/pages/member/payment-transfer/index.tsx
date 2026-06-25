@@ -4,7 +4,7 @@ import { Text, View } from '@tarojs/components'
 import { ActionBar, EmptyState, FieldList, SectionCard } from '@/components/business'
 import { PageShell } from '@/components/PageShell'
 import { cancelOrder, getOrderDetail, paymentCallback, uploadFileRecord, type GetOrderDetailData } from '@/services'
-import { ensureLoggedIn } from '@/shared/auth-guard'
+import { ensurePhoneBound } from '@/shared/auth-guard'
 import { router, routes } from '@/shared/router'
 import { getPageParam, priceOf, textOrPlaceholder } from '@/shared/view-data'
 
@@ -48,7 +48,7 @@ export default function PaymentTransferPage() {
   }
 
   async function handleSubmitVoucher() {
-    if (!(await ensureLoggedIn('登录后才能提交支付凭证'))) {
+    if (!(await ensurePhoneBound('绑定手机号后才能提交支付凭证'))) {
       return
     }
 
@@ -81,7 +81,7 @@ export default function PaymentTransferPage() {
   }
 
   async function handleCancelOrder() {
-    if (!(await ensureLoggedIn('登录后才能取消订单'))) {
+    if (!(await ensurePhoneBound('绑定手机号后才能取消订单'))) {
       return
     }
 

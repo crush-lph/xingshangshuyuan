@@ -4,7 +4,7 @@ import { Switch, Text, View } from '@tarojs/components'
 import { ActionBar, FormSection, FormTextField, FormTextareaField } from '@/components/business'
 import { PageShell } from '@/components/PageShell'
 import { createOpportunity } from '@/services'
-import { ensureLoggedIn } from '@/shared/auth-guard'
+import { ensurePhoneBound } from '@/shared/auth-guard'
 import { router, routes } from '@/shared/router'
 import { numberOf, textOf } from '@/shared/view-data'
 
@@ -53,7 +53,7 @@ export default function OpportunityPublishPage() {
   }
 
   async function handleSubmit() {
-    if (!(await ensureLoggedIn('登录后才能发布商机'))) {
+    if (!(await ensurePhoneBound('绑定手机号后才能发布商机'))) {
       return
     }
 
