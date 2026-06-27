@@ -63,7 +63,7 @@ function getStatusDesc(state: PollerState, message?: string) {
   }
 
   if (state === 'cancelled') {
-    return '订单支付已取消，可重新支付或返回权益页。'
+    return '订单支付已取消，可重新支付或返回上一页。'
   }
 
   if (state === 'timeout') {
@@ -71,7 +71,7 @@ function getStatusDesc(state: PollerState, message?: string) {
   }
 
   if (state === 'paid') {
-    return '权益正在为你开通，请稍候。'
+    return '支付结果已确认，请稍候。'
   }
 
   return '正在确认支付结果，请勿重复关闭页面。'
@@ -205,7 +205,7 @@ export function PaymentStatusPoller<TResult extends PaymentStatusResult = Paymen
   }
 
   if (onBack) {
-    actions.push({ label: '返回权益页', variant: 'primary', onClick: onBack })
+    actions.push({ label: '返回上一页', variant: 'primary', onClick: onBack })
   }
 
   const shouldShowActions = state === 'failed' || state === 'cancelled' || state === 'timeout'
