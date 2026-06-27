@@ -46,6 +46,9 @@
 | 个人中心     | 获取客服配置                       | GET  | `/api/customer-service/config`    | 否   | `profile.getCustomerServiceConfig`       |
 | 个人中心     | 获取关于平台信息                   | GET  | `/api/about`                      | 否   | `profile.getAbout`                       |
 | 个人中心     | 获取会员等级权益配置               | GET  | `/api/user/vip/level-perks`       | 否   | `profile.getVipLevelPerks`               |
+| 会员升级     | 创建会员升级订单                   | POST | `/api/vip/order`                  | 是   | `vip.createVipOrder`                     |
+| 会员升级     | 发起会员升级订单支付               | POST | `/api/vip/pay`                    | 是   | `vip.payVipOrder`                        |
+| 会员升级     | 查询会员升级订单支付状态           | POST | `/api/vip/query_pay`              | 是   | `vip.queryVipPay`                        |
 | 订单         | 获取订单详情                       | GET  | `/api/order/detail`               | 是   | `order.getOrderDetail`                   |
 | 订单         | 发起支付                           | POST | `/api/order/pay`                  | 是   | `order.payOrder`                         |
 | 订单         | 取消订单                           | POST | `/api/order/cancel`               | 是   | `order.cancelOrder`                      |
@@ -351,13 +354,17 @@
 
 响应 Data：
 
-| 字段          | 类型            | 必填 | 说明         | 示例 |
-| ------------- | --------------- | ---- | ------------ | ---- |
-| id            | number(integer) | 否   | 用户ID       |      |
-| nickname      | string          | 否   | 昵称         |      |
-| avatar        | string          | 否   | 头像地址     |      |
-| phone         | string          | 否   | 手机号       |      |
-| last_login_at | string          | 否   | 最后登录时间 |      |
+| 字段           | 类型            | 必填 | 说明                               | 示例 |
+| -------------- | --------------- | ---- | ---------------------------------- | ---- |
+| id             | number(integer) | 否   | 用户ID                             |      |
+| nickname       | string          | 否   | 昵称                               |      |
+| avatar         | string          | 否   | 头像地址                           |      |
+| phone          | string          | 否   | 手机号                             |      |
+| role           | number(integer) | 否   | 角色(1普通,2联盟伙伴,3管理员)      |      |
+| role_text      | string          | 否   | 角色文字                           |      |
+| vip_level      | number(integer) | 否   | 会员等级(1菁英会员,2行商·领航会员) |      |
+| vip_level_text | string          | 否   | 会员等级文字                       |      |
+| last_login_at  | string          | 否   | 最后登录时间                       |      |
 
 ### 删除用户（调试）
 
@@ -878,6 +885,104 @@
 响应 Data：
 
 无。
+
+## 会员升级
+
+### 创建会员升级订单
+
+- 方法：`POST`
+- 路径：`/api/vip/order`
+- 认证：是
+- Service：`vip.createVipOrder`
+
+请求 Query：
+
+无。
+
+请求 Body：
+
+无。
+
+响应 Data：
+
+| 字段           | 类型            | 必填 | 说明                              | 示例 |
+| -------------- | --------------- | ---- | --------------------------------- | ---- |
+| order_id       | number(integer) | 否   | 订单ID                            |      |
+| order_no       | string          | 否   | 订单编号                          |      |
+| vip_level      | number(integer) | 否   | 购买会员等级(2行商·领航会员)      |      |
+| vip_level_text | string          | 否   | 会员等级文字                      |      |
+| amount         | string          | 否   | 支付金额                          |      |
+| status         | number(integer) | 否   | 订单状态(0待支付,1已支付,2已取消) |      |
+| status_text    | string          | 否   | 状态文字                          |      |
+| expire_at      | string          | 否   | 会员到期时间                      |      |
+
+### 发起会员升级订单支付
+
+- 方法：`POST`
+- 路径：`/api/vip/pay`
+- 认证：是
+- Service：`vip.payVipOrder`
+
+请求 Query：
+
+无。
+
+请求 Body：
+
+| 字段     | 类型   | 必填 | 说明     | 示例 |
+| -------- | ------ | ---- | -------- | ---- |
+| order_no | string | 是   | 订单编号 |      |
+
+响应 Data：
+
+| 字段                 | 类型            | 必填 | 说明                | 示例 |
+| -------------------- | --------------- | ---- | ------------------- | ---- |
+| order_no             | string          | 否   | 订单编号            |      |
+| pay_method           | number(integer) | 否   | 支付方式(1微信支付) |      |
+| pay_params           | object          | 否   | 微信支付调起参数    |      |
+| pay_params.timeStamp | string          | 否   |                     |      |
+| pay_params.nonceStr  | string          | 否   |                     |      |
+| pay_params.package   | string          | 否   |                     |      |
+| pay_params.signType  | string          | 否   |                     |      |
+| pay_params.paySign   | string          | 否   |                     |      |
+
+### 查询会员升级订单支付状态
+
+- 方法：`POST`
+- 路径：`/api/vip/query_pay`
+- 认证：是
+- Service：`vip.queryVipPay`
+
+请求 Query：
+
+无。
+
+请求 Body：
+
+| 字段     | 类型   | 必填 | 说明             | 示例 |
+| -------- | ------ | ---- | ---------------- | ---- |
+| order_no | string | 是   | 会员升级订单号   |      |
+
+响应 Data：
+
+| 字段            | 类型             | 必填 | 说明             | 示例 |
+| --------------- | ---------------- | ---- | ---------------- | ---- |
+| order_id        | number(integer)  | 否   | 订单ID           |      |
+| order_no        | string           | 否   | 会员升级订单号   |      |
+| status          | number \| string | 否   | 订单状态         |      |
+| status_text     | string           | 否   | 订单状态文字     |      |
+| pay_status      | number \| string | 否   | 支付状态         |      |
+| pay_status_text | string           | 否   | 支付状态文字     |      |
+| is_paid         | boolean          | 否   | 是否已支付       |      |
+| paid            | boolean          | 否   | 是否已支付       |      |
+| vip_level       | number(integer)  | 否   | 会员等级         |      |
+| vip_level_text  | string           | 否   | 会员等级文字     |      |
+| amount          | string           | 否   | 支付金额         |      |
+| pay_time        | string           | 否   | 支付时间         |      |
+| transaction_id  | string           | 否   | 支付交易号       |      |
+| expire_at       | string           | 否   | 会员到期时间     |      |
+
+业务归一化：`vip.queryVipPaymentStatus` 会调用 `vip.queryVipPay`，并根据后端返回的状态字段与状态文字归一化为 `pending`、`paid`、`failed`、`cancelled`，供前端支付轮询 UI 使用。
 
 ## 订单
 
