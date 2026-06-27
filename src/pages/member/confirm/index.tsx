@@ -1,52 +1,64 @@
 import { useEffect, useState } from 'react'
 import Taro from '@tarojs/taro'
 import { Text, View } from '@tarojs/components'
-import { ActionBar, EmptyState, FieldList, SectionCard } from '@/components/business'
+import { ActionBar, FieldList, PaymentStatusPoller, SectionCard } from '@/components/business'
 import { PageShell } from '@/components/PageShell'
-import { createProductOrder, getProducts, payOrder, type CreateProductOrderData } from '@/services'
+import { createVipOrder, getUserProfile, getVipLevels, payVipOrder, queryVipPaymentStatus, type CreateVipOrderData } from '@/services'
+import type { VipLevelItem } from '@/services'
 import { ensureLoggedIn } from '@/shared/auth-guard'
 import { router, routes } from '@/shared/router'
-import { priceOf, textOrPlaceholder } from '@/shared/view-data'
+import { priceOf, textOf, textOrPlaceholder } from '@/shared/view-data'
 import { getWechatPaymentErrorMessage, requestWechatPayment } from '@/shared/wechat-payment'
+import { useUserInfo } from '@/stores/user-info'
 
-interface MemberProduct {
-  id: number
-  name: string
-  desc?: string
-  price?: string
+const DEFAULT_TARGET_LEVEL = '行商·领航会员'
+const DEFAULT_TARGET_LEVEL_VALUE = 2
+
+function getNavigatorLevel(levels: VipLevelItem[]) {
+  return levels.find((item) => item.level === DEFAULT_TARGET_LEVEL_VALUE || item.name?.includes('领航')) ?? levels[0]
+}
+
+function getPerkFields(level: VipLevelItem | null) {
+  return (level?.perks ?? []).map((item, index) => ({
+    label: textOrPlaceholder(item.perk_name, `权益${index + 1}`),
+    value: '已包含'
+  }))
 }
 
 export default function MemberConfirmPage() {
+  const refreshUserInfo = useUserInfo((state) => state.refreshUserInfo)
   const [isPaying, setIsPaying] = useState(false)
-  const [product, setProduct] = useState<MemberProduct | null>(null)
-  const [order, setOrder] = useState<CreateProductOrderData | null>(null)
+  const [pollingOrderNo, setPollingOrderNo] = useState('')
+  const [levelText, setLevelText] = useState('')
+  const [targetLevel, setTargetLevel] = useState<VipLevelItem | null>(null)
+  const [perkFields, setPerkFields] = useState<Array<{ label: string; value: string }>>([])
+  const [order, setOrder] = useState<CreateVipOrderData | null>(null)
 
   useEffect(() => {
-    async function loadProduct() {
-      const response = await getProducts({ page: 1, page_size: 1 })
-      const item = response.data.list?.[0]
-      setProduct(
-        item?.id
-          ? {
-              id: item.id,
-              name: textOrPlaceholder(item.name),
-              desc: item.description,
-              price: priceOf(item.vip_price ?? item.price, item.price_unit)
-            }
-          : null
-      )
+    async function loadMemberConfig() {
+      const [profileResult, levelsResult] = await Promise.allSettled([getUserProfile(), getVipLevels()])
+
+      if (profileResult.status === 'fulfilled') {
+        setLevelText(textOf(profileResult.value.data.vip_level_text) ?? '')
+      }
+
+      if (levelsResult.status === 'fulfilled') {
+        const level = getNavigatorLevel(levelsResult.value.data)
+
+        setTargetLevel(level ?? null)
+        setPerkFields(getPerkFields(level ?? null))
+      }
     }
 
-    void loadProduct().catch(() => setProduct(null))
+    void loadMemberConfig().catch(() => {
+      setLevelText('')
+      setTargetLevel(null)
+      setPerkFields([])
+    })
   }, [])
 
   async function ensureOrder() {
     if (!(await ensureLoggedIn('登录后才能开通会员'))) {
-      return null
-    }
-
-    if (!product) {
-      Taro.showToast({ title: '暂无商品数据', icon: 'none' })
       return null
     }
 
@@ -55,9 +67,7 @@ export default function MemberConfirmPage() {
     }
 
     Taro.showLoading({ title: '生成订单中' })
-    const orderResult = await createProductOrder({
-      items: [{ product_id: product.id, quantity: 1 }]
-    })
+    const orderResult = await createVipOrder({ vip_level: targetLevel?.level ?? DEFAULT_TARGET_LEVEL_VALUE })
     setOrder(orderResult.data)
     return orderResult.data
   }
@@ -74,11 +84,11 @@ export default function MemberConfirmPage() {
       }
 
       Taro.showLoading({ title: '拉起支付中' })
-      const payResult = await payOrder({ order_no: nextOrder.order_no, pay_method: 1 })
+      const payResult = await payVipOrder({ order_no: nextOrder.order_no })
       await requestWechatPayment(payResult.data.pay_params)
 
-      Taro.showToast({ title: '支付成功', icon: 'success' })
-      router.redirect(routes.userBenefits)
+      setPollingOrderNo(nextOrder.order_no)
+      Taro.showToast({ title: '正在确认支付结果', icon: 'none' })
     } catch (error) {
       Taro.showToast({ title: getWechatPaymentErrorMessage(error), icon: 'none' })
     } finally {
@@ -105,41 +115,82 @@ export default function MemberConfirmPage() {
     }
   }
 
+  async function handlePaymentConfirmed() {
+    await refreshUserInfo()
+    Taro.showToast({ title: '会员权益已更新', icon: 'success' })
+    router.redirect(routes.userBenefits)
+  }
+
+  function handleRetryPayment() {
+    setPollingOrderNo('')
+    void handleWechatPayment()
+  }
+
+  function handleBackToBenefit() {
+    router.redirect(routes.memberBenefit)
+  }
+
+  const displayTargetLevel = textOrPlaceholder(order?.vip_level_text ?? targetLevel?.name, DEFAULT_TARGET_LEVEL)
+  const displayAmount = priceOf(order?.amount ?? targetLevel?.current_price) ?? '生成订单后确认'
+  const isPaymentLocked = isPaying || Boolean(pollingOrderNo)
+
   return (
-    <PageShell title="会员开通确认" subtitle="确认会员方案与企业信息后生成订单。">
-      {product ? (
-        <View className="grid gap-3">
-          <SectionCard title="会员方案">
-            <Text className="block text-base font-bold text-ink">{product.name}</Text>
-            {product.desc ? <Text className="mt-2 block text-sm text-muted">{product.desc}</Text> : null}
-            {order?.order_no ? <Text className="mt-2 block text-xs text-brand">最近订单：{order.order_no}</Text> : null}
+    <PageShell title="会员升级确认" subtitle="确认升级行商·领航会员后生成订单。">
+      <View className="grid gap-3">
+        <SectionCard title="会员方案">
+          <Text className="block text-base font-bold text-ink">{displayTargetLevel}</Text>
+          <Text className="mt-2 block text-sm leading-6 text-muted">
+            升级后可获得更高等级的供应链底价、商机优先和客户经理支持，最终权益以接口返回配置为准。
+          </Text>
+          {order?.order_no ? <Text className="mt-2 block text-xs text-brand">最近订单：{order.order_no}</Text> : null}
+        </SectionCard>
+        <FieldList
+          fields={[
+            { label: '当前会员', value: levelText || '暂无会员信息' },
+            { label: '目标等级', value: displayTargetLevel },
+            { label: '支付金额', value: displayAmount },
+            { label: '原价', value: priceOf(targetLevel?.original_price) ?? '未提供' },
+            { label: '订单状态', value: textOrPlaceholder(order?.status_text, '未生成') },
+            { label: '到期时间', value: textOrPlaceholder(order?.expire_at, '支付后生效') }
+          ]}
+        />
+        {perkFields.length ? (
+          <SectionCard title="升级权益">
+            <View className="grid gap-3">
+              {perkFields.map((item) => (
+                <View key={item.label}>
+                  <Text className="block text-sm font-semibold text-ink">{item.label}</Text>
+                  <Text className="mt-1 block text-sm leading-6 text-muted">{item.value}</Text>
+                </View>
+              ))}
+            </View>
           </SectionCard>
-          <FieldList
-            fields={[
-              { label: '商品价格', value: product.price ?? '未提供' },
-              { label: '支付方式', value: '微信支付 / 对公转账' },
-              { label: '订单状态', value: textOrPlaceholder(order?.status_text, '未生成') }
-            ]}
+        ) : null}
+        {pollingOrderNo ? (
+          <PaymentStatusPoller
+            orderNo={pollingOrderNo}
+            queryStatus={queryVipPaymentStatus}
+            onBack={handleBackToBenefit}
+            onRetryPayment={handleRetryPayment}
+            onSuccess={handlePaymentConfirmed}
           />
-          <ActionBar
-            actions={[
-              {
-                label: '对公转账',
-                variant: 'outline',
-                disabled: isPaying,
-                onClick: handleTransferPayment
-              },
-              {
-                label: isPaying ? '支付处理中' : '微信支付开通',
-                disabled: isPaying,
-                onClick: handleWechatPayment
-              }
-            ]}
-          />
-        </View>
-      ) : (
-        <EmptyState title="暂无可开通商品" />
-      )}
+        ) : null}
+        <ActionBar
+          actions={[
+            {
+              label: '对公转账',
+              variant: 'outline',
+              disabled: isPaymentLocked,
+              onClick: handleTransferPayment
+            },
+            {
+              label: isPaymentLocked ? '支付处理中' : '微信支付升级',
+              disabled: isPaymentLocked,
+              onClick: handleWechatPayment
+            }
+          ]}
+        />
+      </View>
     </PageShell>
   )
 }
