@@ -1,9 +1,11 @@
 // Generated from Apifox export. Update through the Apifox document, not by hand.
 
-import { api, type ApiBodyRequestOptions } from '@/shared/request'
-import type { ApiResponse, EmptyObject } from './types'
+import { api, type ApiBodyRequestOptions, type ApiRequestOptions } from '@/shared/request'
+import type { ApiResponse } from './types'
 
-export type CreateVipOrderPayload = EmptyObject
+export interface CreateVipOrderPayload {
+  vip_level?: number
+}
 
 export interface CreateVipOrderData {
   order_id?: number
@@ -52,6 +54,7 @@ export interface QueryVipPayPayload {
 }
 
 export interface QueryVipPayData {
+  order_id?: number
   order_no?: string
   status?: number | string
   status_text?: string
@@ -61,6 +64,9 @@ export interface QueryVipPayData {
   paid?: boolean
   vip_level?: number
   vip_level_text?: string
+  amount?: string
+  pay_time?: string
+  transaction_id?: string
   expire_at?: string
 }
 
@@ -81,17 +87,61 @@ export function queryVipPay(data: QueryVipPayPayload, options?: ApiBodyRequestOp
 export function normalizeVipPaymentStatus(data: QueryVipPayData): NormalizedVipPaymentStatus {
   const rawStatus = data.pay_status ?? data.status
   const statusText = data.pay_status_text ?? data.status_text ?? ''
+  const normalizedRawStatus = typeof rawStatus === 'string' ? rawStatus.trim().toLowerCase() : rawStatus
   const normalizedText = statusText.trim()
+  const normalizedLowerText = normalizedText.toLowerCase()
+  const hasCancelledText =
+    normalizedText.includes('取消') ||
+    normalizedText.includes('已关闭') ||
+    normalizedText.includes('关闭') ||
+    normalizedLowerText.includes('cancel')
+  const hasFailedText =
+    normalizedText.includes('失败') ||
+    normalizedText.includes('未成功') ||
+    normalizedText.includes('不成功') ||
+    normalizedText.includes('异常') ||
+    normalizedText.includes('错误') ||
+    normalizedLowerText.includes('fail') ||
+    normalizedLowerText.includes('error')
+  const hasPaidText =
+    !hasCancelledText &&
+    !hasFailedText &&
+    (normalizedText.includes('已支付') || normalizedText.includes('支付成功') || normalizedText.includes('成功'))
 
-  if (data.is_paid || data.paid || rawStatus === 1 || rawStatus === '1' || normalizedText.includes('已支付')) {
+  if (
+    data.is_paid ||
+    data.paid ||
+    normalizedRawStatus === 1 ||
+    normalizedRawStatus === '1' ||
+    normalizedRawStatus === 'paid' ||
+    normalizedRawStatus === 'success' ||
+    normalizedRawStatus === 'succeeded' ||
+    hasPaidText
+  ) {
     return { status: 'paid', message: normalizedText || '支付成功', data }
   }
 
-  if (rawStatus === 2 || rawStatus === '2' || normalizedText.includes('取消')) {
+  if (
+    normalizedRawStatus === 2 ||
+    normalizedRawStatus === '2' ||
+    normalizedRawStatus === 'cancelled' ||
+    normalizedRawStatus === 'canceled' ||
+    normalizedRawStatus === 'cancel' ||
+    normalizedRawStatus === 'closed' ||
+    hasCancelledText
+  ) {
     return { status: 'cancelled', message: normalizedText || '支付已取消', data }
   }
 
-  if (rawStatus === -1 || rawStatus === 'failed' || rawStatus === 'fail' || normalizedText.includes('失败')) {
+  if (
+    normalizedRawStatus === -1 ||
+    normalizedRawStatus === '-1' ||
+    normalizedRawStatus === 'failed' ||
+    normalizedRawStatus === 'fail' ||
+    normalizedRawStatus === 'failure' ||
+    normalizedRawStatus === 'error' ||
+    hasFailedText
+  ) {
     return { status: 'failed', message: normalizedText || '支付失败', data }
   }
 
@@ -101,4 +151,26 @@ export function normalizeVipPaymentStatus(data: QueryVipPayData): NormalizedVipP
 export async function queryVipPaymentStatus(orderNo: string) {
   const response = await queryVipPay({ order_no: orderNo })
   return normalizeVipPaymentStatus(response.data)
+}
+
+export interface VipLevelPerk {
+  perk_name?: string
+  perk_icon?: string
+}
+
+export interface VipLevelItem {
+  level?: number
+  name?: string
+  original_price?: string
+  current_price?: string
+  discount_rate?: number
+  perks?: VipLevelPerk[]
+}
+
+export type GetVipLevelsData = VipLevelItem[]
+
+export type GetVipLevelsResponse = ApiResponse<GetVipLevelsData>
+
+export function getVipLevels(options?: ApiRequestOptions) {
+  return api.get<GetVipLevelsResponse>('/api/vip/levels', options)
 }
