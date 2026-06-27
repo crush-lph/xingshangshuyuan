@@ -35,6 +35,9 @@
     },
     {
       "name": "服务商城"
+    },
+    {
+      "name": "评价"
     }
   ],
   "paths": {
@@ -155,7 +158,7 @@
                           "type": "string"
                         },
                         "phone": {
-                          "description": "手机号（未绑定为空）",
+                          "description": "手机号（已脱敏，未绑定为空）",
                           "type": "string"
                         },
                         "is_new": {
@@ -178,7 +181,7 @@
     },
     "/api/auth/bind_phone": {
       "post": {
-        "summary": "绑定微信手机号（需登录态）",
+        "summary": "绑定微信手机号（需登录态），通过 code 获取手机号",
         "deprecated": false,
         "description": "",
         "operationId": "70f3e944e800e6b83b5e761176d62d4e",
@@ -189,12 +192,8 @@
             "application/json": {
               "schema": {
                 "properties": {
-                  "encrypted_data": {
-                    "description": "wx.getPhoneNumber 返回的加密数据",
-                    "type": "string"
-                  },
-                  "iv": {
-                    "description": "加密初始向量",
+                  "code": {
+                    "description": "wx.getPhoneNumber 组件按钮授权后获取的临时 code",
                     "type": "string"
                   }
                 },
@@ -224,7 +223,7 @@
                     "data": {
                       "properties": {
                         "phone": {
-                          "description": "手机号",
+                          "description": "手机号（已脱敏）",
                           "type": "string"
                         }
                       },
@@ -309,7 +308,7 @@
                           "type": "string"
                         },
                         "phone": {
-                          "description": "手机号",
+                          "description": "手机号（已脱敏）",
                           "type": "string"
                         },
                         "is_new": {
@@ -436,7 +435,7 @@
                           "type": "string"
                         },
                         "phone": {
-                          "description": "手机号",
+                          "description": "手机号（已脱敏）",
                           "type": "string"
                         },
                         "company_name": {
@@ -789,7 +788,7 @@
                           "type": "string"
                         },
                         "phone": {
-                          "description": "手机号",
+                          "description": "手机号（已脱敏）",
                           "type": "string"
                         },
                         "last_login_at": {
@@ -812,6 +811,127 @@
             "bearerAuth": []
           }
         ]
+      }
+    },
+    "/api/user/upload_avatar": {
+      "post": {
+        "summary": "上传头像（Base64 图片，返回访问 URL）",
+        "deprecated": false,
+        "description": "",
+        "operationId": "6e87f72911a24e73a39fc4c1cca79165",
+        "tags": ["用户"],
+        "parameters": [],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "properties": {
+                  "image": {
+                    "description": "Base64 编码的图片数据，支持两种格式：1) 带 data URI 前缀，如 data:image/png;base64,iVBOR...；2) 纯 Base64 字符串",
+                    "type": "string"
+                  }
+                },
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "code": {
+                      "description": "状态码",
+                      "type": "integer",
+                      "example": 1
+                    },
+                    "info": {
+                      "description": "提示信息",
+                      "type": "string",
+                      "example": "上传成功"
+                    },
+                    "data": {
+                      "properties": {
+                        "url": {
+                          "description": "图片访问地址（可用于后续调用 /api/user/profile 更新 avatar 字段）",
+                          "type": "string"
+                        },
+                        "key": {
+                          "description": "图片存储路径（相对）",
+                          "type": "string"
+                        }
+                      },
+                      "type": "object"
+                    }
+                  },
+                  "type": "object"
+                }
+              }
+            },
+            "headers": {}
+          }
+        },
+        "security": []
+      }
+    },
+    "/api/user/delete": {
+      "post": {
+        "summary": "【调试】删除用户（仅开发环境可用）",
+        "deprecated": false,
+        "description": "",
+        "operationId": "3bd6b84b594f81523976ee224dde50ef",
+        "tags": ["用户"],
+        "parameters": [],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "properties": {
+                  "user_id": {
+                    "description": "待删除的用户ID",
+                    "type": "integer"
+                  }
+                },
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "code": {
+                      "description": "状态码",
+                      "type": "integer",
+                      "example": 1
+                    },
+                    "info": {
+                      "description": "提示信息",
+                      "type": "string",
+                      "example": "用户已删除"
+                    },
+                    "data": {
+                      "type": "object",
+                      "properties": {}
+                    }
+                  },
+                  "type": "object"
+                }
+              }
+            },
+            "headers": {}
+          }
+        },
+        "security": []
       }
     },
     "/api/banners": {
@@ -2081,6 +2201,128 @@
                     "data": {
                       "type": "object",
                       "properties": {}
+                    }
+                  },
+                  "type": "object"
+                }
+              }
+            },
+            "headers": {}
+          }
+        },
+        "security": []
+      }
+    },
+    "/api/user/reviews": {
+      "get": {
+        "summary": "获取我的评价列表",
+        "deprecated": false,
+        "description": "获取当前登录用户的全部评价列表，支持分页",
+        "operationId": "dca6989ace71c6eec42e928b28719ad0",
+        "tags": ["个人中心"],
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "description": "页码",
+            "required": false,
+            "example": "1",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "page_size",
+            "in": "query",
+            "description": "每页数量",
+            "required": false,
+            "example": "10",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "code": {
+                      "description": "状态码",
+                      "type": "integer",
+                      "example": 1
+                    },
+                    "info": {
+                      "description": "提示信息",
+                      "type": "string",
+                      "example": ""
+                    },
+                    "data": {
+                      "properties": {
+                        "list": {
+                          "type": "array",
+                          "items": {
+                            "properties": {
+                              "id": {
+                                "description": "评价ID",
+                                "type": "integer"
+                              },
+                              "product_id": {
+                                "description": "商品ID",
+                                "type": "integer"
+                              },
+                              "product_name": {
+                                "description": "商品名称",
+                                "type": "string"
+                              },
+                              "thumbnail": {
+                                "description": "商品缩略图",
+                                "type": "string"
+                              },
+                              "order_id": {
+                                "description": "订单ID",
+                                "type": "integer"
+                              },
+                              "rating": {
+                                "description": "评分",
+                                "type": "integer"
+                              },
+                              "content": {
+                                "description": "评价内容",
+                                "type": "string"
+                              },
+                              "status": {
+                                "description": "状态(0隐藏,1显示)",
+                                "type": "integer"
+                              },
+                              "created_at": {
+                                "description": "创建时间",
+                                "type": "string"
+                              }
+                            },
+                            "type": "object"
+                          }
+                        },
+                        "total": {
+                          "description": "总数",
+                          "type": "integer"
+                        },
+                        "page": {
+                          "description": "页码",
+                          "type": "integer"
+                        },
+                        "page_size": {
+                          "description": "每页数量",
+                          "type": "integer"
+                        },
+                        "total_page": {
+                          "description": "总页数",
+                          "type": "integer"
+                        }
+                      },
+                      "type": "object"
                     }
                   },
                   "type": "object"
@@ -5422,6 +5664,130 @@
         "security": []
       }
     },
+    "/api/product/reviews": {
+      "get": {
+        "summary": "获取商品评价列表",
+        "deprecated": false,
+        "description": "获取指定商品的公开评价列表，支持分页",
+        "operationId": "f4c8b07021387abb0e4f3f7afb82fd54",
+        "tags": ["服务商城"],
+        "parameters": [
+          {
+            "name": "product_id",
+            "in": "query",
+            "description": "商品ID",
+            "required": true,
+            "example": "1",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "description": "页码",
+            "required": false,
+            "example": "1",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "page_size",
+            "in": "query",
+            "description": "每页数量",
+            "required": false,
+            "example": "10",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "code": {
+                      "description": "状态码",
+                      "type": "integer",
+                      "example": 1
+                    },
+                    "info": {
+                      "description": "提示信息",
+                      "type": "string",
+                      "example": ""
+                    },
+                    "data": {
+                      "properties": {
+                        "list": {
+                          "type": "array",
+                          "items": {
+                            "properties": {
+                              "id": {
+                                "description": "评价ID",
+                                "type": "integer"
+                              },
+                              "user_id": {
+                                "description": "用户ID",
+                                "type": "integer"
+                              },
+                              "nickname": {
+                                "description": "用户昵称",
+                                "type": "string"
+                              },
+                              "avatar": {
+                                "description": "用户头像",
+                                "type": "string"
+                              },
+                              "rating": {
+                                "description": "评分",
+                                "type": "integer"
+                              },
+                              "content": {
+                                "description": "评价内容",
+                                "type": "string"
+                              },
+                              "created_at": {
+                                "description": "创建时间",
+                                "type": "string"
+                              }
+                            },
+                            "type": "object"
+                          }
+                        },
+                        "total": {
+                          "description": "总数",
+                          "type": "integer"
+                        },
+                        "page": {
+                          "description": "页码",
+                          "type": "integer"
+                        },
+                        "page_size": {
+                          "description": "每页数量",
+                          "type": "integer"
+                        },
+                        "total_page": {
+                          "description": "总页数",
+                          "type": "integer"
+                        }
+                      },
+                      "type": "object"
+                    }
+                  },
+                  "type": "object"
+                }
+              }
+            },
+            "headers": {}
+          }
+        },
+        "security": []
+      }
+    },
     "/api/user/messages/unread-count": {
       "get": {
         "summary": "获取未读消息数",
@@ -5453,6 +5819,90 @@
                           "description": "未读消息数量",
                           "type": "integer",
                           "example": 3
+                        }
+                      },
+                      "type": "object"
+                    }
+                  },
+                  "type": "object"
+                }
+              }
+            },
+            "headers": {}
+          }
+        },
+        "security": []
+      }
+    },
+    "/api/review/submit": {
+      "post": {
+        "summary": "提交服务商品评价",
+        "deprecated": false,
+        "description": "已完成订单的用户可提交评价，一笔订单仅可评价一次",
+        "operationId": "82f6ee0931302d65d5aba19930e2198f",
+        "tags": ["评价"],
+        "parameters": [],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "properties": {
+                  "order_id": {
+                    "description": "订单ID",
+                    "type": "integer",
+                    "example": 1
+                  },
+                  "rating": {
+                    "description": "评分(1-5)",
+                    "type": "integer",
+                    "example": 5
+                  },
+                  "content": {
+                    "description": "评价内容",
+                    "type": "string",
+                    "example": "服务非常好，专业高效！"
+                  }
+                },
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "code": {
+                      "description": "状态码",
+                      "type": "integer",
+                      "example": 1
+                    },
+                    "info": {
+                      "description": "提示信息",
+                      "type": "string",
+                      "example": "评价提交成功"
+                    },
+                    "data": {
+                      "properties": {
+                        "id": {
+                          "description": "评价ID",
+                          "type": "integer"
+                        },
+                        "rating": {
+                          "description": "评分",
+                          "type": "integer"
+                        },
+                        "content": {
+                          "description": "评价内容",
+                          "type": "string"
+                        },
+                        "created_at": {
+                          "description": "创建时间",
+                          "type": "string"
                         }
                       },
                       "type": "object"

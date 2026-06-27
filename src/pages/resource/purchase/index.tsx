@@ -10,7 +10,7 @@ import {
   type CreateProductOrderData,
   type GetProductDetailData
 } from '@/services'
-import { ensurePhoneBound } from '@/shared/auth-guard'
+import { ensureLoggedIn } from '@/shared/auth-guard'
 import { router, routes } from '@/shared/router'
 import { getPageParam, priceOf, textOrPlaceholder } from '@/shared/view-data'
 
@@ -47,7 +47,7 @@ export default function ResourcePurchasePage() {
   }, [])
 
   async function handleCreateOrder(redirectToOrders = true) {
-    if (!(await ensurePhoneBound('绑定手机号后才能采购资源'))) {
+    if (!(await ensureLoggedIn('登录后才能采购资源'))) {
       return null
     }
 

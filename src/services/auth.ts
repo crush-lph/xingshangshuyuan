@@ -24,8 +24,6 @@ export function wxLogin(data: WxLoginPayload, options?: ApiBodyRequestOptions<Wx
 
 export interface BindPhonePayload {
   code?: string
-  encrypted_data?: string
-  iv?: string
 }
 
 export interface BindPhoneData {

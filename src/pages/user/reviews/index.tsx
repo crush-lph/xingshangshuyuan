@@ -1,51 +1,128 @@
-import { useEffect, useState } from 'react'
-import { EmptyState, ItemList, type ListItem } from '@/components/business'
+import { useEffect, useMemo, useState } from 'react'
+import Taro from '@tarojs/taro'
+import { Text, View } from '@tarojs/components'
+import Rate from '@nutui/nutui-react-taro/dist/es/packages/rate'
+import '@nutui/nutui-react-taro/dist/es/packages/rate/style/css'
+import { ActionBar, EmptyState, FormSection, FormTextareaField, ReviewList } from '@/components/business'
 import { PageShell } from '@/components/PageShell'
-import { getUserCourseProgress, getUserCourses } from '@/services'
-import { getPageParam, textOrPlaceholder, textOf } from '@/shared/view-data'
+import { getUserReviews, submitReview, type UserReviewItem } from '@/services'
+import { router, routes } from '@/shared/router'
+import { getPageParam, numberOf, textOf, textOrPlaceholder } from '@/shared/view-data'
 
 export default function UserReviewsPage() {
-  const [items, setItems] = useState<ListItem[]>([])
+  const orderId = numberOf(getPageParam('order_id'))
+  const orderTitle = textOf(getPageParam('title'))
+  const [items, setItems] = useState<UserReviewItem[]>([])
+  const [rating, setRating] = useState(5)
+  const [content, setContent] = useState('')
+  const [isSubmitting, setIsSubmitting] = useState(false)
+
+  const pageTitle = useMemo(() => (orderId ? '提交评价' : '我的评价'), [orderId])
+  const reviewItems = items.map((item) => ({
+    key: String(item.id ?? `${item.order_id}-${item.created_at}`),
+    title: textOrPlaceholder(item.product_name ?? item.order_id, '未命名服务'),
+    content: textOrPlaceholder(item.content, '暂无评价内容'),
+    rating: item.rating,
+    thumbnail: item.thumbnail,
+    statusText: item.status === 0 ? '隐藏' : '已评价',
+    statusTone: item.status === 0 ? ('neutral' as const) : ('success' as const),
+    meta: item.order_id ? `订单 ${item.order_id}` : textOrPlaceholder(item.created_at),
+    time: textOf(item.created_at)
+  }))
+
+  async function loadReviews() {
+    const response = await getUserReviews({ page: 1, page_size: 20 })
+    setItems(response.data.list ?? [])
+  }
 
   useEffect(() => {
-    async function loadProgress() {
-      const courseId = getPageParam('course_id')
+    let isMounted = true
 
-      if (courseId) {
-        const response = await getUserCourseProgress({ course_id: courseId })
-        setItems([
-          {
-            title: `课程 ${textOrPlaceholder(response.data.course_id, courseId)}`,
-            desc: response.data.total_learn_duration_text ?? '接口未返回学习时长',
-            tag: response.data.is_completed ? '已完成' : '学习中',
-            icon: 'star-line',
-            tone: response.data.is_completed ? 'success' : 'gold',
-            action: '查看'
-          }
-        ])
-        return
-      }
+    void getUserReviews({ page: 1, page_size: 20 })
+      .then((response) => {
+        if (isMounted) {
+          setItems(response.data.list ?? [])
+        }
+      })
+      .catch(() => {
+        if (isMounted) {
+          setItems([])
+        }
+      })
 
-      const response = await getUserCourses({ is_completed: 1, page: 1, page_size: 20 })
-      setItems(
-        (response.data.list ?? []).map((item) => ({
-          title: textOrPlaceholder(item.title, '未命名课程'),
-          desc: item.progress !== undefined ? `学习进度 ${item.progress}%` : '接口未返回学习进度',
-          meta: textOf(item.bought_at),
-          tag: item.is_completed ? '已完成' : '学习中',
-          icon: 'star-line',
-          tone: item.is_completed ? 'success' : 'gold',
-          action: '查看'
-        }))
-      )
+    return () => {
+      isMounted = false
     }
-
-    void loadProgress().catch(() => setItems([]))
   }, [])
 
+  async function handleSubmit() {
+    if (!orderId) {
+      Taro.showToast({ title: '缺少订单信息', icon: 'none' })
+      return
+    }
+
+    const nextContent = textOf(content)
+
+    if (!nextContent) {
+      Taro.showToast({ title: '请填写评价内容', icon: 'none' })
+      return
+    }
+
+    setIsSubmitting(true)
+    Taro.showLoading({ title: '提交中' })
+
+    try {
+      await submitReview({
+        order_id: orderId,
+        rating,
+        content: nextContent
+      })
+      Taro.showToast({ title: '评价已提交', icon: 'success' })
+      setContent('')
+      setRating(5)
+      await loadReviews()
+      router.redirect(routes.userReviews)
+    } finally {
+      Taro.hideLoading()
+      setIsSubmitting(false)
+    }
+  }
+
   return (
-    <PageShell title="我的评价" subtitle="对已完成的资源、活动和商机服务进行评价。">
-      {items.length ? <ItemList items={items} /> : <EmptyState title="暂无评价对象" />}
+    <PageShell title={pageTitle} subtitle={orderId ? '对已完成的服务订单进行评价。' : '查看已提交的资源和服务评价。'}>
+      <View className="grid gap-3">
+        {orderId ? (
+          <FormSection title="评价服务" desc={orderTitle ? `订单服务：${orderTitle}` : `订单编号：${orderId}`}>
+            <View>
+              <Text className="mb-2 block text-sm font-semibold text-ink">
+                服务评分<Text className="text-[#E53E3E]"> *</Text>
+              </Text>
+              <View className="rounded-lg border border-line bg-canvas px-3 py-3">
+                <Rate value={rating} count={5} onChange={(value) => setRating(Number(value) || 5)} />
+              </View>
+            </View>
+            <FormTextareaField
+              label="评价内容"
+              required
+              value={content}
+              placeholder="请填写本次服务体验"
+              onChange={setContent}
+            />
+            <ActionBar
+              actions={[
+                { label: '返回列表', variant: 'outline', path: routes.userReviews },
+                { label: isSubmitting ? '提交中' : '提交评价', disabled: isSubmitting, onClick: handleSubmit }
+              ]}
+            />
+          </FormSection>
+        ) : null}
+
+        {reviewItems.length ? (
+          <ReviewList items={reviewItems} />
+        ) : (
+          <EmptyState title={orderId ? '暂无历史评价' : '暂无评价'} />
+        )}
+      </View>
     </PageShell>
   )
 }

@@ -2,7 +2,11 @@ import { useEffect, useState } from 'react'
 import Taro from '@tarojs/taro'
 import { Button as TaroButton, Image, Input, Text, View } from '@tarojs/components'
 import { AppIcon } from '@/components/AppIcon'
+import { IdentityBadge } from '@/components/business'
+import { uploadUserAvatar } from '@/services'
+import { readImageFileAsDataUri } from '@/shared/image-file'
 import { router, routes } from '@/shared/router'
+import { getUserIdentity } from '@/shared/user-identity'
 import { useUserInfo } from '@/stores/user-info'
 import { textOrPlaceholder, textOf } from '@/shared/view-data'
 
@@ -11,6 +15,7 @@ export function ProfileHeader() {
   const nickname = textOf(profile?.nickname ?? userInfo?.nickname)
   const avatar = textOf(profile?.avatar ?? userInfo?.avatar)
   const hasAccount = Boolean(profile || userInfo)
+  const identity = hasAccount ? getUserIdentity(profile) : undefined
   const avatarText = nickname?.slice(0, 1)
   const [draftNickname, setDraftNickname] = useState<string>()
   const [draftAvatar, setDraftAvatar] = useState<string>()
@@ -20,9 +25,7 @@ export function ProfileHeader() {
     void loadUserInfo()
   }, [loadUserInfo])
 
-  async function handleBindPhone(event: {
-    detail?: { code?: string; encryptedData?: string; iv?: string; errMsg?: string }
-  }) {
+  async function handleBindPhone(event: { detail?: { code?: string; errMsg?: string } }) {
     const errMsg = event.detail?.errMsg
 
     if (errMsg && !errMsg.includes(':ok')) {
@@ -32,9 +35,7 @@ export function ProfileHeader() {
 
     try {
       await bindWechatPhone({
-        code: event.detail?.code,
-        encryptedData: event.detail?.encryptedData,
-        iv: event.detail?.iv
+        code: event.detail?.code
       })
       Taro.showToast({ title: '手机号已绑定', icon: 'success' })
     } catch {
@@ -76,7 +77,27 @@ export function ProfileHeader() {
     }
 
     setDraftAvatar(nextAvatar)
-    await saveWechatProfile({ avatar: nextAvatar })
+
+    try {
+      setIsSavingProfile(true)
+      const image = readImageFileAsDataUri(nextAvatar)
+      const response = await uploadUserAvatar({ image })
+      const uploadedAvatar = textOf(response.data.url)
+
+      if (!uploadedAvatar) {
+        throw new Error('上传头像接口未返回地址')
+      }
+
+      await updateWechatProfile({ avatar: uploadedAvatar })
+      setDraftAvatar(undefined)
+      Taro.showToast({ title: '头像已更新', icon: 'success' })
+    } catch (error) {
+      const title = error instanceof Error && error.message ? error.message : '头像上传失败'
+      Taro.showToast({ title, icon: 'none' })
+      setDraftAvatar(undefined)
+    } finally {
+      setIsSavingProfile(false)
+    }
   }
 
   async function handleNicknameSave(value?: string) {
@@ -146,10 +167,13 @@ export function ProfileHeader() {
         )}
         {hasAccount ? (
           <Text className="mt-1 block text-sm text-white/70">
-            {isPhoneBound
-              ? textOrPlaceholder(profile?.company_name, '暂无企业信息')
-              : '绑定后可报名活动、购买资源、提交商机'}
+            {isPhoneBound ? textOrPlaceholder(profile?.company_name, '暂无企业信息') : '绑定手机号，便于活动和订单沟通'}
           </Text>
+        ) : null}
+        {identity ? (
+          <View className="mt-2">
+            <IdentityBadge identity={identity} size="sm" variant="soft" />
+          </View>
         ) : null}
       </View>
       {hasAccount && isPhoneBound ? (

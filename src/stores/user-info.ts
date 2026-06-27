@@ -30,7 +30,7 @@ export interface UserInfoState {
   loadUserInfo: () => Promise<void>
   refreshUserInfo: () => Promise<void>
   loginWithWechat: () => Promise<void>
-  bindWechatPhone: (payload: { code?: string; encryptedData?: string; iv?: string }) => Promise<void>
+  bindWechatPhone: (payload: { code?: string }) => Promise<void>
   updateWechatProfile: (payload: { nickname?: string; avatar?: string }) => Promise<void>
   setUserInfo: (payload: SetUserInfoPayload) => void
   clearUserInfo: () => void
@@ -160,18 +160,11 @@ export const useUserInfo = create<UserInfoState>()((set, get) => ({
   },
 
   async bindWechatPhone(payload) {
-    if (!payload.code && (!payload.encryptedData || !payload.iv)) {
+    if (!payload.code) {
       throw new Error('未获取到手机号授权信息')
     }
 
-    const response = await bindPhone(
-      payload.code
-        ? { code: payload.code }
-        : {
-            encrypted_data: payload.encryptedData,
-            iv: payload.iv
-          }
-    )
+    const response = await bindPhone({ code: payload.code })
     const phone = response.data.phone
 
     if (!phone) {

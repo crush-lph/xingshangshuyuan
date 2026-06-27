@@ -1,10 +1,16 @@
 import { useEffect, useState } from 'react'
 import { Text, View } from '@tarojs/components'
-import { ActionBar, EmptyState, FieldList, SectionCard } from '@/components/business'
+import { ActionBar, EmptyState, FieldList, ReviewList, SectionCard } from '@/components/business'
 import { PageShell } from '@/components/PageShell'
-import { getProductDetail, getProducts, type GetProductDetailData } from '@/services'
+import {
+  getProductDetail,
+  getProductReviews,
+  getProducts,
+  type GetProductDetailData,
+  type ProductReviewItem
+} from '@/services'
 import { routes } from '@/shared/router'
-import { compactJoin, getPageParam, priceOf, textOrPlaceholder } from '@/shared/view-data'
+import { compactJoin, getPageParam, priceOf, textOf, textOrPlaceholder } from '@/shared/view-data'
 
 async function resolveProductId() {
   const pageId = getPageParam('product_id')
@@ -19,6 +25,7 @@ async function resolveProductId() {
 
 export default function ResourceStandardDetailPage() {
   const [product, setProduct] = useState<GetProductDetailData | null>(null)
+  const [reviews, setReviews] = useState<ProductReviewItem[]>([])
 
   useEffect(() => {
     async function loadProduct() {
@@ -31,10 +38,26 @@ export default function ResourceStandardDetailPage() {
 
       const response = await getProductDetail({ product_id: productId })
       setProduct(response.data.id ? response.data : null)
+
+      void getProductReviews({ product_id: productId, page: 1, page_size: 3 })
+        .then((reviewsResponse) => setReviews(reviewsResponse.data.list ?? []))
+        .catch(() => setReviews([]))
     }
 
-    void loadProduct().catch(() => setProduct(null))
+    void loadProduct().catch(() => {
+      setProduct(null)
+      setReviews([])
+    })
   }, [])
+
+  const reviewItems = reviews.map((item) => ({
+    key: String(item.id ?? `${item.user_id}-${item.created_at}`),
+    title: textOrPlaceholder(item.nickname, '匿名用户'),
+    content: textOrPlaceholder(item.content, '暂无评价内容'),
+    rating: item.rating,
+    thumbnail: textOf(item.avatar),
+    time: textOf(item.created_at)
+  }))
 
   return (
     <PageShell
@@ -100,6 +123,14 @@ export default function ResourceStandardDetailPage() {
               <EmptyState title="暂无规格" desc="商品详情接口未返回规格数据。" />
             )}
           </SectionCard>
+
+          <View className="grid gap-2">
+            <View className="flex items-center gap-2 px-1">
+              <View className="h-4 w-1 rounded bg-gold" />
+              <Text className="block text-base font-bold text-ink">用户评价</Text>
+            </View>
+            {reviewItems.length ? <ReviewList items={reviewItems} /> : <EmptyState title="暂无评价" />}
+          </View>
 
           <ActionBar
             actions={[

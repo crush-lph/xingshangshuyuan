@@ -22,9 +22,7 @@ export default function UserBindPhonePage() {
     router.open(redirectRoute)
   }
 
-  async function handleBindPhone(event: {
-    detail?: { code?: string; encryptedData?: string; iv?: string; errMsg?: string }
-  }) {
+  async function handleBindPhone(event: { detail?: { code?: string; errMsg?: string } }) {
     if (isBindingPhone) {
       return
     }
@@ -39,9 +37,7 @@ export default function UserBindPhonePage() {
     try {
       setIsBindingPhone(true)
       await bindWechatPhone({
-        code: event.detail?.code,
-        encryptedData: event.detail?.encryptedData,
-        iv: event.detail?.iv
+        code: event.detail?.code
       })
       Taro.showToast({ title: '手机号已绑定', icon: 'success' })
       finishBinding()
@@ -54,7 +50,7 @@ export default function UserBindPhonePage() {
   }
 
   return (
-    <AuthShell stepLabel="2 / 2" title="绑定手机号" subtitle="使用微信官方组件授权手机号。">
+    <AuthShell title="绑定手机号" subtitle="使用微信官方组件授权手机号。">
       <View>
         {!isLoggedIn ? (
           <Button

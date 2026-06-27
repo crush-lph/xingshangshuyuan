@@ -2,7 +2,7 @@ import Taro from '@tarojs/taro'
 import { Button as TaroButton, Text, View } from '@tarojs/components'
 import { AppIcon } from '@/components/AppIcon'
 import { AuthShell } from '../components/AuthShell'
-import { buildUrl, getSafeRedirectRoute, routes, router } from '@/shared/router'
+import { getSafeRedirectRoute, router } from '@/shared/router'
 import { getPageParam } from '@/shared/view-data'
 import { useUserInfo } from '@/stores/user-info'
 
@@ -13,15 +13,8 @@ export default function UserLoginPage() {
   async function handleLogin() {
     try {
       await loginWithWechat()
-
-      if (useUserInfo.getState().isPhoneBound) {
-        Taro.showToast({ title: '登录成功', icon: 'success' })
-        router.open(redirectRoute)
-        return
-      }
-
-      Taro.showToast({ title: '请继续绑定手机号', icon: 'none' })
-      router.redirect(routes.userBindPhone, { redirect: buildUrl(redirectRoute.path, redirectRoute.query) })
+      Taro.showToast({ title: '登录成功', icon: 'success' })
+      router.open(redirectRoute)
     } catch (error) {
       const title = error instanceof Error && error.message ? error.message : '登录失败，请稍后重试'
       Taro.showToast({ title, icon: 'none' })
@@ -29,7 +22,7 @@ export default function UserLoginPage() {
   }
 
   return (
-    <AuthShell stepLabel="1 / 2" title="微信授权登录" subtitle="登录后继续完成当前操作。">
+    <AuthShell title="微信授权登录" subtitle="登录后继续完成当前操作。">
       <View>
         <TaroButton
           className="auth-primary-button flex h-12 items-center justify-center rounded-lg border-0 bg-tech px-4 text-white"
@@ -41,10 +34,6 @@ export default function UserLoginPage() {
             <Text className="text-base font-semibold text-white">{isLoggingIn ? '登录中' : '快捷授权登录'}</Text>
           </View>
         </TaroButton>
-
-        <Text className="mt-3 block text-center text-xs leading-5 text-muted">
-          未绑定手机号时，将进入下一步绑定；完成后自动返回原页面。
-        </Text>
       </View>
     </AuthShell>
   )

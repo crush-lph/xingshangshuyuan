@@ -11,7 +11,7 @@ import {
   type GetCompanyProfileData,
   type GetOpportunityDetailData
 } from '@/services'
-import { ensurePhoneBound } from '@/shared/auth-guard'
+import { ensureLoggedIn } from '@/shared/auth-guard'
 import { router, routes } from '@/shared/router'
 import { getPageParam, numberOf, textOf, textOrPlaceholder } from '@/shared/view-data'
 
@@ -74,7 +74,7 @@ export default function OpportunityApplyPage() {
   }, [])
 
   async function handleApply() {
-    if (!(await ensurePhoneBound('绑定手机号后才能申请接单'))) {
+    if (!(await ensureLoggedIn('登录后才能申请接单'))) {
       return
     }
 

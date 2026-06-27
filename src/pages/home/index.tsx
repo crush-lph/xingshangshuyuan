@@ -256,7 +256,6 @@ export default function HomePage() {
   }, [])
 
   const primaryBanner = banners[0]
-  const secondaryBanners = banners.slice(1)
   const heroImageUrl = primaryBanner?.imageUrl || FALLBACK_HERO_IMAGE
   const heroStyle: CSSProperties = {
     height: `${navbarHeight + 96}px`
@@ -266,7 +265,7 @@ export default function HomePage() {
     <View className="min-h-screen bg-canvas pb-6 text-ink">
       <ImmersiveNavbar
         title="行商书苑"
-        subtitle="上海 · 商业撮合与线下活动"
+        subtitle="笃行致远 · 聚商共赢"
         onSearchClick={() => router.to(routes.resourceList)}
         onHeightChange={setNavbarHeight}
       />
@@ -314,7 +313,7 @@ export default function HomePage() {
           </View>
         )}
 
-        <HomeBannerCarousel items={secondaryBanners} />
+        <HomeBannerCarousel items={banners} />
 
         <View className="mt-3 flex items-center justify-between rounded-lg bg-white px-4 py-3 shadow-soft">
           <View>

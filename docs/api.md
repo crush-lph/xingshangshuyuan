@@ -24,6 +24,8 @@
 | 用户         | 获取企业认证状态                   | GET  | `/api/user/certification`         | 是   | `user.getUserCertification`              |
 | 用户         | 提交企业认证                       | POST | `/api/user/certification`         | 是   | `user.submitUserCertification`           |
 | 用户         | 获取用户基本信息                   | GET  | `/api/user/info`                  | 是   | `user.getUserInfo`                       |
+| 用户         | 删除用户（调试）                   | POST | `/api/user/delete`                | 否   | `user.deleteUser`                        |
+| 用户         | 上传头像                           | POST | `/api/user/upload_avatar`         | 否   | `user.uploadUserAvatar`                  |
 | 首页         | 获取轮播图列表                     | GET  | `/api/banners`                    | 否   | `home.getBanners`                        |
 | 首页         | 获取四大核心业务配置               | GET  | `/api/core-business`              | 否   | `home.getCoreBusiness`                   |
 | 首页         | 获取平台动态列表                   | GET  | `/api/notifications`              | 否   | `home.getNotifications`                  |
@@ -48,6 +50,9 @@
 | 订单         | 发起支付                           | POST | `/api/order/pay`                  | 是   | `order.payOrder`                         |
 | 订单         | 取消订单                           | POST | `/api/order/cancel`               | 是   | `order.cancelOrder`                      |
 | 订单         | 微信支付回调（内部接口）           | POST | `/api/payment/callback`           | 否   | `order.paymentCallback`                  |
+| 评价         | 获取我的评价列表                   | GET  | `/api/user/reviews`               | 是   | `review.getUserReviews`                  |
+| 评价         | 获取商品评价列表                   | GET  | `/api/product/reviews`            | 否   | `review.getProductReviews`               |
+| 评价         | 提交服务商品评价                   | POST | `/api/review/submit`              | 是   | `review.submitReview`                    |
 | 学习中心     | 获取课程分类列表                   | GET  | `/api/course/categories`          | 否   | `learning.getCourseCategories`           |
 | 学习中心     | 获取课程列表                       | GET  | `/api/courses`                    | 否   | `learning.getCourses`                    |
 | 学习中心     | 获取课程详情                       | GET  | `/api/course/detail`              | 否   | `learning.getCourseDetail`               |
@@ -145,16 +150,15 @@
 
 请求 Body：
 
-| 字段           | 类型   | 必填 | 说明                             | 示例 |
-| -------------- | ------ | ---- | -------------------------------- | ---- |
-| encrypted_data | string | 否   | wx.getPhoneNumber 返回的加密数据 |      |
-| iv             | string | 否   | 加密初始向量                     |      |
+| 字段 | 类型   | 必填 | 说明                                        | 示例 |
+| ---- | ------ | ---- | ------------------------------------------- | ---- |
+| code | string | 否   | wx.getPhoneNumber 组件授权后获取的临时 code |      |
 
 响应 Data：
 
-| 字段  | 类型   | 必填 | 说明   | 示例 |
-| ----- | ------ | ---- | ------ | ---- |
-| phone | string | 否   | 手机号 |      |
+| 字段  | 类型   | 必填 | 说明             | 示例 |
+| ----- | ------ | ---- | ---------------- | ---- |
+| phone | string | 否   | 手机号（已脱敏） |      |
 
 ### 手机号验证码登录
 
@@ -354,6 +358,51 @@
 | avatar        | string          | 否   | 头像地址     |      |
 | phone         | string          | 否   | 手机号       |      |
 | last_login_at | string          | 否   | 最后登录时间 |      |
+
+### 删除用户（调试）
+
+- 方法：`POST`
+- 路径：`/api/user/delete`
+- 认证：否
+- Service：`user.deleteUser`
+
+请求 Query：
+
+无。
+
+请求 Body：
+
+| 字段    | 类型            | 必填 | 说明           | 示例 |
+| ------- | --------------- | ---- | -------------- | ---- |
+| user_id | number(integer) | 否   | 待删除的用户ID |      |
+
+响应 Data：
+
+无字段。
+
+### 上传头像
+
+- 方法：`POST`
+- 路径：`/api/user/upload_avatar`
+- 认证：否
+- Service：`user.uploadUserAvatar`
+
+请求 Query：
+
+无。
+
+请求 Body：
+
+| 字段  | 类型   | 必填 | 说明                                              | 示例 |
+| ----- | ------ | ---- | ------------------------------------------------- | ---- |
+| image | string | 否   | Base64 图片，支持 data URI 前缀或纯 Base64 字符串 |      |
+
+响应 Data：
+
+| 字段 | 类型   | 必填 | 说明         | 示例 |
+| ---- | ------ | ---- | ------------ | ---- |
+| url  | string | 否   | 图片访问地址 |      |
+| key  | string | 否   | 图片存储路径 |      |
 
 ## 首页
 
@@ -944,6 +993,109 @@
 响应 Data：
 
 无。
+
+## 评价
+
+### 获取我的评价列表
+
+- 方法：`GET`
+- 路径：`/api/user/reviews`
+- 认证：是
+- Service：`review.getUserReviews`
+
+请求 Query：
+
+| 字段      | 类型                        | 必填 | 说明     | 示例 |
+| --------- | --------------------------- | ---- | -------- | ---- |
+| page      | string \| number \| boolean | 否   | 页码     | 1    |
+| page_size | string \| number \| boolean | 否   | 每页数量 | 10   |
+
+请求 Body：
+
+无。
+
+响应 Data：
+
+| 字段                | 类型            | 必填 | 说明              | 示例 |
+| ------------------- | --------------- | ---- | ----------------- | ---- |
+| list                | array<object>   | 否   |                   |      |
+| list[].id           | number(integer) | 否   | 评价ID            |      |
+| list[].product_id   | number(integer) | 否   | 商品ID            |      |
+| list[].product_name | string          | 否   | 商品名称          |      |
+| list[].thumbnail    | string          | 否   | 商品缩略图        |      |
+| list[].order_id     | number(integer) | 否   | 订单ID            |      |
+| list[].rating       | number(integer) | 否   | 评分              |      |
+| list[].content      | string          | 否   | 评价内容          |      |
+| list[].status       | number(integer) | 否   | 状态(0隐藏,1显示) |      |
+| list[].created_at   | string          | 否   | 创建时间          |      |
+| total               | number(integer) | 否   | 总数              |      |
+| page                | number(integer) | 否   | 页码              |      |
+| page_size           | number(integer) | 否   | 每页数量          |      |
+| total_page          | number(integer) | 否   | 总页数            |      |
+
+### 获取商品评价列表
+
+- 方法：`GET`
+- 路径：`/api/product/reviews`
+- 认证：否
+- Service：`review.getProductReviews`
+
+请求 Query：
+
+| 字段       | 类型                        | 必填 | 说明     | 示例 |
+| ---------- | --------------------------- | ---- | -------- | ---- |
+| product_id | string \| number \| boolean | 否   | 商品ID   | 1    |
+| page       | string \| number \| boolean | 否   | 页码     | 1    |
+| page_size  | string \| number \| boolean | 否   | 每页数量 | 10   |
+
+请求 Body：
+
+无。
+
+响应 Data：
+
+| 字段              | 类型            | 必填 | 说明     | 示例 |
+| ----------------- | --------------- | ---- | -------- | ---- |
+| list              | array<object>   | 否   |          |      |
+| list[].id         | number(integer) | 否   | 评价ID   |      |
+| list[].user_id    | number(integer) | 否   | 用户ID   |      |
+| list[].nickname   | string          | 否   | 用户昵称 |      |
+| list[].avatar     | string          | 否   | 用户头像 |      |
+| list[].rating     | number(integer) | 否   | 评分     |      |
+| list[].content    | string          | 否   | 评价内容 |      |
+| list[].created_at | string          | 否   | 创建时间 |      |
+| total             | number(integer) | 否   | 总数     |      |
+| page              | number(integer) | 否   | 页码     |      |
+| page_size         | number(integer) | 否   | 每页数量 |      |
+| total_page        | number(integer) | 否   | 总页数   |      |
+
+### 提交服务商品评价
+
+- 方法：`POST`
+- 路径：`/api/review/submit`
+- 认证：是
+- Service：`review.submitReview`
+
+请求 Query：
+
+无。
+
+请求 Body：
+
+| 字段     | 类型            | 必填 | 说明      | 示例                   |
+| -------- | --------------- | ---- | --------- | ---------------------- |
+| order_id | number(integer) | 否   | 订单ID    | 1                      |
+| rating   | number(integer) | 否   | 评分(1-5) | 5                      |
+| content  | string          | 否   | 评价内容  | 服务非常好，专业高效！ |
+
+响应 Data：
+
+| 字段       | 类型            | 必填 | 说明     | 示例 |
+| ---------- | --------------- | ---- | -------- | ---- |
+| id         | number(integer) | 否   | 评价ID   |      |
+| rating     | number(integer) | 否   | 评分     |      |
+| content    | string          | 否   | 评价内容 |      |
+| created_at | string          | 否   | 创建时间 |      |
 
 ## 学习中心
 

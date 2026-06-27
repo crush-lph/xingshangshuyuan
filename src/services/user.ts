@@ -108,3 +108,33 @@ export type GetUserInfoResponse = ApiResponse<GetUserInfoData>
 export function getUserInfo(options?: ApiRequestOptions) {
   return api.get<GetUserInfoResponse>('/api/user/info', options)
 }
+
+export interface DeleteUserPayload {
+  user_id?: number
+}
+
+export type DeleteUserData = EmptyObject
+
+export type DeleteUserResponse = ApiResponse<DeleteUserData>
+
+export function deleteUser(data: DeleteUserPayload, options?: ApiBodyRequestOptions<DeleteUserPayload>) {
+  return api.post<DeleteUserResponse, DeleteUserPayload>('/api/user/delete', data, options)
+}
+
+export interface UploadUserAvatarPayload {
+  image?: string
+}
+
+export interface UploadUserAvatarData {
+  url?: string
+  key?: string
+}
+
+export type UploadUserAvatarResponse = ApiResponse<UploadUserAvatarData>
+
+export function uploadUserAvatar(
+  data: UploadUserAvatarPayload,
+  options?: ApiBodyRequestOptions<UploadUserAvatarPayload>
+) {
+  return api.post<UploadUserAvatarResponse, UploadUserAvatarPayload>('/api/user/upload_avatar', data, options)
+}

@@ -2,7 +2,7 @@ import { ReactNode } from 'react'
 import { Text, View } from '@tarojs/components'
 
 interface AuthShellProps {
-  stepLabel: string
+  stepLabel?: string
   title: string
   subtitle: string
   children: ReactNode
@@ -14,7 +14,7 @@ export function AuthShell({ stepLabel, title, subtitle, children }: AuthShellPro
       <View className="mb-7">
         <View className="mb-4 flex items-center justify-between">
           <Text className="text-sm font-semibold text-brand">行商书苑</Text>
-          <Text className="text-xs font-medium text-muted">{stepLabel}</Text>
+          {stepLabel ? <Text className="text-xs font-medium text-muted">{stepLabel}</Text> : null}
         </View>
         <Text className="block text-xl font-bold leading-tight text-ink">{title}</Text>
         <Text className="mt-2 block text-sm leading-6 text-muted">{subtitle}</Text>

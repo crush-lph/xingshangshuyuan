@@ -4,9 +4,10 @@ import { Text, View } from '@tarojs/components'
 import { ActionBar, EmptyState, FieldList, SectionCard } from '@/components/business'
 import { PageShell } from '@/components/PageShell'
 import { createProductOrder, getProducts, payOrder, type CreateProductOrderData } from '@/services'
-import { ensurePhoneBound } from '@/shared/auth-guard'
+import { ensureLoggedIn } from '@/shared/auth-guard'
 import { router, routes } from '@/shared/router'
 import { priceOf, textOrPlaceholder } from '@/shared/view-data'
+import { getWechatPaymentErrorMessage, requestWechatPayment } from '@/shared/wechat-payment'
 
 interface MemberProduct {
   id: number
@@ -40,7 +41,7 @@ export default function MemberConfirmPage() {
   }, [])
 
   async function ensureOrder() {
-    if (!(await ensurePhoneBound('绑定手机号后才能开通会员'))) {
+    if (!(await ensureLoggedIn('登录后才能开通会员'))) {
       return null
     }
 
@@ -67,13 +68,19 @@ export default function MemberConfirmPage() {
     try {
       const nextOrder = await ensureOrder()
 
-      if (nextOrder?.order_no) {
-        Taro.showLoading({ title: '拉起支付中' })
-        await payOrder({ order_no: nextOrder.order_no, pay_method: 1 })
+      if (!nextOrder?.order_no) {
+        Taro.showToast({ title: '订单生成失败', icon: 'none' })
+        return
       }
 
-      Taro.showToast({ title: '支付接口已调用', icon: 'success' })
+      Taro.showLoading({ title: '拉起支付中' })
+      const payResult = await payOrder({ order_no: nextOrder.order_no, pay_method: 1 })
+      await requestWechatPayment(payResult.data.pay_params)
+
+      Taro.showToast({ title: '支付成功', icon: 'success' })
       router.redirect(routes.userBenefits)
+    } catch (error) {
+      Taro.showToast({ title: getWechatPaymentErrorMessage(error), icon: 'none' })
     } finally {
       Taro.hideLoading()
       setIsPaying(false)

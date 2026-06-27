@@ -10,7 +10,7 @@ import {
   type GetUserCertificationData,
   type SubmitUserCertificationPayload
 } from '@/services'
-import { ensurePhoneBound } from '@/shared/auth-guard'
+import { ensureLoggedIn } from '@/shared/auth-guard'
 import { routes } from '@/shared/router'
 import { textOf, textOrPlaceholder } from '@/shared/view-data'
 
@@ -209,7 +209,7 @@ export default function UserCertPage() {
   }
 
   async function handleSubmit() {
-    if (!(await ensurePhoneBound('绑定手机号后才能提交企业认证'))) {
+    if (!(await ensureLoggedIn('登录后才能提交企业认证'))) {
       return
     }
 

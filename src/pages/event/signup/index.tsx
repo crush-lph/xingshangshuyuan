@@ -4,7 +4,7 @@ import { View } from '@tarojs/components'
 import { ActionBar, EmptyState, FieldList, FormSection, FormTextField } from '@/components/business'
 import { PageShell } from '@/components/PageShell'
 import { getEventDetail, getEvents, getUserProfile, registerEvent, type GetEventDetailData } from '@/services'
-import { ensurePhoneBound } from '@/shared/auth-guard'
+import { ensureLoggedIn } from '@/shared/auth-guard'
 import { router, routes } from '@/shared/router'
 import { getPageParam, priceOf, textOf, textOrPlaceholder } from '@/shared/view-data'
 
@@ -61,7 +61,7 @@ export default function EventSignupPage() {
   }, [])
 
   async function handleRegister() {
-    if (!(await ensurePhoneBound('绑定手机号后才能报名活动'))) {
+    if (!(await ensureLoggedIn('登录后才能报名活动'))) {
       return
     }
 

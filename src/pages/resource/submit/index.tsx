@@ -4,7 +4,7 @@ import { Text, View } from '@tarojs/components'
 import { ActionBar, FormSection, FormTextField, FormTextareaField } from '@/components/business'
 import { PageShell } from '@/components/PageShell'
 import { saveCompanyProfile } from '@/services'
-import { ensurePhoneBound } from '@/shared/auth-guard'
+import { ensureLoggedIn } from '@/shared/auth-guard'
 import { router, routes } from '@/shared/router'
 import { numberOf, textOf } from '@/shared/view-data'
 
@@ -53,7 +53,7 @@ export default function ResourceSubmitPage() {
   }
 
   async function handleSubmit() {
-    if (!(await ensurePhoneBound('绑定手机号后才能提交资源需求'))) {
+    if (!(await ensureLoggedIn('登录后才能提交资源需求'))) {
       return
     }
 

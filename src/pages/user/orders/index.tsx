@@ -6,6 +6,13 @@ import { getOrders } from '@/services'
 import { routes } from '@/shared/router'
 import { firstRecordList, priceOf, textOf, textOrPlaceholder } from '@/shared/view-data'
 
+function isCompletedOrder(order: Record<string, unknown>) {
+  const status = order.status
+  const statusText = textOf(order.status_text)
+
+  return status === 2 || statusText === '已完成'
+}
+
 export default function UserOrdersPage() {
   const [items, setItems] = useState<ListItem[]>([])
 
@@ -15,18 +22,28 @@ export default function UserOrdersPage() {
       setItems(
         firstRecordList(response.data).map((order) => {
           const orderNo = textOf(order.order_no ?? order.id)
+          const orderId = textOf(order.order_id ?? order.id)
+          const isCompleted = isCompletedOrder(order)
+          const title = textOrPlaceholder(order.title ?? order.order_no ?? order.id, '未命名订单')
 
           return {
-            title: textOrPlaceholder(order.title ?? order.order_no ?? order.id, '未命名订单'),
+            title,
             desc: textOrPlaceholder(order.description ?? order.remark ?? order.status_text, '接口未返回订单描述'),
             meta: orderNo,
             price: priceOf(order.pay_amount ?? order.total_amount ?? order.amount),
             tag: textOf(order.status_text),
             icon: 'file-list-3-line',
-            tone: 'gold',
-            path: routes.paymentTransfer,
-            query: orderNo ? { order_no: orderNo } : undefined,
-            action: '查看'
+            tone: isCompleted ? 'success' : 'gold',
+            path: isCompleted ? routes.userReviews : routes.paymentTransfer,
+            query: isCompleted
+              ? {
+                  ...(orderId ? { order_id: orderId } : {}),
+                  title
+                }
+              : orderNo
+                ? { order_no: orderNo }
+                : undefined,
+            action: isCompleted ? '去评价' : '查看'
           }
         })
       )

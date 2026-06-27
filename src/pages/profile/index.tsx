@@ -6,17 +6,19 @@ import { MemberCard } from './components/MemberCard'
 import { MenuGroup } from './components/MenuGroup'
 import { MetricGrid } from './components/MetricGrid'
 import { ProfileHeader } from './components/ProfileHeader'
+import { IdentityIconPreview } from './components/IdentityIconPreview'
 import { getCustomerServiceConfig, getUnreadMessageCount, getUserLearningStats, getUserProfile } from '@/services'
 import { accountMenus, memberActions, serviceMenus } from './profile.data'
 import type { ManagerInfo, MetricItem } from './types'
 import { isRecord, textOf } from '@/shared/view-data'
 import { routes } from '@/shared/router'
+import { getUserIdentity, type UserIdentity } from '@/shared/user-identity'
 
 export default function ProfilePage() {
   const [metricItems, setMetricItems] = useState<MetricItem[]>([])
   const [serviceMenuItems, setServiceMenuItems] = useState(serviceMenus)
   const [accountMenuItems, setAccountMenuItems] = useState(accountMenus)
-  const [memberLevelText, setMemberLevelText] = useState<string | undefined>()
+  const [identity, setIdentity] = useState<UserIdentity>(() => getUserIdentity())
   const [manager, setManager] = useState<ManagerInfo | null>(null)
 
   useEffect(() => {
@@ -30,7 +32,7 @@ export default function ProfilePage() {
 
       if (profileResult.status === 'fulfilled') {
         const profile = profileResult.value.data
-        setMemberLevelText(textOf(profile.vip_level_text))
+        setIdentity(getUserIdentity(profile))
 
         setAccountMenuItems((items) =>
           items.map((item) =>
@@ -89,11 +91,15 @@ export default function ProfilePage() {
     <View className="min-h-screen bg-canvas pb-6 text-ink">
       <View className="bg-brand px-5 pb-8 pt-5">
         <ProfileHeader />
-        <MemberCard actions={memberActions} levelText={memberLevelText} />
+        <MemberCard actions={memberActions} identity={identity} />
       </View>
 
       <View className="-mt-4 px-4">
         {metricItems.length ? <MetricGrid items={metricItems} /> : <EmptyState title="暂无个人统计" />}
+
+        <View className="mt-3">
+          <IdentityIconPreview />
+        </View>
 
         <View className="mt-3">
           <MenuGroup items={serviceMenuItems} />
