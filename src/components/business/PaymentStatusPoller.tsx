@@ -90,37 +90,34 @@ export function PaymentStatusPoller<TResult extends PaymentStatusResult = Paymen
 
   useEffect(() => {
     let isActive = true
-    let timer: ReturnType<typeof setTimeout> | undefined
-    const startedAt = Date.now()
+    let didTimeout = false
+    let pollTimer: ReturnType<typeof setTimeout> | undefined
+    let timeoutTimer: ReturnType<typeof setTimeout> | undefined
 
-    const clearTimer = () => {
-      if (timer) {
-        clearTimeout(timer)
-        timer = undefined
+    const clearPollTimer = () => {
+      if (pollTimer) {
+        clearTimeout(pollTimer)
+        pollTimer = undefined
+      }
+    }
+
+    const clearTimeoutTimer = () => {
+      if (timeoutTimer) {
+        clearTimeout(timeoutTimer)
+        timeoutTimer = undefined
       }
     }
 
     const poll = async () => {
-      if (!isActive) {
-        return
-      }
-
-      if (Date.now() - startedAt >= timeoutMs) {
-        setState('timeout')
-        setMessage(undefined)
-        return
-      }
-
-      setState('polling')
+      if (!isActive || didTimeout) return
 
       try {
         const result = await callbacksRef.current.queryStatus(orderNo)
 
-        if (!isActive) {
-          return
-        }
+        if (!isActive || didTimeout) return
 
         if (result.status === 'paid') {
+          clearTimeoutTimer()
           setState('paid')
           setMessage(result.message)
           callbacksRef.current.onSuccess(result)
@@ -128,33 +125,45 @@ export function PaymentStatusPoller<TResult extends PaymentStatusResult = Paymen
         }
 
         if (result.status === 'failed' || result.status === 'cancelled') {
+          clearTimeoutTimer()
           setState(result.status)
           setMessage(result.message)
           return
         }
 
         setMessage(result.message)
-        timer = setTimeout(() => {
+        if (didTimeout) return
+
+        pollTimer = setTimeout(() => {
           void poll()
         }, intervalMs)
       } catch {
-        if (!isActive) {
-          return
-        }
+        if (!isActive || didTimeout) return
 
         setMessage('支付结果查询失败，请稍后重新查询。')
-        timer = setTimeout(() => {
+        pollTimer = setTimeout(() => {
           void poll()
         }, intervalMs)
       }
     }
 
+    timeoutTimer = setTimeout(() => {
+      if (!isActive) return
+
+      didTimeout = true
+      clearPollTimer()
+      setState('timeout')
+      setMessage(undefined)
+    }, timeoutMs)
+
+    setState('polling')
     setMessage(undefined)
     void poll()
 
     return () => {
       isActive = false
-      clearTimer()
+      clearPollTimer()
+      clearTimeoutTimer()
     }
   }, [orderNo, attempt, intervalMs, timeoutMs])
 
