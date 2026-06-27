@@ -23,6 +23,13 @@ export interface PaymentStatusPollerProps<TResult extends PaymentStatusResult = 
 
 type PollerState = 'polling' | 'paid' | 'failed' | 'cancelled' | 'timeout'
 
+interface PollerSnapshot {
+  orderNo: string
+  attempt: number
+  state: PollerState
+  message?: string
+}
+
 const DEFAULT_INTERVAL_MS = 2000
 const DEFAULT_TIMEOUT_MS = 30000
 
@@ -79,10 +86,16 @@ export function PaymentStatusPoller<TResult extends PaymentStatusResult = Paymen
   onRetryPayment,
   onBack,
 }: PaymentStatusPollerProps<TResult>) {
-  const [attempt, setAttempt] = useState(0)
-  const [state, setState] = useState<PollerState>('polling')
-  const [message, setMessage] = useState<string>()
+  const [snapshot, setSnapshot] = useState<PollerSnapshot>(() => ({
+    orderNo,
+    attempt: 0,
+    state: 'polling',
+  }))
   const callbacksRef = useRef({ queryStatus, onSuccess, onRetryPayment, onBack })
+  const activeAttempt = snapshot.attempt
+  const isCurrentSnapshot = snapshot.orderNo === orderNo
+  const state = isCurrentSnapshot ? snapshot.state : 'polling'
+  const message = isCurrentSnapshot ? snapshot.message : undefined
 
   useEffect(() => {
     callbacksRef.current = { queryStatus, onSuccess, onRetryPayment, onBack }
@@ -118,20 +131,28 @@ export function PaymentStatusPoller<TResult extends PaymentStatusResult = Paymen
 
         if (result.status === 'paid') {
           clearTimeoutTimer()
-          setState('paid')
-          setMessage(result.message)
+          setSnapshot({ orderNo, attempt: activeAttempt, state: 'paid', message: result.message })
           callbacksRef.current.onSuccess(result)
           return
         }
 
         if (result.status === 'failed' || result.status === 'cancelled') {
           clearTimeoutTimer()
-          setState(result.status)
-          setMessage(result.message)
+          setSnapshot({
+            orderNo,
+            attempt: activeAttempt,
+            state: result.status,
+            message: result.message,
+          })
           return
         }
 
-        setMessage(result.message)
+        setSnapshot({
+          orderNo,
+          attempt: activeAttempt,
+          state: 'polling',
+          message: result.message,
+        })
         if (didTimeout) return
 
         pollTimer = setTimeout(() => {
@@ -140,7 +161,12 @@ export function PaymentStatusPoller<TResult extends PaymentStatusResult = Paymen
       } catch {
         if (!isActive || didTimeout) return
 
-        setMessage('支付结果查询失败，请稍后重新查询。')
+        setSnapshot({
+          orderNo,
+          attempt: activeAttempt,
+          state: 'polling',
+          message: '支付结果查询失败，请稍后重新查询。',
+        })
         pollTimer = setTimeout(() => {
           void poll()
         }, intervalMs)
@@ -152,12 +178,9 @@ export function PaymentStatusPoller<TResult extends PaymentStatusResult = Paymen
 
       didTimeout = true
       clearPollTimer()
-      setState('timeout')
-      setMessage(undefined)
+      setSnapshot({ orderNo, attempt: activeAttempt, state: 'timeout' })
     }, timeoutMs)
 
-    setState('polling')
-    setMessage(undefined)
     void poll()
 
     return () => {
@@ -165,11 +188,14 @@ export function PaymentStatusPoller<TResult extends PaymentStatusResult = Paymen
       clearPollTimer()
       clearTimeoutTimer()
     }
-  }, [orderNo, attempt, intervalMs, timeoutMs])
+  }, [orderNo, activeAttempt, intervalMs, timeoutMs])
 
   const restartPolling = () => {
-    setMessage(undefined)
-    setAttempt((current) => current + 1)
+    setSnapshot((current) => ({
+      orderNo,
+      attempt: current.attempt + 1,
+      state: 'polling',
+    }))
   }
 
   const actions: ActionItem[] = [{ label: '重新查询', variant: 'outline', onClick: restartPolling }]
