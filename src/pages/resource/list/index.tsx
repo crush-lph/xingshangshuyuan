@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Input, Text, View } from '@tarojs/components'
-import { EmptyState, ItemList, SectionCard, type ListItem } from '@/components/business'
+import { ItemList, SectionCard, StateNotice, type ListItem } from '@/components/business'
 import { PageShell } from '@/components/PageShell'
 import { getProductCategories, getProducts, getSearchSuggest } from '@/services'
 import { routes } from '@/shared/router'
@@ -17,13 +17,20 @@ export default function ResourceListPage() {
   const [filters, setFilters] = useState(['全部'])
   const [activeFilter, setActiveFilter] = useState('全部')
   const [resources, setResources] = useState<ResourceItem[]>([])
+  const [isLoading, setIsLoading] = useState(true)
+  const [hasError, setHasError] = useState(false)
 
   useEffect(() => {
     async function loadResources() {
+      setIsLoading(true)
+      setHasError(false)
+
       const [categoriesResult, productsResult] = await Promise.allSettled([
         getProductCategories(),
         getProducts({ page: 1, page_size: 20 })
       ])
+
+      setHasError(categoriesResult.status === 'rejected' && productsResult.status === 'rejected')
 
       if (categoriesResult.status === 'fulfilled') {
         setFilters([
@@ -57,6 +64,8 @@ export default function ResourceListPage() {
           })
         )
       }
+
+      setIsLoading(false)
     }
 
     void loadResources()
@@ -90,36 +99,43 @@ export default function ResourceListPage() {
   return (
     <PageShell title="资源列表" subtitle="按业务场景筛选供应商、工具和标准化服务。">
       <View className="grid gap-3">
-        <View className="rounded-full bg-white px-4 py-3 shadow-soft">
-          <Input
-            value={query}
-            placeholder="搜索资源名称、分类或描述"
-            className="text-sm"
-            onInput={(event) => setQuery(event.detail.value)}
-          />
-        </View>
+        {isLoading ? <StateNotice state="loading" /> : null}
+        {!isLoading && hasError ? <StateNotice state="error" /> : null}
 
-        <SectionCard>
-          <View className="flex flex-wrap gap-2">
-            {filters.map((item) => (
-              <View
-                key={item}
-                className={`rounded-full px-3 py-2 ${activeFilter === item ? 'bg-brand' : 'border border-line bg-white'}`}
-                onClick={() => setActiveFilter(item)}
-              >
-                <Text className={`text-xs font-semibold ${activeFilter === item ? 'text-white' : 'text-muted'}`}>
-                  {item}
-                </Text>
+        {!isLoading && !hasError ? (
+          <>
+            <View className="rounded-full bg-white px-4 py-3 shadow-soft">
+              <Input
+                value={query}
+                placeholder="搜索资源名称、分类或描述"
+                className="text-sm"
+                onInput={(event) => setQuery(event.detail.value)}
+              />
+            </View>
+
+            <SectionCard>
+              <View className="flex flex-wrap gap-2">
+                {filters.map((item) => (
+                  <View
+                    key={item}
+                    className={`rounded-full px-3 py-2 ${activeFilter === item ? 'bg-brand' : 'border border-line bg-white'}`}
+                    onClick={() => setActiveFilter(item)}
+                  >
+                    <Text className={`text-xs font-semibold ${activeFilter === item ? 'text-white' : 'text-muted'}`}>
+                      {item}
+                    </Text>
+                  </View>
+                ))}
               </View>
-            ))}
-          </View>
-        </SectionCard>
+            </SectionCard>
 
-        {visibleResources.length ? (
-          <ItemList items={visibleResources} />
-        ) : (
-          <EmptyState title="暂无资源" desc="当前接口或筛选条件没有返回可展示资源。" />
-        )}
+            {visibleResources.length ? (
+              <ItemList items={visibleResources} />
+            ) : (
+              <StateNotice state="empty" copy={{ title: '暂无资源', desc: '当前接口或筛选条件没有返回可展示资源。' }} />
+            )}
+          </>
+        ) : null}
       </View>
     </PageShell>
   )

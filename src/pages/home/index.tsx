@@ -15,7 +15,7 @@ import {
   type GetProductsData
 } from '@/services'
 import { AppIcon } from '@/components/AppIcon'
-import { EmptyState } from '@/components/business'
+import { StateNotice } from '@/components/business'
 import type { AppIconName } from '@/shared/app-icons'
 import { router, routes, type RoutePath } from '@/shared/router'
 import { compactJoin, priceOf, textOf, textOrPlaceholder } from '@/shared/view-data'
@@ -65,6 +65,12 @@ interface ProfileView {
   companyName?: string
   memberText?: string
   certificationText?: string
+}
+
+interface HomeSectionErrors {
+  products: boolean
+  event: boolean
+  opportunity: boolean
 }
 
 const FALLBACK_HERO_IMAGE =
@@ -174,9 +180,24 @@ export default function HomePage() {
   const [banners, setBanners] = useState<HomeBannerItem[]>([])
   const [coreBusiness, setCoreBusiness] = useState<CoreBusinessEntry[]>([])
   const [systemStatus, setSystemStatus] = useState('')
+  const [isLoading, setIsLoading] = useState(true)
+  const [hasError, setHasError] = useState(false)
+  const [sectionErrors, setSectionErrors] = useState<HomeSectionErrors>({
+    products: false,
+    event: false,
+    opportunity: false
+  })
 
   useEffect(() => {
     async function loadHomeData() {
+      setIsLoading(true)
+      setHasError(false)
+      setSectionErrors({
+        products: false,
+        event: false,
+        opportunity: false
+      })
+
       const [
         bannersResult,
         coreBusinessResult,
@@ -194,6 +215,21 @@ export default function HomePage() {
         getOpportunities({ page: 1, page_size: 1 }),
         getUserProfile()
       ])
+
+      setHasError(
+        bannersResult.status === 'rejected' &&
+          coreBusinessResult.status === 'rejected' &&
+          systemStatusResult.status === 'rejected' &&
+          productsResult.status === 'rejected' &&
+          eventsResult.status === 'rejected' &&
+          opportunitiesResult.status === 'rejected' &&
+          profileResult.status === 'rejected'
+      )
+      setSectionErrors({
+        products: productsResult.status === 'rejected',
+        event: eventsResult.status === 'rejected',
+        opportunity: opportunitiesResult.status === 'rejected'
+      })
 
       if (bannersResult.status === 'fulfilled') {
         setBanners(
@@ -250,6 +286,8 @@ export default function HomePage() {
             : null
         )
       }
+
+      setIsLoading(false)
     }
 
     void loadHomeData()
@@ -277,208 +315,232 @@ export default function HomePage() {
       </View>
 
       <View className="px-4 py-3">
-        {profile ? (
-          <View className="mb-3 flex items-center gap-3 rounded-lg bg-white px-4 py-4 shadow-soft">
-            <View className="flex h-11 w-11 items-center justify-center rounded-lg bg-brand-soft text-brand">
-              <Text className="font-bold">{profile.avatarText}</Text>
-            </View>
-            <View className="flex-1">
-              <Text className="block text-sm font-semibold text-ink">
-                {compactJoin([profile.name, profile.companyName])}
-              </Text>
-              {profile.memberText ? (
-                <Text className="mt-1 block text-xs font-semibold text-gold">{profile.memberText}</Text>
-              ) : (
-                <Text className="mt-1 block text-xs text-muted">完善资料后获得更精准撮合推荐</Text>
-              )}
-            </View>
-            {profile.certificationText ? (
-              <View className="rounded bg-gold-soft px-2 py-1" onClick={() => router.to(routes.userCert)}>
-                <Text className="text-xs font-semibold text-gold">{profile.certificationText}</Text>
-              </View>
-            ) : null}
-          </View>
-        ) : (
-          <View className="mb-3 flex items-center gap-3 rounded-lg bg-white px-4 py-4 shadow-soft">
-            <View className="flex h-11 w-11 items-center justify-center rounded-lg bg-canvas text-muted">
-              <AppIcon name="user-3-line" size={22} color="#9AA7BD" />
-            </View>
-            <View className="flex-1">
-              <Text className="block text-sm font-semibold text-ink">未登录</Text>
-              <Text className="mt-1 block text-xs text-muted">登录后查看会员与认证信息</Text>
-            </View>
-            <View className="rounded bg-brand-soft px-2 py-1" onClick={() => router.to(routes.profile)}>
-              <Text className="text-xs font-semibold text-brand">登录</Text>
-            </View>
-          </View>
-        )}
+        {isLoading ? <StateNotice state="loading" /> : null}
+        {!isLoading && hasError ? <StateNotice state="error" /> : null}
 
-        <HomeBannerCarousel items={banners} />
-
-        <View className="mt-3 flex items-center justify-between rounded-lg bg-white px-4 py-3 shadow-soft">
-          <View>
-            <Text className="block text-sm font-semibold text-ink">运营待办</Text>
-            <Text className="mt-1 block text-xs text-muted">{systemStatus || '活动签到、资质审核和资源管理'}</Text>
-          </View>
-          <View className="rounded-lg bg-brand px-3 py-2" onClick={() => router.to(routes.adminCheckin)}>
-            <Text className="text-xs font-semibold text-white">查看</Text>
-          </View>
-        </View>
-
-        <View className="mt-3 rounded-lg bg-white p-[14px] shadow-soft">
-          <View className="grid grid-cols-3 gap-3">
-            {HOME_QUICK_ENTRIES.map((entry) => (
-              <View key={entry.label} className="items-center text-center" onClick={() => router.to(entry.path)}>
-                <View
-                  className="mx-auto flex h-12 w-12 items-center justify-center rounded-[14px]"
-                  style={{ background: entry.iconBackground }}
-                >
-                  <AppIcon name={entry.icon} size={22} color={entry.iconColor} />
-                </View>
-                <Text className="mt-2 block text-xs font-semibold text-ink">{entry.label}</Text>
-              </View>
-            ))}
-          </View>
-        </View>
-
-        {coreBusiness.length ? (
-          <View className="mt-3 rounded-lg bg-white p-4 shadow-soft">
-            <View className="mb-3 flex items-center gap-2">
-              <View className="h-4 w-1 rounded bg-gold" />
-              <Text className="text-base font-bold text-ink">核心业务</Text>
-            </View>
-            <View className="grid gap-2">
-              {coreBusiness.map((item) => (
-                <View key={item.title} className="rounded-lg bg-canvas px-3 py-3">
-                  <Text className="block text-sm font-semibold text-ink">{item.title}</Text>
-                  {item.subtitle ? (
-                    <Text className="mt-1 block text-xs leading-5 text-muted">{item.subtitle}</Text>
-                  ) : null}
-                  {item.actionText ? (
-                    <Text className="mt-2 block text-xs font-semibold text-tech">{item.actionText}</Text>
-                  ) : null}
-                </View>
-              ))}
-            </View>
-          </View>
-        ) : null}
-
-        <View className="mt-3 rounded-lg bg-white p-4 shadow-soft">
-          <View className="mb-3 flex items-center justify-between">
-            <View className="flex items-center gap-2">
-              <View className="h-4 w-1 rounded bg-gold" />
-              <Text className="text-base font-bold text-ink">热门资源推荐</Text>
-            </View>
-            <Text className="text-xs font-semibold text-tech" onClick={() => router.to(routes.resourceHome)}>
-              查看全部 ›
-            </Text>
-          </View>
-          {products.length ? (
-            products.map((item) => (
-              <View
-                key={`${item.id ?? item.title}`}
-                className="border-t border-line py-3"
-                onClick={() => router.to(routes.resourceStandardDetail, item.id ? { product_id: item.id } : undefined)}
-              >
-                <View className="flex items-center justify-between gap-3">
-                  <View className="flex-1">
-                    <Text className="block text-sm font-semibold text-ink">{item.title}</Text>
-                    <Text className="mt-1 block text-xs leading-5 text-muted">{item.desc}</Text>
-                  </View>
-                  {item.price ? <Text className="text-sm font-bold text-gold">{item.price}</Text> : null}
-                </View>
-              </View>
-            ))
-          ) : (
-            <EmptyState title="暂无资源推荐" />
-          )}
-        </View>
-
-        <View className="mt-3 rounded-lg bg-white p-4 shadow-soft">
-          <View className="mb-3 flex items-center justify-between">
-            <View className="flex items-center gap-2">
-              <View className="h-4 w-1 rounded bg-gold" />
-              <Text className="text-base font-bold text-ink">近期线下活动</Text>
-            </View>
-            <Text className="text-xs font-semibold text-tech" onClick={() => router.to(routes.eventHome)}>
-              查看全部 ›
-            </Text>
-          </View>
-          {event ? (
-            <View
-              className="rounded-lg bg-canvas p-3"
-              onClick={() => router.to(routes.eventDetail, event.id ? { event_id: event.id } : undefined)}
-            >
-              <View className="flex items-center gap-3">
-                <View className="rounded-lg bg-brand px-3 py-2 text-center">
-                  <Text className="block text-xs text-white/70">{event.month}</Text>
-                  <Text className="block text-lg font-bold text-white">{event.day}</Text>
+        {!isLoading && !hasError ? (
+          <>
+            {profile ? (
+              <View className="mb-3 flex items-center gap-3 rounded-lg bg-white px-4 py-4 shadow-soft">
+                <View className="flex h-11 w-11 items-center justify-center rounded-lg bg-brand-soft text-brand">
+                  <Text className="font-bold">{profile.avatarText}</Text>
                 </View>
                 <View className="flex-1">
-                  <Text className="block text-sm font-semibold text-ink">{event.title}</Text>
-                  <Text className="mt-1 block text-xs text-muted">{event.meta}</Text>
-                </View>
-                <Button
-                  type="primary"
-                  size="small"
-                  onClick={() => router.to(routes.eventSignup, event.id ? { event_id: event.id } : undefined)}
-                >
-                  报名
-                </Button>
-              </View>
-            </View>
-          ) : (
-            <EmptyState title="暂无活动" />
-          )}
-        </View>
-
-        <View className="mt-3 rounded-lg bg-brand-deep p-4 shadow-medium">
-          <Text className="block text-xs font-semibold text-gold-light">行商会员特权</Text>
-          <Text className="mt-1 block text-base font-bold text-white">加入会员，获取供应链底价</Text>
-          <View className="mt-3 grid grid-cols-2 gap-2">
-            <View className="rounded-lg bg-white/10 px-3 py-3" onClick={() => router.to(routes.memberBenefit)}>
-              <Text className="block text-xs font-semibold text-white">行商·菁英会员</Text>
-              <Text className="mt-1 block text-xs text-gold-light">查看年度权益</Text>
-            </View>
-            <View className="rounded-lg bg-white/10 px-3 py-3" onClick={() => router.to(routes.memberBenefit)}>
-              <Text className="block text-xs font-semibold text-white">行商·领航会员</Text>
-              <Text className="mt-1 block text-xs text-gold-light">升级企业服务</Text>
-            </View>
-          </View>
-        </View>
-
-        <View className="mt-3 rounded-lg bg-white p-4 shadow-soft">
-          <View className="mb-3 flex items-center justify-between">
-            <View className="flex items-center gap-2">
-              <View className="h-4 w-1 rounded bg-gold" />
-              <Text className="text-base font-bold text-ink">推荐商机</Text>
-            </View>
-            <Text className="text-xs font-semibold text-tech" onClick={() => router.to(routes.opportunityHome)}>
-              查看全部 ›
-            </Text>
-          </View>
-          {opportunity ? (
-            <View
-              className="rounded-lg border border-line p-3"
-              onClick={() =>
-                router.to(routes.opportunityDetail, opportunity.id ? { opportunity_id: opportunity.id } : undefined)
-              }
-            >
-              <View className="flex items-start justify-between gap-3">
-                <Text className="flex-1 text-sm font-semibold leading-5 text-ink">{opportunity.title}</Text>
-                {opportunity.tag ? (
-                  <Text className="rounded bg-gold-soft px-2 py-1 text-xs font-semibold text-gold">
-                    {opportunity.tag}
+                  <Text className="block text-sm font-semibold text-ink">
+                    {compactJoin([profile.name, profile.companyName])}
                   </Text>
+                  {profile.memberText ? (
+                    <Text className="mt-1 block text-xs font-semibold text-gold">{profile.memberText}</Text>
+                  ) : (
+                    <Text className="mt-1 block text-xs text-muted">完善资料后获得更精准撮合推荐</Text>
+                  )}
+                </View>
+                {profile.certificationText ? (
+                  <View className="rounded bg-gold-soft px-2 py-1" onClick={() => router.to(routes.userCert)}>
+                    <Text className="text-xs font-semibold text-gold">{profile.certificationText}</Text>
+                  </View>
                 ) : null}
               </View>
-              <Text className="mt-2 block text-xs text-muted">{opportunity.meta}</Text>
-              {opportunity.time ? <Text className="mt-3 block text-xs text-muted">{opportunity.time}</Text> : null}
+            ) : (
+              <View className="mb-3 flex items-center gap-3 rounded-lg bg-white px-4 py-4 shadow-soft">
+                <View className="flex h-11 w-11 items-center justify-center rounded-lg bg-canvas text-muted">
+                  <AppIcon name="user-3-line" size={22} color="#9AA7BD" />
+                </View>
+                <View className="flex-1">
+                  <Text className="block text-sm font-semibold text-ink">未登录</Text>
+                  <Text className="mt-1 block text-xs text-muted">登录后查看会员与认证信息</Text>
+                </View>
+                <View className="rounded bg-brand-soft px-2 py-1" onClick={() => router.to(routes.profile)}>
+                  <Text className="text-xs font-semibold text-brand">登录</Text>
+                </View>
+              </View>
+            )}
+
+            <HomeBannerCarousel items={banners} />
+
+            <View className="mt-3 flex items-center justify-between rounded-lg bg-white px-4 py-3 shadow-soft">
+              <View>
+                <Text className="block text-sm font-semibold text-ink">运营待办</Text>
+                <Text className="mt-1 block text-xs text-muted">{systemStatus || '活动签到、资质审核和资源管理'}</Text>
+              </View>
+              <View className="rounded-lg bg-brand px-3 py-2" onClick={() => router.to(routes.adminCheckin)}>
+                <Text className="text-xs font-semibold text-white">查看</Text>
+              </View>
             </View>
-          ) : (
-            <EmptyState title="暂无推荐商机" />
-          )}
-        </View>
+
+            <View className="mt-3 rounded-lg bg-white p-[14px] shadow-soft">
+              <View className="grid grid-cols-3 gap-3">
+                {HOME_QUICK_ENTRIES.map((entry) => (
+                  <View key={entry.label} className="items-center text-center" onClick={() => router.to(entry.path)}>
+                    <View
+                      className="mx-auto flex h-12 w-12 items-center justify-center rounded-[14px]"
+                      style={{ background: entry.iconBackground }}
+                    >
+                      <AppIcon name={entry.icon} size={22} color={entry.iconColor} />
+                    </View>
+                    <Text className="mt-2 block text-xs font-semibold text-ink">{entry.label}</Text>
+                  </View>
+                ))}
+              </View>
+            </View>
+
+            {coreBusiness.length ? (
+              <View className="mt-3 rounded-lg bg-white p-4 shadow-soft">
+                <View className="mb-3 flex items-center gap-2">
+                  <View className="h-4 w-1 rounded bg-gold" />
+                  <Text className="text-base font-bold text-ink">核心业务</Text>
+                </View>
+                <View className="grid gap-2">
+                  {coreBusiness.map((item) => (
+                    <View key={item.title} className="rounded-lg bg-canvas px-3 py-3">
+                      <Text className="block text-sm font-semibold text-ink">{item.title}</Text>
+                      {item.subtitle ? (
+                        <Text className="mt-1 block text-xs leading-5 text-muted">{item.subtitle}</Text>
+                      ) : null}
+                      {item.actionText ? (
+                        <Text className="mt-2 block text-xs font-semibold text-tech">{item.actionText}</Text>
+                      ) : null}
+                    </View>
+                  ))}
+                </View>
+              </View>
+            ) : null}
+
+            <View className="mt-3 rounded-lg bg-white p-4 shadow-soft">
+              <View className="mb-3 flex items-center justify-between">
+                <View className="flex items-center gap-2">
+                  <View className="h-4 w-1 rounded bg-gold" />
+                  <Text className="text-base font-bold text-ink">热门资源推荐</Text>
+                </View>
+                <Text className="text-xs font-semibold text-tech" onClick={() => router.to(routes.resourceHome)}>
+                  查看全部 ›
+                </Text>
+              </View>
+              {products.length ? (
+                products.map((item) => (
+                  <View
+                    key={`${item.id ?? item.title}`}
+                    className="border-t border-line py-3"
+                    onClick={() =>
+                      router.to(routes.resourceStandardDetail, item.id ? { product_id: item.id } : undefined)
+                    }
+                  >
+                    <View className="flex items-center justify-between gap-3">
+                      <View className="flex-1">
+                        <Text className="block text-sm font-semibold text-ink">{item.title}</Text>
+                        <Text className="mt-1 block text-xs leading-5 text-muted">{item.desc}</Text>
+                      </View>
+                      {item.price ? <Text className="text-sm font-bold text-gold">{item.price}</Text> : null}
+                    </View>
+                  </View>
+                ))
+              ) : sectionErrors.products ? (
+                <StateNotice
+                  state="error"
+                  copy={{ title: '资源加载失败', desc: '推荐资源暂时无法获取，请稍后重试。' }}
+                />
+              ) : (
+                <StateNotice state="empty" copy={{ title: '暂无资源推荐', desc: '当前接口没有返回推荐资源。' }} />
+              )}
+            </View>
+
+            <View className="mt-3 rounded-lg bg-white p-4 shadow-soft">
+              <View className="mb-3 flex items-center justify-between">
+                <View className="flex items-center gap-2">
+                  <View className="h-4 w-1 rounded bg-gold" />
+                  <Text className="text-base font-bold text-ink">近期线下活动</Text>
+                </View>
+                <Text className="text-xs font-semibold text-tech" onClick={() => router.to(routes.eventHome)}>
+                  查看全部 ›
+                </Text>
+              </View>
+              {event ? (
+                <View
+                  className="rounded-lg bg-canvas p-3"
+                  onClick={() => router.to(routes.eventDetail, event.id ? { event_id: event.id } : undefined)}
+                >
+                  <View className="flex items-center gap-3">
+                    <View className="rounded-lg bg-brand px-3 py-2 text-center">
+                      <Text className="block text-xs text-white/70">{event.month}</Text>
+                      <Text className="block text-lg font-bold text-white">{event.day}</Text>
+                    </View>
+                    <View className="flex-1">
+                      <Text className="block text-sm font-semibold text-ink">{event.title}</Text>
+                      <Text className="mt-1 block text-xs text-muted">{event.meta}</Text>
+                    </View>
+                    <Button
+                      type="primary"
+                      size="small"
+                      onClick={() => router.to(routes.eventSignup, event.id ? { event_id: event.id } : undefined)}
+                    >
+                      报名
+                    </Button>
+                  </View>
+                </View>
+              ) : sectionErrors.event ? (
+                <StateNotice
+                  state="error"
+                  copy={{ title: '活动加载失败', desc: '近期活动暂时无法获取，请稍后重试。' }}
+                />
+              ) : (
+                <StateNotice state="empty" copy={{ title: '暂无活动', desc: '当前接口没有返回近期活动。' }} />
+              )}
+            </View>
+
+            <View className="mt-3 rounded-lg bg-brand-deep p-4 shadow-medium">
+              <Text className="block text-xs font-semibold text-gold-light">行商会员特权</Text>
+              <Text className="mt-1 block text-base font-bold text-white">加入会员，获取供应链底价</Text>
+              <View className="mt-3 grid grid-cols-2 gap-2">
+                <View className="rounded-lg bg-white/10 px-3 py-3" onClick={() => router.to(routes.memberBenefit)}>
+                  <Text className="block text-xs font-semibold text-white">行商·菁英会员</Text>
+                  <Text className="mt-1 block text-xs text-gold-light">查看年度权益</Text>
+                </View>
+                <View className="rounded-lg bg-white/10 px-3 py-3" onClick={() => router.to(routes.memberBenefit)}>
+                  <Text className="block text-xs font-semibold text-white">行商·领航会员</Text>
+                  <Text className="mt-1 block text-xs text-gold-light">升级企业服务</Text>
+                </View>
+              </View>
+            </View>
+
+            <View className="mt-3 rounded-lg bg-white p-4 shadow-soft">
+              <View className="mb-3 flex items-center justify-between">
+                <View className="flex items-center gap-2">
+                  <View className="h-4 w-1 rounded bg-gold" />
+                  <Text className="text-base font-bold text-ink">推荐商机</Text>
+                </View>
+                <Text className="text-xs font-semibold text-tech" onClick={() => router.to(routes.opportunityHome)}>
+                  查看全部 ›
+                </Text>
+              </View>
+              {opportunity ? (
+                <View
+                  className="rounded-lg border border-line p-3"
+                  onClick={() =>
+                    router.to(routes.opportunityDetail, opportunity.id ? { opportunity_id: opportunity.id } : undefined)
+                  }
+                >
+                  <View className="flex items-start justify-between gap-3">
+                    <Text className="flex-1 text-sm font-semibold leading-5 text-ink">{opportunity.title}</Text>
+                    {opportunity.tag ? (
+                      <Text className="rounded bg-gold-soft px-2 py-1 text-xs font-semibold text-gold">
+                        {opportunity.tag}
+                      </Text>
+                    ) : null}
+                  </View>
+                  <Text className="mt-2 block text-xs text-muted">{opportunity.meta}</Text>
+                  {opportunity.time ? <Text className="mt-3 block text-xs text-muted">{opportunity.time}</Text> : null}
+                </View>
+              ) : sectionErrors.opportunity ? (
+                <StateNotice
+                  state="error"
+                  copy={{ title: '商机加载失败', desc: '推荐商机暂时无法获取，请稍后重试。' }}
+                />
+              ) : (
+                <StateNotice state="empty" copy={{ title: '暂无推荐商机', desc: '当前接口没有返回推荐商机。' }} />
+              )}
+            </View>
+          </>
+        ) : null}
       </View>
     </View>
   )

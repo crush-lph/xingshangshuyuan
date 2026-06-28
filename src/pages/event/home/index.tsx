@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Text, View } from '@tarojs/components'
-import { EmptyState, ItemList, SectionCard, StatGrid, type ListItem, type StatItem } from '@/components/business'
+import { ItemList, SectionCard, StatGrid, StateNotice, type ListItem, type StatItem } from '@/components/business'
 import { PageShell } from '@/components/PageShell'
 import { getEvents } from '@/services'
 import { routes } from '@/shared/router'
@@ -11,9 +11,14 @@ export default function EventHomePage() {
   const [stats, setStats] = useState<StatItem[]>([])
   const [items, setItems] = useState<ListItem[]>([])
   const [cities, setCities] = useState<string[]>([])
+  const [isLoading, setIsLoading] = useState(true)
+  const [hasError, setHasError] = useState(false)
 
   useEffect(() => {
     async function loadEventData() {
+      setIsLoading(true)
+      setHasError(false)
+
       try {
         const response = await getEvents({ page: 1, page_size: 6 })
         const events = response.data.list ?? []
@@ -56,6 +61,9 @@ export default function EventHomePage() {
         setStats([])
         setItems([])
         setCities([])
+        setHasError(true)
+      } finally {
+        setIsLoading(false)
       }
     }
 
@@ -65,29 +73,44 @@ export default function EventHomePage() {
   return (
     <PageShell title="活动" subtitle="线下峰会、训练营和城市沙龙，服务财税机构增长。">
       <View className="grid gap-3">
-        {notice ? (
-          <View className="rounded-lg bg-gold-soft px-4 py-3">
-            <Text className="text-sm font-semibold text-gold">{notice}</Text>
-          </View>
-        ) : null}
+        {isLoading ? <StateNotice state="loading" /> : null}
+        {!isLoading && hasError ? <StateNotice state="error" /> : null}
 
-        {stats.length ? <StatGrid items={stats} /> : <EmptyState title="暂无活动统计" />}
+        {!isLoading && !hasError ? (
+          <>
+            {notice ? (
+              <View className="rounded-lg bg-gold-soft px-4 py-3">
+                <Text className="text-sm font-semibold text-gold">{notice}</Text>
+              </View>
+            ) : null}
 
-        <SectionCard title="活动城市">
-          {cities.length ? (
-            <View className="grid grid-cols-3 gap-2">
-              {cities.map((item) => (
-                <View key={item} className="rounded-lg bg-brand-soft px-3 py-3 text-center">
-                  <Text className="text-xs font-semibold text-brand">{item}</Text>
+            {stats.length ? (
+              <StatGrid items={stats} />
+            ) : (
+              <StateNotice state="empty" copy={{ title: '暂无活动统计', desc: '当前接口没有返回活动统计。' }} />
+            )}
+
+            <SectionCard title="活动城市">
+              {cities.length ? (
+                <View className="grid grid-cols-3 gap-2">
+                  {cities.map((item) => (
+                    <View key={item} className="rounded-lg bg-brand-soft px-3 py-3 text-center">
+                      <Text className="text-xs font-semibold text-brand">{item}</Text>
+                    </View>
+                  ))}
                 </View>
-              ))}
-            </View>
-          ) : (
-            <EmptyState title="暂无活动城市" desc="活动接口没有返回城市数据。" />
-          )}
-        </SectionCard>
+              ) : (
+                <StateNotice state="empty" copy={{ title: '暂无活动城市', desc: '活动接口没有返回城市数据。' }} />
+              )}
+            </SectionCard>
 
-        {items.length ? <ItemList items={items} /> : <EmptyState title="暂无活动" />}
+            {items.length ? (
+              <ItemList items={items} />
+            ) : (
+              <StateNotice state="empty" copy={{ title: '暂无活动', desc: '当前接口没有返回活动。' }} />
+            )}
+          </>
+        ) : null}
       </View>
     </PageShell>
   )

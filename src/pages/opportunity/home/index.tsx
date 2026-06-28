@@ -1,11 +1,12 @@
 import { useEffect, useState } from 'react'
+import Taro from '@tarojs/taro'
 import { Text, View } from '@tarojs/components'
 import {
   ActionBar,
-  EmptyState,
   ItemList,
   SectionCard,
   StatGrid,
+  StateNotice,
   type ListItem,
   type StatItem
 } from '@/components/business'
@@ -19,14 +20,25 @@ export default function OpportunityHomePage() {
   const [items, setItems] = useState<ListItem[]>([])
   const [applicationItems, setApplicationItems] = useState<ListItem[]>([])
   const [types, setTypes] = useState<string[]>([])
+  const [isLoading, setIsLoading] = useState(true)
+  const [hasError, setHasError] = useState(false)
 
   useEffect(() => {
     async function loadOpportunityData() {
+      setIsLoading(true)
+      setHasError(false)
+
       const [statsResult, listResult, applicationsResult] = await Promise.allSettled([
         getOpportunityStats(),
         getOpportunities({ page: 1, page_size: 6 }),
         getUserApplications({ page: 1, page_size: 3 })
       ])
+
+      setHasError(
+        statsResult.status === 'rejected' &&
+          listResult.status === 'rejected' &&
+          applicationsResult.status === 'rejected'
+      )
 
       if (statsResult.status === 'fulfilled') {
         const data = statsResult.value.data
@@ -74,6 +86,8 @@ export default function OpportunityHomePage() {
           }))
         )
       }
+
+      setIsLoading(false)
     }
 
     void loadOpportunityData()
@@ -87,35 +101,56 @@ export default function OpportunityHomePage() {
           <Text className="mt-2 block text-sm leading-5 text-white/65">实时展示平台商机数据。</Text>
         </View>
 
-        {stats.length ? <StatGrid items={stats} /> : <EmptyState title="暂无商机统计" />}
+        {isLoading ? <StateNotice state="loading" /> : null}
+        {!isLoading && hasError ? <StateNotice state="error" /> : null}
 
-        <ActionBar
-          actions={[
-            { label: '发布商机', path: routes.opportunityPublish },
-            { label: '我的申请', variant: 'outline', path: routes.userReviews }
-          ]}
-        />
+        {!isLoading && !hasError ? (
+          <>
+            {stats.length ? (
+              <StatGrid items={stats} />
+            ) : (
+              <StateNotice state="empty" copy={{ title: '暂无商机统计', desc: '当前接口没有返回商机统计。' }} />
+            )}
 
-        <SectionCard title="商机类型">
-          {types.length ? (
-            <View className="flex flex-wrap gap-2">
-              {types.map((item) => (
-                <View key={item} className="rounded-full bg-brand-soft px-3 py-2">
-                  <Text className="text-xs font-semibold text-brand">{item}</Text>
+            <ActionBar
+              actions={[
+                { label: '发布商机', path: routes.opportunityPublish },
+                {
+                  label: '我的申请',
+                  variant: 'outline',
+                  onClick: () => {
+                    void Taro.showToast({ title: '我的申请列表暂未开放', icon: 'none' })
+                  }
+                }
+              ]}
+            />
+
+            <SectionCard title="商机类型">
+              {types.length ? (
+                <View className="flex flex-wrap gap-2">
+                  {types.map((item) => (
+                    <View key={item} className="rounded-full bg-brand-soft px-3 py-2">
+                      <Text className="text-xs font-semibold text-brand">{item}</Text>
+                    </View>
+                  ))}
                 </View>
-              ))}
-            </View>
-          ) : (
-            <EmptyState title="暂无商机类型" desc="商机列表没有返回类型数据。" />
-          )}
-        </SectionCard>
+              ) : (
+                <StateNotice state="empty" copy={{ title: '暂无商机类型', desc: '商机列表没有返回类型数据。' }} />
+              )}
+            </SectionCard>
 
-        {items.length ? <ItemList items={items} /> : <EmptyState title="暂无商机" />}
+            {items.length ? (
+              <ItemList items={items} />
+            ) : (
+              <StateNotice state="empty" copy={{ title: '暂无商机', desc: '当前接口没有返回可展示商机。' }} />
+            )}
 
-        {applicationItems.length ? (
-          <SectionCard title="我的申请">
-            <ItemList items={applicationItems} />
-          </SectionCard>
+            {applicationItems.length ? (
+              <SectionCard title="我的申请">
+                <ItemList items={applicationItems} />
+              </SectionCard>
+            ) : null}
+          </>
         ) : null}
       </View>
     </PageShell>

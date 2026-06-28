@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Text, View } from '@tarojs/components'
-import { EmptyState, ItemList, SectionCard, type ListItem } from '@/components/business'
+import { ItemList, SectionCard, StateNotice, type ListItem } from '@/components/business'
 import { PageShell } from '@/components/PageShell'
 import { getEvents } from '@/services'
 import { routes } from '@/shared/router'
@@ -14,9 +14,14 @@ export default function EventListPage() {
   const [activeCity, setActiveCity] = useState('全部')
   const [cities, setCities] = useState(['全部'])
   const [items, setItems] = useState<EventItem[]>([])
+  const [isLoading, setIsLoading] = useState(true)
+  const [hasError, setHasError] = useState(false)
 
   useEffect(() => {
     async function loadEvents() {
+      setIsLoading(true)
+      setHasError(false)
+
       const response = await getEvents({ page: 1, page_size: 20 })
       const events = response.data.list ?? []
       const nextItems = events.map((item) => {
@@ -48,10 +53,15 @@ export default function EventListPage() {
       ])
     }
 
-    void loadEvents().catch(() => {
-      setItems([])
-      setCities(['全部'])
-    })
+    void loadEvents()
+      .catch(() => {
+        setItems([])
+        setCities(['全部'])
+        setHasError(true)
+      })
+      .finally(() => {
+        setIsLoading(false)
+      })
   }, [])
 
   const visibleItems = useMemo(
@@ -62,26 +72,33 @@ export default function EventListPage() {
   return (
     <PageShell title="活动列表" subtitle="按城市、主题和会员权益筛选活动。">
       <View className="grid gap-3">
-        <SectionCard>
-          <View className="flex flex-wrap gap-2">
-            {cities.map((item) => (
-              <View
-                key={item}
-                className={`rounded-full px-3 py-2 ${activeCity === item ? 'bg-brand' : 'border border-line bg-white'}`}
-                onClick={() => setActiveCity(item)}
-              >
-                <Text className={`text-xs font-semibold ${activeCity === item ? 'text-white' : 'text-muted'}`}>
-                  {item}
-                </Text>
+        {isLoading ? <StateNotice state="loading" /> : null}
+        {!isLoading && hasError ? <StateNotice state="error" /> : null}
+
+        {!isLoading && !hasError ? (
+          <>
+            <SectionCard>
+              <View className="flex flex-wrap gap-2">
+                {cities.map((item) => (
+                  <View
+                    key={item}
+                    className={`rounded-full px-3 py-2 ${activeCity === item ? 'bg-brand' : 'border border-line bg-white'}`}
+                    onClick={() => setActiveCity(item)}
+                  >
+                    <Text className={`text-xs font-semibold ${activeCity === item ? 'text-white' : 'text-muted'}`}>
+                      {item}
+                    </Text>
+                  </View>
+                ))}
               </View>
-            ))}
-          </View>
-        </SectionCard>
-        {visibleItems.length ? (
-          <ItemList items={visibleItems} />
-        ) : (
-          <EmptyState title="暂无活动" desc="当前接口或筛选条件没有返回活动。" />
-        )}
+            </SectionCard>
+            {visibleItems.length ? (
+              <ItemList items={visibleItems} />
+            ) : (
+              <StateNotice state="empty" copy={{ title: '暂无活动', desc: '当前接口或筛选条件没有返回活动。' }} />
+            )}
+          </>
+        ) : null}
       </View>
     </PageShell>
   )

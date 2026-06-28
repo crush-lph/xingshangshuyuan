@@ -3,7 +3,7 @@ import { View, Text } from '@tarojs/components'
 import Button from '@nutui/nutui-react-taro/dist/es/packages/button'
 import '@nutui/nutui-react-taro/dist/es/packages/button/style/css'
 import { AppIcon } from '@/components/AppIcon'
-import { EmptyState, ItemList, SectionCard, type ListItem } from '@/components/business'
+import { ItemList, SectionCard, StateNotice, type ListItem } from '@/components/business'
 import { PageShell } from '@/components/PageShell'
 import { getProductCategories, getProducts } from '@/services'
 import { getAppIconName, type AppIconName } from '@/shared/app-icons'
@@ -19,13 +19,20 @@ interface Category {
 export default function ServicesPage() {
   const [categories, setCategories] = useState<Category[]>([])
   const [items, setItems] = useState<ListItem[]>([])
+  const [isLoading, setIsLoading] = useState(true)
+  const [hasError, setHasError] = useState(false)
 
   useEffect(() => {
     async function loadServiceData() {
+      setIsLoading(true)
+      setHasError(false)
+
       const [categoriesResult, productsResult] = await Promise.allSettled([
         getProductCategories(),
         getProducts({ page: 1, page_size: 6 })
       ])
+
+      setHasError(categoriesResult.status === 'rejected' && productsResult.status === 'rejected')
 
       if (categoriesResult.status === 'fulfilled') {
         setCategories(
@@ -52,6 +59,8 @@ export default function ServicesPage() {
           }))
         )
       }
+
+      setIsLoading(false)
     }
 
     void loadServiceData()
@@ -60,41 +69,52 @@ export default function ServicesPage() {
   return (
     <PageShell title="服务商城" subtitle="工具、培训、咨询和资质服务统一入口。">
       <View className="grid gap-3">
-        <SectionCard title="服务分类">
-          {categories.length ? (
-            <View className="grid grid-cols-2 gap-3">
-              {categories.map((item) => (
-                <View key={item.name} className="rounded-lg bg-brand-soft p-3" onClick={() => router.to(item.path)}>
-                  <View className="mb-2 flex h-9 w-9 items-center justify-center rounded-lg bg-white text-brand">
-                    <AppIcon name={item.icon} size={20} />
-                  </View>
-                  <Text className="block text-sm font-bold text-brand">{item.name}</Text>
+        {isLoading ? <StateNotice state="loading" /> : null}
+        {!isLoading && hasError ? <StateNotice state="error" /> : null}
+
+        {!isLoading && !hasError ? (
+          <>
+            <SectionCard title="服务分类">
+              {categories.length ? (
+                <View className="grid grid-cols-2 gap-3">
+                  {categories.map((item) => (
+                    <View key={item.name} className="rounded-lg bg-brand-soft p-3" onClick={() => router.to(item.path)}>
+                      <View className="mb-2 flex h-9 w-9 items-center justify-center rounded-lg bg-white text-brand">
+                        <AppIcon name={item.icon} size={20} />
+                      </View>
+                      <Text className="block text-sm font-bold text-brand">{item.name}</Text>
+                    </View>
+                  ))}
                 </View>
-              ))}
-            </View>
-          ) : (
-            <EmptyState title="暂无服务分类" />
-          )}
-        </SectionCard>
+              ) : (
+                <StateNotice state="empty" copy={{ title: '暂无服务分类', desc: '当前接口没有返回服务分类。' }} />
+              )}
+            </SectionCard>
 
-        {items.length ? <ItemList items={items} /> : <EmptyState title="暂无服务商品" />}
+            {items.length ? (
+              <ItemList items={items} />
+            ) : (
+              <StateNotice state="empty" copy={{ title: '暂无服务商品', desc: '当前接口没有返回可展示服务。' }} />
+            )}
 
-        <View className="rounded-lg bg-brand-deep p-4 shadow-medium">
-          <View className="flex items-center justify-between gap-3">
-            <View className="flex-1">
-              <Text className="block text-base font-bold text-white">没有找到合适服务？</Text>
-              <Text className="mt-1 block text-sm text-white/65">提交需求后由客户经理协助匹配。</Text>
+            <View className="rounded-lg bg-brand-deep p-4 shadow-medium">
+              <View className="flex items-center justify-between gap-3">
+                <View className="flex-1">
+                  <Text className="block text-base font-bold text-white">没有找到合适服务？</Text>
+                  <Text className="mt-1 block text-sm text-white/65">提交需求后由客户经理协助匹配。</Text>
+                </View>
+                <Button
+                  type="primary"
+                  size="small"
+                  className="bg-gold border-gold"
+                  onClick={() => router.to(routes.resourceSubmit)}
+                >
+                  提需求
+                </Button>
+              </View>
             </View>
-            <Button
-              type="primary"
-              size="small"
-              className="bg-gold border-gold"
-              onClick={() => router.to(routes.resourceSubmit)}
-            >
-              提需求
-            </Button>
-          </View>
-        </View>
+          </>
+        ) : null}
       </View>
     </PageShell>
   )
