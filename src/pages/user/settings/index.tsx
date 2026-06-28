@@ -1,6 +1,6 @@
 import Taro from '@tarojs/taro'
 import { Text, View } from '@tarojs/components'
-import { ActionBar, EmptyState, FieldList, SectionCard } from '@/components/business'
+import { ActionBar, FieldList, SectionCard, StateNotice } from '@/components/business'
 import { PageShell } from '@/components/PageShell'
 import { routes } from '@/shared/router'
 import { useUserInfo } from '@/stores/user-info'
@@ -44,7 +44,7 @@ export default function UserSettingsPage() {
             ]}
           />
         ) : (
-          <EmptyState title="当前未登录" desc="登录后可在这里管理账号信息。" />
+          <StateNotice state="loginRequired" copy={{ title: '当前未登录', desc: '登录后可在这里管理账号信息。' }} />
         )}
 
         <SectionCard title="账号">

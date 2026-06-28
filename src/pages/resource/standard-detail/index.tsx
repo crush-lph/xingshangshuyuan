@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Text, View } from '@tarojs/components'
-import { ActionBar, EmptyState, FieldList, ReviewList, SectionCard, StateNotice } from '@/components/business'
+import { ActionBar, FieldList, ReviewList, SectionCard, StateNotice } from '@/components/business'
 import { PageShell } from '@/components/PageShell'
 import {
   getProductDetail,
@@ -135,7 +135,7 @@ export default function ResourceStandardDetailPage() {
                 ))}
               </View>
             ) : (
-              <EmptyState title="暂无规格" desc="商品详情接口未返回规格数据。" />
+              <StateNotice state="empty" copy={{ title: '暂无规格', desc: '商品详情接口未返回规格数据。' }} />
             )}
           </SectionCard>
 
@@ -144,7 +144,11 @@ export default function ResourceStandardDetailPage() {
               <View className="h-4 w-1 rounded bg-gold" />
               <Text className="block text-base font-bold text-ink">用户评价</Text>
             </View>
-            {reviewItems.length ? <ReviewList items={reviewItems} /> : <EmptyState title="暂无评价" />}
+            {reviewItems.length ? (
+              <ReviewList items={reviewItems} />
+            ) : (
+              <StateNotice state="empty" copy={{ title: '暂无评价', desc: '当前接口没有返回用户评价。' }} />
+            )}
           </View>
 
           <ActionBar

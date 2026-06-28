@@ -5,7 +5,7 @@ import Button from '@nutui/nutui-react-taro/dist/es/packages/button'
 import Popup from '@nutui/nutui-react-taro/dist/es/packages/popup'
 import '@nutui/nutui-react-taro/dist/es/packages/button/style/css'
 import '@nutui/nutui-react-taro/dist/es/packages/popup/style/css'
-import { EmptyState, PaymentStatusPoller, SectionCard, StateNotice } from '@/components/business'
+import { PaymentStatusPoller, SectionCard, StateNotice } from '@/components/business'
 import { AppIcon } from '@/components/AppIcon'
 import { PageShell } from '@/components/PageShell'
 import {
@@ -281,7 +281,7 @@ export default function MemberBenefitPage() {
   const isPaymentLocked = isPaying || Boolean(pollingOrderNo)
 
   return (
-    <PageShell title="行商会员" subtitle="供应链底价、商机优先、线下课和客户经理支持。">
+    <PageShell title="行商会员" subtitle="供应链底价、商机优先、线下课和客户经理支持。" showHeader={false}>
       <View className="-mx-4 -mt-3">
         <View className="bg-brand-deep px-5 pb-7 pt-6">
           <View className="mb-4 flex items-center justify-between gap-3">
@@ -428,7 +428,7 @@ export default function MemberBenefitPage() {
                 )
               })
             ) : (
-              <EmptyState title="暂无会员配置" desc="当前接口未返回可开通的会员等级。" />
+              <StateNotice state="empty" copy={{ title: '暂无会员配置', desc: '当前接口未返回可开通的会员等级。' }} />
             )}
           </>
         ) : null}

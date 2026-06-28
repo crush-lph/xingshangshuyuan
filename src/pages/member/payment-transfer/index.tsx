@@ -119,7 +119,7 @@ export default function PaymentTransferPage() {
   }
 
   return (
-    <PageShell title="对公支付凭证" subtitle="上传转账凭证后由财务确认到账。">
+    <PageShell title="对公支付凭证" subtitle="上传转账凭证后进入财务审核。">
       {isLoading ? (
         <StateNotice state="loading" />
       ) : hasError ? (
