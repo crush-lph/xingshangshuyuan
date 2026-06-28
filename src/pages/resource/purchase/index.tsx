@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import Taro from '@tarojs/taro'
 import { Text, View } from '@tarojs/components'
-import { ActionBar, EmptyState, FieldList, SectionCard } from '@/components/business'
+import { ActionBar, FieldList, SectionCard, StateNotice } from '@/components/business'
 import { PageShell } from '@/components/PageShell'
 import {
   createProductOrder,
@@ -28,14 +28,20 @@ async function resolveProductId() {
 export default function ResourcePurchasePage() {
   const [product, setProduct] = useState<GetProductDetailData | null>(null)
   const [order, setOrder] = useState<CreateProductOrderData | null>(null)
+  const [isLoading, setIsLoading] = useState(true)
+  const [hasError, setHasError] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
 
   useEffect(() => {
     async function loadProduct() {
+      setIsLoading(true)
+      setHasError(false)
+
       const productId = await resolveProductId()
 
       if (!productId) {
         setProduct(null)
+        setIsLoading(false)
         return
       }
 
@@ -43,7 +49,12 @@ export default function ResourcePurchasePage() {
       setProduct(response.data.id ? response.data : null)
     }
 
-    void loadProduct().catch(() => setProduct(null))
+    void loadProduct()
+      .catch(() => {
+        setProduct(null)
+        setHasError(true)
+      })
+      .finally(() => setIsLoading(false))
   }, [])
 
   async function handleCreateOrder(redirectToOrders = true) {
@@ -69,6 +80,9 @@ export default function ResourcePurchasePage() {
         router.redirect(routes.userOrders)
       }
       return response.data
+    } catch {
+      Taro.showToast({ title: '订单生成失败，请稍后重试', icon: 'none' })
+      return null
     } finally {
       Taro.hideLoading()
       setIsSubmitting(false)
@@ -85,12 +99,18 @@ export default function ResourcePurchasePage() {
 
     if (nextOrder?.order_no) {
       router.to(routes.paymentTransfer, { order_no: nextOrder.order_no })
+    } else if (nextOrder) {
+      Taro.showToast({ title: '订单未返回转账编号', icon: 'none' })
     }
   }
 
   return (
     <PageShell title="采购确认" subtitle="确认资源、权益和支付方式后生成订单。">
-      {product ? (
+      {isLoading ? (
+        <StateNotice state="loading" />
+      ) : hasError ? (
+        <StateNotice state="error" />
+      ) : product ? (
         <View className="grid gap-3">
           <SectionCard title="订单资源">
             <Text className="block text-base font-bold text-ink">{textOrPlaceholder(product.name)}</Text>
@@ -116,7 +136,7 @@ export default function ResourcePurchasePage() {
                 onClick: handleTransferPayment
               },
               {
-                label: isSubmitting ? '生成中' : '确认支付',
+                label: isSubmitting ? '生成中' : '生成订单',
                 disabled: isSubmitting,
                 onClick: async () => {
                   await handleCreateOrder()
@@ -126,7 +146,7 @@ export default function ResourcePurchasePage() {
           />
         </View>
       ) : (
-        <EmptyState title="暂无采购商品" />
+        <StateNotice state="empty" copy={{ title: '暂无采购商品', desc: '当前接口没有返回可采购商品。' }} />
       )}
     </PageShell>
   )

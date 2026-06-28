@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import Taro from '@tarojs/taro'
 import { View } from '@tarojs/components'
-import { ActionBar, EmptyState, FieldList, FormSection, FormTextField } from '@/components/business'
+import { ActionBar, FieldList, FormSection, FormTextField, StateNotice } from '@/components/business'
 import { PageShell } from '@/components/PageShell'
 import { getEventDetail, getEvents, getUserProfile, registerEvent, type GetEventDetailData } from '@/services'
 import { ensureLoggedIn } from '@/shared/auth-guard'
@@ -34,10 +34,15 @@ async function resolveEventId() {
 export default function EventSignupPage() {
   const [event, setEvent] = useState<GetEventDetailData | null>(null)
   const [form, setForm] = useState<SignupForm>(initialForm)
+  const [isLoading, setIsLoading] = useState(true)
+  const [hasError, setHasError] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
 
   useEffect(() => {
     async function loadData() {
+      setIsLoading(true)
+      setHasError(false)
+
       const [eventId, profileResult] = await Promise.all([resolveEventId(), getUserProfile().catch(() => null)])
 
       if (profileResult) {
@@ -50,6 +55,7 @@ export default function EventSignupPage() {
 
       if (!eventId) {
         setEvent(null)
+        setIsLoading(false)
         return
       }
 
@@ -57,7 +63,12 @@ export default function EventSignupPage() {
       setEvent(eventResult.data.id ? eventResult.data : null)
     }
 
-    void loadData().catch(() => setEvent(null))
+    void loadData()
+      .catch(() => {
+        setEvent(null)
+        setHasError(true)
+      })
+      .finally(() => setIsLoading(false))
   }, [])
 
   async function handleRegister() {
@@ -92,6 +103,8 @@ export default function EventSignupPage() {
       })
       Taro.showToast({ title: '报名已提交', icon: 'success' })
       router.redirect(routes.eventTicket, { event_id: event.id })
+    } catch {
+      Taro.showToast({ title: '报名失败，请稍后重试', icon: 'none' })
     } finally {
       Taro.hideLoading()
       setIsSubmitting(false)
@@ -99,8 +112,12 @@ export default function EventSignupPage() {
   }
 
   return (
-    <PageShell title="活动报名" subtitle="确认参会人和票务信息。">
-      {event ? (
+    <PageShell title="活动报名" subtitle="确认参会人信息，提交后以后台报名状态为准。">
+      {isLoading ? (
+        <StateNotice state="loading" />
+      ) : hasError ? (
+        <StateNotice state="error" />
+      ) : event ? (
         <View className="grid gap-3">
           <FieldList
             fields={[
@@ -143,7 +160,7 @@ export default function EventSignupPage() {
           />
         </View>
       ) : (
-        <EmptyState title="暂无可报名活动" />
+        <StateNotice state="empty" copy={{ title: '暂无可报名活动', desc: '当前接口没有返回可报名活动。' }} />
       )}
     </PageShell>
   )

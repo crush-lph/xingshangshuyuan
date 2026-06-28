@@ -80,6 +80,8 @@ export default function OpportunityPublishPage() {
         response.data.opportunity_id ? routes.opportunityDetail : routes.opportunityHome,
         response.data.opportunity_id ? { opportunity_id: response.data.opportunity_id } : undefined
       )
+    } catch {
+      Taro.showToast({ title: '商机提交失败，请稍后重试', icon: 'none' })
     } finally {
       Taro.hideLoading()
       setIsSubmitting(false)

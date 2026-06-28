@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Text, View } from '@tarojs/components'
-import { ActionBar, EmptyState, FieldList, SectionCard } from '@/components/business'
+import { ActionBar, FieldList, SectionCard, StateNotice } from '@/components/business'
 import { PageShell } from '@/components/PageShell'
 import { getEventDetail, getEvents, getUserProfile, type GetEventDetailData, type GetUserProfileData } from '@/services'
 import { routes } from '@/shared/router'
@@ -20,9 +20,14 @@ async function resolveEventId() {
 export default function EventTicketPage() {
   const [event, setEvent] = useState<GetEventDetailData | null>(null)
   const [profile, setProfile] = useState<GetUserProfileData | null>(null)
+  const [isLoading, setIsLoading] = useState(true)
+  const [hasError, setHasError] = useState(false)
 
   useEffect(() => {
     async function loadTicket() {
+      setIsLoading(true)
+      setHasError(false)
+
       const [eventId, profileResult] = await Promise.all([resolveEventId(), getUserProfile().catch(() => null)])
 
       if (profileResult) {
@@ -31,6 +36,7 @@ export default function EventTicketPage() {
 
       if (!eventId) {
         setEvent(null)
+        setIsLoading(false)
         return
       }
 
@@ -38,17 +44,32 @@ export default function EventTicketPage() {
       setEvent(response.data.id ? response.data : null)
     }
 
-    void loadTicket().catch(() => setEvent(null))
+    void loadTicket()
+      .catch(() => {
+        setEvent(null)
+        setHasError(true)
+      })
+      .finally(() => setIsLoading(false))
   }, [])
 
   return (
-    <PageShell title="我的电子票" subtitle="报名成功，请凭电子票现场核销。">
-      {event ? (
+    <PageShell title="报名状态" subtitle="展示报名接口返回状态，核销凭证以后台返回为准。">
+      {isLoading ? (
+        <StateNotice state="loading" />
+      ) : hasError ? (
+        <StateNotice state="error" />
+      ) : event ? (
         <View className="grid gap-3">
-          <SectionCard>
-            <View className="items-center py-4 text-center">
-              <Text className="block text-3xl font-bold text-brand">EVENT-{event.id}</Text>
-              <Text className="mt-2 block text-sm text-muted">现场出示编号完成核销</Text>
+          <SectionCard title="报名结果">
+            <View className="py-2">
+              <Text className="block text-lg font-bold text-brand">
+                {event.is_registered ? '已报名' : textOrPlaceholder(event.status_text, '报名状态待确认')}
+              </Text>
+              <Text className="mt-2 block text-sm leading-6 text-muted">
+                {event.is_registered
+                  ? '当前接口未返回真实票号或核销码，现场核销信息以后台返回为准。'
+                  : '当前接口尚未确认报名成功，请查看我的活动或返回报名页确认。'}
+              </Text>
             </View>
           </SectionCard>
           <FieldList
@@ -62,7 +83,7 @@ export default function EventTicketPage() {
           <ActionBar actions={[{ label: '查看我的活动', path: routes.userEvents }]} />
         </View>
       ) : (
-        <EmptyState title="暂无电子票" />
+        <StateNotice state="empty" copy={{ title: '暂无报名状态', desc: '当前接口没有返回活动报名状态。' }} />
       )}
     </PageShell>
   )

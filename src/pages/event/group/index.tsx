@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Text, View } from '@tarojs/components'
-import { ActionBar, EmptyState, FieldList, SectionCard } from '@/components/business'
+import { ActionBar, FieldList, SectionCard, StateNotice } from '@/components/business'
 import { PageShell } from '@/components/PageShell'
 import { getEventDetail, getEvents, type GetEventDetailData } from '@/services'
 import { routes } from '@/shared/router'
@@ -19,13 +19,19 @@ async function resolveEventId() {
 
 export default function EventGroupPage() {
   const [event, setEvent] = useState<GetEventDetailData | null>(null)
+  const [isLoading, setIsLoading] = useState(true)
+  const [hasError, setHasError] = useState(false)
 
   useEffect(() => {
     async function loadEvent() {
+      setIsLoading(true)
+      setHasError(false)
+
       const eventId = await resolveEventId()
 
       if (!eventId) {
         setEvent(null)
+        setIsLoading(false)
         return
       }
 
@@ -33,16 +39,27 @@ export default function EventGroupPage() {
       setEvent(response.data.id ? response.data : null)
     }
 
-    void loadEvent().catch(() => setEvent(null))
+    void loadEvent()
+      .catch(() => {
+        setEvent(null)
+        setHasError(true)
+      })
+      .finally(() => setIsLoading(false))
   }, [])
 
   return (
-    <PageShell title="拼团参与" subtitle="邀请同行一起报名，成团后享受优惠价。">
-      {event ? (
+    <PageShell title="拼团参与" subtitle="当前展示活动信息，拼团状态以后台配置为准。">
+      {isLoading ? (
+        <StateNotice state="loading" />
+      ) : hasError ? (
+        <StateNotice state="error" />
+      ) : event ? (
         <View className="grid gap-3">
           <SectionCard title="当前活动">
             <Text className="block text-lg font-bold text-gold">{textOrPlaceholder(event.title)}</Text>
-            <Text className="mt-2 block text-sm text-muted">拼团规则以接口返回的活动配置为准。</Text>
+            <Text className="mt-2 block text-sm text-muted">
+              当前接口未返回独立拼团状态，拼团规则以后台活动配置为准。
+            </Text>
           </SectionCard>
           <FieldList
             fields={[
@@ -54,12 +71,12 @@ export default function EventGroupPage() {
           />
           <ActionBar
             actions={[
-              { label: '支付并加入', path: routes.eventTicket, query: event.id ? { event_id: event.id } : undefined }
+              { label: '前往报名', path: routes.eventSignup, query: event.id ? { event_id: event.id } : undefined }
             ]}
           />
         </View>
       ) : (
-        <EmptyState title="暂无拼团活动" />
+        <StateNotice state="empty" copy={{ title: '暂无拼团活动', desc: '当前接口没有返回可参与拼团的活动。' }} />
       )}
     </PageShell>
   )

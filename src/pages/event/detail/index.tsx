@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Text, View } from '@tarojs/components'
-import { ActionBar, EmptyState, FieldList, SectionCard } from '@/components/business'
+import { ActionBar, FieldList, SectionCard, StateNotice } from '@/components/business'
 import { PageShell } from '@/components/PageShell'
 import { getEventDetail, getEvents, type GetEventDetailData } from '@/services'
 import { routes } from '@/shared/router'
@@ -19,13 +19,19 @@ async function resolveEventId() {
 
 export default function EventDetailPage() {
   const [event, setEvent] = useState<GetEventDetailData | null>(null)
+  const [isLoading, setIsLoading] = useState(true)
+  const [hasError, setHasError] = useState(false)
 
   useEffect(() => {
     async function loadEvent() {
+      setIsLoading(true)
+      setHasError(false)
+
       const eventId = await resolveEventId()
 
       if (!eventId) {
         setEvent(null)
+        setIsLoading(false)
         return
       }
 
@@ -33,7 +39,12 @@ export default function EventDetailPage() {
       setEvent(response.data.id ? response.data : null)
     }
 
-    void loadEvent().catch(() => setEvent(null))
+    void loadEvent()
+      .catch(() => {
+        setEvent(null)
+        setHasError(true)
+      })
+      .finally(() => setIsLoading(false))
   }, [])
 
   return (
@@ -41,7 +52,11 @@ export default function EventDetailPage() {
       title="活动详情"
       subtitle={event ? compactJoin([event.city, event.start_time]) || '活动接口详情' : '活动接口详情'}
     >
-      {event ? (
+      {isLoading ? (
+        <StateNotice state="loading" />
+      ) : hasError ? (
+        <StateNotice state="error" />
+      ) : event ? (
         <View className="grid gap-3">
           <View className="rounded-lg bg-brand-deep p-4 shadow-medium">
             <Text className="block text-xs font-semibold text-gold-light">
@@ -84,7 +99,7 @@ export default function EventDetailPage() {
           />
         </View>
       ) : (
-        <EmptyState title="暂无活动详情" />
+        <StateNotice state="empty" copy={{ title: '暂无活动详情', desc: '当前接口没有返回活动详情。' }} />
       )}
     </PageShell>
   )

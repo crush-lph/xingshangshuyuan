@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Text, View } from '@tarojs/components'
-import { ActionBar, EmptyState, FieldList, SectionCard } from '@/components/business'
+import { ActionBar, FieldList, SectionCard, StateNotice } from '@/components/business'
 import { PageShell } from '@/components/PageShell'
 import {
   getOpportunities,
@@ -25,13 +25,19 @@ async function resolveOpportunityId() {
 export default function OpportunityDetailPage() {
   const [detail, setDetail] = useState<GetOpportunityDetailData | null>(null)
   const [applicationCount, setApplicationCount] = useState<number | null>(null)
+  const [isLoading, setIsLoading] = useState(true)
+  const [hasError, setHasError] = useState(false)
 
   useEffect(() => {
     async function loadDetail() {
+      setIsLoading(true)
+      setHasError(false)
+
       const opportunityId = await resolveOpportunityId()
 
       if (!opportunityId) {
         setDetail(null)
+        setIsLoading(false)
         return
       }
 
@@ -42,12 +48,29 @@ export default function OpportunityDetailPage() {
       setApplicationCount(applications?.data.total ?? null)
     }
 
-    void loadDetail().catch(() => setDetail(null))
+    void loadDetail()
+      .catch(() => {
+        setDetail(null)
+        setApplicationCount(null)
+        setHasError(true)
+      })
+      .finally(() => setIsLoading(false))
   }, [])
+
+  const applicationCountText =
+    applicationCount !== null
+      ? String(applicationCount)
+      : detail?.apply_count !== undefined && detail.apply_count !== null
+        ? String(detail.apply_count)
+        : '申请人数暂不可用'
 
   return (
     <PageShell title="商机详情" subtitle={detail ? textOrPlaceholder(detail.title) : '商机接口详情'}>
-      {detail ? (
+      {isLoading ? (
+        <StateNotice state="loading" />
+      ) : hasError ? (
+        <StateNotice state="error" />
+      ) : detail ? (
         <View className="grid gap-3">
           <View className="rounded-lg bg-white p-4 shadow-soft">
             {detail.tags?.length ? (
@@ -71,7 +94,7 @@ export default function OpportunityDetailPage() {
             fields={[
               { label: '项目区域', value: textOrPlaceholder(detail.city) },
               { label: '商机类型', value: textOrPlaceholder(detail.type_text) },
-              { label: '申请人数', value: String(applicationCount ?? detail.apply_count ?? 0) },
+              { label: '申请人数', value: applicationCountText },
               {
                 label: '发布方',
                 value: compactJoin([detail.publisher?.nickname, detail.publisher?.company_name]) || '未提供'
@@ -98,7 +121,7 @@ export default function OpportunityDetailPage() {
           />
         </View>
       ) : (
-        <EmptyState title="暂无商机详情" />
+        <StateNotice state="empty" copy={{ title: '暂无商机详情', desc: '当前接口没有返回商机详情。' }} />
       )}
     </PageShell>
   )

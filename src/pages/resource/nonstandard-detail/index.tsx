@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Text, View } from '@tarojs/components'
-import { ActionBar, EmptyState, FieldList, SectionCard } from '@/components/business'
+import { ActionBar, FieldList, SectionCard, StateNotice } from '@/components/business'
 import { PageShell } from '@/components/PageShell'
 import { getCompanyProfile, type GetCompanyProfileData } from '@/services'
 import { routes } from '@/shared/router'
@@ -8,11 +8,20 @@ import { textOrPlaceholder } from '@/shared/view-data'
 
 export default function ResourceNonstandardDetailPage() {
   const [company, setCompany] = useState<GetCompanyProfileData | null>(null)
+  const [isLoading, setIsLoading] = useState(true)
+  const [hasError, setHasError] = useState(false)
 
   useEffect(() => {
+    setIsLoading(true)
+    setHasError(false)
+
     void getCompanyProfile()
       .then((response) => setCompany(response.data.id ? response.data : null))
-      .catch(() => setCompany(null))
+      .catch(() => {
+        setCompany(null)
+        setHasError(true)
+      })
+      .finally(() => setIsLoading(false))
   }, [])
 
   return (
@@ -21,7 +30,11 @@ export default function ResourceNonstandardDetailPage() {
         <SectionCard title="需求说明">
           <Text className="text-sm leading-6 text-muted">提交需求后平台进行供应商匹配，企业档案信息来自平台接口。</Text>
         </SectionCard>
-        {company ? (
+        {isLoading ? (
+          <StateNotice state="loading" />
+        ) : hasError ? (
+          <StateNotice state="error" />
+        ) : company ? (
           <FieldList
             fields={[
               { label: '企业名称', value: textOrPlaceholder(company.name) },
@@ -31,7 +44,7 @@ export default function ResourceNonstandardDetailPage() {
             ]}
           />
         ) : (
-          <EmptyState title="暂无企业档案" />
+          <StateNotice state="empty" copy={{ title: '暂无服务资料', desc: '当前接口没有返回企业服务资料。' }} />
         )}
         <ActionBar
           actions={[

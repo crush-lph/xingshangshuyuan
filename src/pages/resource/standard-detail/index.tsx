@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Text, View } from '@tarojs/components'
-import { ActionBar, EmptyState, FieldList, ReviewList, SectionCard } from '@/components/business'
+import { ActionBar, EmptyState, FieldList, ReviewList, SectionCard, StateNotice } from '@/components/business'
 import { PageShell } from '@/components/PageShell'
 import {
   getProductDetail,
@@ -26,13 +26,19 @@ async function resolveProductId() {
 export default function ResourceStandardDetailPage() {
   const [product, setProduct] = useState<GetProductDetailData | null>(null)
   const [reviews, setReviews] = useState<ProductReviewItem[]>([])
+  const [isLoading, setIsLoading] = useState(true)
+  const [hasError, setHasError] = useState(false)
 
   useEffect(() => {
     async function loadProduct() {
+      setIsLoading(true)
+      setHasError(false)
+
       const productId = await resolveProductId()
 
       if (!productId) {
         setProduct(null)
+        setIsLoading(false)
         return
       }
 
@@ -44,10 +50,15 @@ export default function ResourceStandardDetailPage() {
         .catch(() => setReviews([]))
     }
 
-    void loadProduct().catch(() => {
-      setProduct(null)
-      setReviews([])
-    })
+    void loadProduct()
+      .catch(() => {
+        setProduct(null)
+        setReviews([])
+        setHasError(true)
+      })
+      .finally(() => {
+        setIsLoading(false)
+      })
   }, [])
 
   const reviewItems = reviews.map((item) => ({
@@ -64,7 +75,11 @@ export default function ResourceStandardDetailPage() {
       title={product ? textOrPlaceholder(product.name) : '资源详情'}
       subtitle="标准化工具资源，支持在线采购和会员优惠。"
     >
-      {product ? (
+      {isLoading ? (
+        <StateNotice state="loading" />
+      ) : hasError ? (
+        <StateNotice state="error" />
+      ) : product ? (
         <View className="grid gap-3">
           <View className="rounded-lg bg-brand-deep p-4 shadow-medium">
             <View className="flex items-start justify-between gap-3">
@@ -144,7 +159,7 @@ export default function ResourceStandardDetailPage() {
           />
         </View>
       ) : (
-        <EmptyState title="暂无资源详情" />
+        <StateNotice state="empty" copy={{ title: '暂无资源详情', desc: '当前接口没有返回资源详情。' }} />
       )}
     </PageShell>
   )

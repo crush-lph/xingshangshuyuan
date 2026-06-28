@@ -80,6 +80,8 @@ export default function ResourceSubmitPage() {
       })
       Taro.showToast({ title: '需求已提交', icon: 'success' })
       router.redirect(routes.resourceHome)
+    } catch {
+      Taro.showToast({ title: '提交失败，请稍后重试', icon: 'none' })
     } finally {
       Taro.hideLoading()
       setIsSubmitting(false)

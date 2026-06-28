@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import Taro from '@tarojs/taro'
 import { View } from '@tarojs/components'
-import { ActionBar, EmptyState, FieldList, FormSection, FormTextField, FormTextareaField } from '@/components/business'
+import { ActionBar, FieldList, FormSection, FormTextField, FormTextareaField, StateNotice } from '@/components/business'
 import { PageShell } from '@/components/PageShell'
 import {
   applyOpportunity,
@@ -44,10 +44,15 @@ export default function OpportunityApplyPage() {
   const [detail, setDetail] = useState<GetOpportunityDetailData | null>(null)
   const [company, setCompany] = useState<GetCompanyProfileData | null>(null)
   const [form, setForm] = useState<OpportunityApplyForm>(initialForm)
+  const [isLoading, setIsLoading] = useState(true)
+  const [hasError, setHasError] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
 
   useEffect(() => {
     async function loadData() {
+      setIsLoading(true)
+      setHasError(false)
+
       const [opportunityId, companyResult] = await Promise.all([
         resolveOpportunityId(),
         getCompanyProfile().catch(() => null)
@@ -63,6 +68,7 @@ export default function OpportunityApplyPage() {
 
       if (!opportunityId) {
         setDetail(null)
+        setIsLoading(false)
         return
       }
 
@@ -70,7 +76,12 @@ export default function OpportunityApplyPage() {
       setDetail(detailResult.data.id ? detailResult.data : null)
     }
 
-    void loadData().catch(() => setDetail(null))
+    void loadData()
+      .catch(() => {
+        setDetail(null)
+        setHasError(true)
+      })
+      .finally(() => setIsLoading(false))
   }, [])
 
   async function handleApply() {
@@ -101,6 +112,8 @@ export default function OpportunityApplyPage() {
       })
       Taro.showToast({ title: '申请已提交', icon: 'success' })
       router.redirect(routes.profile)
+    } catch {
+      Taro.showToast({ title: '申请提交失败，请稍后重试', icon: 'none' })
     } finally {
       Taro.hideLoading()
       setIsSubmitting(false)
@@ -109,7 +122,11 @@ export default function OpportunityApplyPage() {
 
   return (
     <PageShell title="申请接单" subtitle="提交服务能力说明，平台审核后推送给发布方。">
-      {detail ? (
+      {isLoading ? (
+        <StateNotice state="loading" />
+      ) : hasError ? (
+        <StateNotice state="error" />
+      ) : detail ? (
         <View className="grid gap-3">
           <FieldList
             fields={[
@@ -161,7 +178,7 @@ export default function OpportunityApplyPage() {
           />
         </View>
       ) : (
-        <EmptyState title="暂无可申请商机" />
+        <StateNotice state="empty" copy={{ title: '暂无可申请商机', desc: '当前接口没有返回可申请商机。' }} />
       )}
     </PageShell>
   )
