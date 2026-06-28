@@ -47,9 +47,9 @@ export function ItemList({ items }: ItemListProps) {
                 className={toneClassName[item.tone ?? 'brand'].text}
               />
             </View>
-            <View className="flex-1">
+            <View className="min-w-0 flex-1">
               <View className="flex items-start justify-between gap-2">
-                <Text className="text-base font-semibold text-ink">{item.title}</Text>
+                <Text className="block min-w-0 flex-1 break-all text-base font-semibold text-ink">{item.title}</Text>
                 {item.tag ? (
                   <Text
                     className={`shrink-0 rounded px-2 py-1 text-xs font-semibold ${
@@ -62,8 +62,12 @@ export function ItemList({ items }: ItemListProps) {
               </View>
               {item.desc ? <Text className="mt-2 block text-sm leading-5 text-muted">{item.desc}</Text> : null}
               <View className="mt-3 flex items-center justify-between gap-3">
-                {item.meta ? <Text className="text-xs text-muted">{item.meta}</Text> : <View />}
-                <View className="items-end">
+                {item.meta ? (
+                  <Text className="min-w-0 flex-1 break-all text-xs text-muted">{item.meta}</Text>
+                ) : (
+                  <View className="flex-1" />
+                )}
+                <View className="shrink-0 items-end">
                   {item.price ? <Text className="block text-base font-bold text-gold">{item.price}</Text> : null}
                   {item.action ? (
                     <Text className="mt-1 block text-xs font-semibold text-tech">{item.action} ›</Text>
