@@ -1,14 +1,21 @@
 import { useEffect, useState } from 'react'
-import { EmptyState, ItemList, type ListItem } from '@/components/business'
+import { View } from '@tarojs/components'
+import { ItemList, StateNotice, type ListItem } from '@/components/business'
 import { PageShell } from '@/components/PageShell'
 import { getContractDetail, getContracts, getUserCustomers } from '@/services'
 import { firstRecordList, textOf, textOrPlaceholder } from '@/shared/view-data'
+import { AdminGuard } from '../components/AdminGuard'
 
-export default function AdminResourcePage() {
+function AdminResourceContent() {
   const [items, setItems] = useState<ListItem[]>([])
+  const [isLoading, setIsLoading] = useState(true)
+  const [hasError, setHasError] = useState(false)
 
   useEffect(() => {
     async function loadResources() {
+      setIsLoading(true)
+      setHasError(false)
+
       const [customersResult, contractsResult] = await Promise.allSettled([
         getUserCustomers({ page: 1, page_size: 10 }),
         getContracts({ page: 1, page_size: 10 })
@@ -46,14 +53,46 @@ export default function AdminResourcePage() {
           action: '查看'
         }))
       ])
+
+      setHasError(customersResult.status === 'rejected' && contractsResult.status === 'rejected')
     }
 
-    void loadResources().catch(() => setItems([]))
+    void loadResources()
+      .catch(() => {
+        setItems([])
+        setHasError(true)
+      })
+      .finally(() => setIsLoading(false))
   }, [])
 
   return (
     <PageShell title="资源需求" subtitle="跟进非标需求、供应商报价和交付状态。">
-      {items.length ? <ItemList items={items} /> : <EmptyState title="暂无资源需求" />}
+      <View className="grid gap-3">
+        <StateNotice
+          state="empty"
+          copy={{
+            title: '后台资源需求处理接口待补',
+            desc: '当前展示已有客户/合同接口数据，来源受限，不等同后台待分配需求队列。'
+          }}
+        />
+        {isLoading ? (
+          <StateNotice state="loading" />
+        ) : hasError ? (
+          <StateNotice state="error" />
+        ) : items.length ? (
+          <ItemList items={items} />
+        ) : (
+          <StateNotice state="empty" copy={{ title: '暂无资源数据', desc: '当前接口没有返回客户或合同数据。' }} />
+        )}
+      </View>
     </PageShell>
+  )
+}
+
+export default function AdminResourcePage() {
+  return (
+    <AdminGuard title="资源需求">
+      <AdminResourceContent />
+    </AdminGuard>
   )
 }

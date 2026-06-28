@@ -1,15 +1,22 @@
 import { useEffect, useState } from 'react'
-import { EmptyState, ItemList, type ListItem } from '@/components/business'
+import { View } from '@tarojs/components'
+import { ItemList, StateNotice, type ListItem } from '@/components/business'
 import { PageShell } from '@/components/PageShell'
 import { getInvoices, getOrders } from '@/services'
 import { routes } from '@/shared/router'
 import { firstRecordList, priceOf, textOf, textOrPlaceholder } from '@/shared/view-data'
+import { AdminGuard } from '../components/AdminGuard'
 
-export default function AdminOrdersPage() {
+function AdminOrdersContent() {
   const [items, setItems] = useState<ListItem[]>([])
+  const [isLoading, setIsLoading] = useState(true)
+  const [hasError, setHasError] = useState(false)
 
   useEffect(() => {
     async function loadOrders() {
+      setIsLoading(true)
+      setHasError(false)
+
       const [ordersResult, invoicesResult] = await Promise.allSettled([
         getOrders({ page: 1, page_size: 20 }),
         getInvoices({ page: 1, page_size: 20 })
@@ -43,14 +50,46 @@ export default function AdminOrdersPage() {
           action: '查看'
         }))
       ])
+
+      setHasError(ordersResult.status === 'rejected' && invoicesResult.status === 'rejected')
     }
 
-    void loadOrders().catch(() => setItems([]))
+    void loadOrders()
+      .catch(() => {
+        setItems([])
+        setHasError(true)
+      })
+      .finally(() => setIsLoading(false))
   }, [])
 
   return (
     <PageShell title="订单确认" subtitle="处理对公转账、会员开通和资源采购订单。">
-      {items.length ? <ItemList items={items} /> : <EmptyState title="暂无订单" />}
+      <View className="grid gap-3">
+        <StateNotice
+          state="empty"
+          copy={{
+            title: '后台订单确认接口待补',
+            desc: '当前展示已有订单/发票接口数据，来源受限，不等同后台待确认队列。'
+          }}
+        />
+        {isLoading ? (
+          <StateNotice state="loading" />
+        ) : hasError ? (
+          <StateNotice state="error" />
+        ) : items.length ? (
+          <ItemList items={items} />
+        ) : (
+          <StateNotice state="empty" copy={{ title: '暂无订单数据', desc: '当前接口没有返回订单或发票数据。' }} />
+        )}
+      </View>
     </PageShell>
+  )
+}
+
+export default function AdminOrdersPage() {
+  return (
+    <AdminGuard title="订单确认">
+      <AdminOrdersContent />
+    </AdminGuard>
   )
 }

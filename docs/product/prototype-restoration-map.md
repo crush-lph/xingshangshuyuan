@@ -39,11 +39,11 @@
 | 25   | 我的权益          | `/pages/user/benefits/index`               | 阶段 3   | 部分实现 | 会员等级、权益配置、使用状态接口缺口说明                        |
 | 26   | 我的积分          | `/pages/user/points/index`                 | 阶段 3   | 部分实现 | 积分余额/流水接口缺口说明、证书记录边界                         |
 | 27   | 我的评价          | `/pages/user/reviews/index`                | 阶段 3   | 部分实现 | 真实评价列表、待评价来源边界、提交失败反馈                      |
-| 28   | 后台核销页        | `/pages/admin/checkin/index`               | 阶段 4   | 部分实现 | 核销查询、核销状态、权限态                                      |
-| 29   | 后台认证审核      | `/pages/admin/cert/index`                  | 阶段 4   | 部分实现 | 审核列表、资料预览、通过/驳回                                   |
-| 30   | 后台订单确认      | `/pages/admin/orders/index`                | 阶段 4   | 部分实现 | 订单确认、支付状态、操作反馈                                    |
-| 31   | 后台资源需求      | `/pages/admin/resource/index`              | 阶段 4   | 部分实现 | 需求列表、分配/处理状态                                         |
-| 32   | 后台商机撮合      | `/pages/admin/opportunity/index`           | 阶段 4   | 部分实现 | 商机列表、申请人、撮合状态                                      |
+| 28   | 后台核销页        | `/pages/admin/checkin/index`               | 阶段 4   | 部分实现 | 权限态、真实活动字段、核销码/签到接口缺口说明                   |
+| 29   | 后台认证审核      | `/pages/admin/cert/index`                  | 阶段 4   | 部分实现 | 权限态、认证资料来源限制、后台审核接口缺口说明                  |
+| 30   | 后台订单确认      | `/pages/admin/orders/index`                | 阶段 4   | 部分实现 | 权限态、订单/发票来源限制、确认接口缺口说明                     |
+| 31   | 后台资源需求      | `/pages/admin/resource/index`              | 阶段 4   | 部分实现 | 权限态、客户/合同来源限制、资源需求处理接口缺口说明             |
+| 32   | 后台商机撮合      | `/pages/admin/opportunity/index`           | 阶段 4   | 部分实现 | 权限态、真实商机列表、关闭商机反馈、撮合接口缺口说明            |
 
 ## 一级 Tab 补充入口
 

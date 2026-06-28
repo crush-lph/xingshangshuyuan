@@ -1,13 +1,20 @@
 import { useEffect, useState } from 'react'
-import { EmptyState, ItemList, type ListItem } from '@/components/business'
+import { View } from '@tarojs/components'
+import { ItemList, StateNotice, type ListItem } from '@/components/business'
 import { PageShell } from '@/components/PageShell'
 import { getUserCertification } from '@/services'
 import { textOrPlaceholder } from '@/shared/view-data'
+import { AdminGuard } from '../components/AdminGuard'
 
-export default function AdminCertPage() {
+function AdminCertContent() {
   const [items, setItems] = useState<ListItem[]>([])
+  const [isLoading, setIsLoading] = useState(true)
+  const [hasError, setHasError] = useState(false)
 
   useEffect(() => {
+    setIsLoading(true)
+    setHasError(false)
+
     void getUserCertification()
       .then((response) => {
         const data = response.data
@@ -21,18 +28,47 @@ export default function AdminCertPage() {
                   tag: textOrPlaceholder(data.status_text),
                   icon: 'building-2-line',
                   tone: 'gold',
-                  action: '处理'
+                  action: '来源受限'
                 }
               ]
             : []
         )
       })
-      .catch(() => setItems([]))
+      .catch(() => {
+        setItems([])
+        setHasError(true)
+      })
+      .finally(() => setIsLoading(false))
   }, [])
 
   return (
     <PageShell title="认证审核" subtitle="审核企业资料、服务能力和认证标签。">
-      {items.length ? <ItemList items={items} /> : <EmptyState title="暂无认证审核" />}
+      <View className="grid gap-3">
+        <StateNotice
+          state="empty"
+          copy={{
+            title: '后台认证审核列表接口待补',
+            desc: '当前仅能读取登录用户认证资料，不能作为后台待审核列表。'
+          }}
+        />
+        {isLoading ? (
+          <StateNotice state="loading" />
+        ) : hasError ? (
+          <StateNotice state="error" />
+        ) : items.length ? (
+          <ItemList items={items} />
+        ) : (
+          <StateNotice state="empty" copy={{ title: '暂无认证资料示例', desc: '当前接口没有返回登录用户认证资料。' }} />
+        )}
+      </View>
     </PageShell>
+  )
+}
+
+export default function AdminCertPage() {
+  return (
+    <AdminGuard title="认证审核">
+      <AdminCertContent />
+    </AdminGuard>
   )
 }
