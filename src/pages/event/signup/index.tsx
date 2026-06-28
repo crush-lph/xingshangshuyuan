@@ -95,14 +95,17 @@ export default function EventSignupPage() {
     Taro.showLoading({ title: '报名中' })
 
     try {
-      await registerEvent({
+      const response = await registerEvent({
         event_id: event.id,
         real_name: form.realName.trim(),
         phone: form.phone.trim(),
         company_name: textOf(form.companyName)
       })
       Taro.showToast({ title: '报名已提交', icon: 'success' })
-      router.redirect(routes.eventTicket, { event_id: event.id })
+      router.redirect(routes.eventTicket, {
+        event_id: event.id,
+        registration_id: response.data.registration_id ?? undefined
+      })
     } catch {
       Taro.showToast({ title: '报名失败，请稍后重试', icon: 'none' })
     } finally {

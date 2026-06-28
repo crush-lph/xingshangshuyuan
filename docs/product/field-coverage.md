@@ -31,7 +31,8 @@
 | 非标资源详情 | 详情和需求入口                   | `getProductDetail().data.detail/product_type_text`   | 非标判断依赖接口类型；缺类型时保守展示提交需求入口 | 已覆盖   |
 | 资源采购确认 | 订单金额、订单号、状态           | `createProductOrder().data`、`getOrderDetail().data` | 创建订单后展示真实金额和状态                       | 已覆盖   |
 | 活动详情     | 活动介绍、时间、地点、价格       | `getEventDetail().data`                              | 展示真实详情；缺字段进入页面空态                   | 已覆盖   |
-| 活动报名     | 报名人、联系方式、报名状态       | `registerEvent()` payload/response                   | 使用真实返回；无票券字段时不生成假票券             | 已覆盖   |
+| 活动报名     | 报名人、联系方式、报名状态       | `registerEvent()` payload/response                   | 提交后使用真实 `registration_id` 进入电子票页      | 已覆盖   |
+| 电子票       | 二维码、核销码、参会人、状态     | `getEventTicket({ registration_id })`                | 有报名记录时展示真实电子票；缺报名记录时兜底说明   | 已覆盖   |
 | 商机详情     | 标题、描述、发布人、状态、申请数 | `getOpportunityDetail().data`                        | 展示真实字段；保密字段按接口标记隐藏               | 已覆盖   |
 | 发布商机     | 标题、类型、城市、描述、保密     | `createOpportunity()` payload                        | 提交后展示真实状态                                 | 已覆盖   |
 | 申请接单     | 理由、报价、附件、状态           | `applyOpportunity()` payload/response                | 提交后展示真实状态                                 | 已覆盖   |
@@ -54,8 +55,8 @@
 | 我的积分     | 证书记录            | `getUserCertificates()`                               | 可作为证书记录展示，不写成积分       | 已覆盖   |
 | 我的评价     | 已评价列表          | review service                                        | 展示真实评价；无评价空态             | 已覆盖   |
 | 我的评价     | 待评价来源          | 订单或评价接口需返回真实可评价状态                    | 无真实来源时不展示待评价假数量       | 接口待补 |
-| 后台核销     | 当前真实接口        | `getEvents()`、`getEventDetail()`                     | 只展示真实活动，不展示假核销码       | 已覆盖   |
-| 后台核销     | 不能支持的后台动作  | 当前 service 未见核销码、签到、核销接口               | 不展示核销成功或扫码核销动作         | 接口待补 |
+| 后台核销     | 当前真实接口        | `getEvents()`、`getEventDetail()`、`checkinEvent()`   | 展示真实活动，扫码后调用真实核销接口 | 已覆盖   |
+| 后台核销     | 电子票核验结果      | `checkinEvent({ code })`                              | 展示后台返回的报名人、手机号和状态   | 已覆盖   |
 | 后台认证审核 | 当前真实接口        | `getUserCertification()`                              | 仅可展示当前登录用户认证资料来源限制 | 已覆盖   |
 | 后台认证审核 | 不能支持的后台动作  | 当前 service 未见后台审核列表、通过、驳回接口         | 不展示审核通过/驳回操作              | 接口待补 |
 | 后台订单确认 | 当前真实接口        | `getOrders()`、发票相关接口                           | 展示已有订单/发票数据并说明来源受限  | 已覆盖   |
