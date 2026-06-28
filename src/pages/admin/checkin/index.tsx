@@ -1,15 +1,19 @@
 import { useEffect, useState } from 'react'
+import Taro from '@tarojs/taro'
 import { Text, View } from '@tarojs/components'
-import { FieldList, SectionCard, StateNotice } from '@/components/business'
+import { ActionBar, FieldList, SectionCard, StateNotice } from '@/components/business'
 import { PageShell } from '@/components/PageShell'
-import { getEventDetail, getEvents, type GetEventDetailData } from '@/services'
+import { checkinEvent, getEventDetail, getEvents, type CheckinEventData, type GetEventDetailData } from '@/services'
 import { textOrPlaceholder } from '@/shared/view-data'
 import { AdminGuard } from '../components/AdminGuard'
 
 function AdminCheckinContent() {
   const [event, setEvent] = useState<GetEventDetailData | null>(null)
+  const [checkinResult, setCheckinResult] = useState<CheckinEventData | null>(null)
+  const [checkinMessage, setCheckinMessage] = useState('')
   const [isLoading, setIsLoading] = useState(true)
   const [hasError, setHasError] = useState(false)
+  const [isCheckingIn, setIsCheckingIn] = useState(false)
 
   useEffect(() => {
     async function loadEvent() {
@@ -37,8 +41,46 @@ function AdminCheckinContent() {
       .finally(() => setIsLoading(false))
   }, [])
 
+  async function handleScanCheckin() {
+    setIsCheckingIn(true)
+    setCheckinMessage('')
+    setCheckinResult(null)
+
+    try {
+      const scanResult = await Taro.scanCode({
+        onlyFromCamera: true,
+        scanType: ['qrCode']
+      })
+      const code = (scanResult.result || scanResult.path || '').trim()
+
+      if (!code) {
+        Taro.showToast({ title: '未识别到核销码', icon: 'none' })
+        return
+      }
+
+      Taro.showLoading({ title: '核销中' })
+      const response = await checkinEvent({ code })
+      const message = response.data.status_text || response.info || '核销成功'
+      setCheckinResult(response.data)
+      setCheckinMessage(message)
+      Taro.showToast({ title: message, icon: 'success' })
+    } catch (error) {
+      const errMsg =
+        typeof error === 'object' && error
+          ? String((error as { errMsg?: string; message?: string }).errMsg ?? (error as Error).message ?? '')
+          : ''
+
+      if (!/cancel/i.test(errMsg)) {
+        Taro.showToast({ title: '核销失败，请重试', icon: 'none' })
+      }
+    } finally {
+      Taro.hideLoading()
+      setIsCheckingIn(false)
+    }
+  }
+
   return (
-    <PageShell title="活动核销" subtitle="当前接口文档未提供扫码核销接口，暂不展示核销操作。">
+    <PageShell title="活动核销" subtitle="扫描电子票二维码并提交后台核销。">
       {isLoading ? (
         <StateNotice state="loading" />
       ) : hasError ? (
@@ -47,9 +89,31 @@ function AdminCheckinContent() {
         <View className="grid gap-3">
           <SectionCard title="核销入口">
             <Text className="block rounded-lg border border-line bg-canvas px-4 py-4 text-sm leading-6 text-muted">
-              新版接口文档仅包含活动列表、活动详情、活动报名和我的活动列表，暂未提供电子票二维码或扫码核销接口。
+              点击扫码后调起微信扫一扫，识别到的二维码内容会提交到后台核销接口。
             </Text>
+            <View className="mt-3">
+              <ActionBar
+                actions={[
+                  {
+                    label: isCheckingIn ? '核销中' : '扫码核销',
+                    disabled: isCheckingIn,
+                    onClick: handleScanCheckin
+                  }
+                ]}
+              />
+            </View>
           </SectionCard>
+          {checkinMessage ? (
+            <FieldList
+              fields={[
+                { label: '核销结果', value: checkinMessage },
+                { label: '活动', value: textOrPlaceholder(checkinResult?.event_title) },
+                { label: '参会人', value: textOrPlaceholder(checkinResult?.real_name) },
+                { label: '手机号', value: textOrPlaceholder(checkinResult?.phone) },
+                { label: '报名记录', value: textOrPlaceholder(checkinResult?.registration_id) }
+              ]}
+            />
+          ) : null}
           <FieldList
             fields={[
               { label: '活动', value: textOrPlaceholder(event.title) },

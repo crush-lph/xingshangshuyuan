@@ -26,13 +26,13 @@ pnpm install
 接口地址通过环境变量配置，默认值见 `.env.example`：
 
 ```bash
-TARO_APP_API_BASE_URL=http://152.136.125.82/
+TARO_APP_API_BASE_URL=http://www.xssy365.com/
 ```
 
 可以在本地 `.env.local` 中覆盖，或启动时直接传入：
 
 ```bash
-TARO_APP_API_BASE_URL=http://152.136.125.82/ pnpm dev:weapp
+TARO_APP_API_BASE_URL=http://www.xssy365.com/ pnpm dev:weapp
 ```
 
 微信小程序开发：

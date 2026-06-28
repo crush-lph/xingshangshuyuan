@@ -67,6 +67,8 @@
 | 学习中心     | 获取线下活动列表                   | GET  | `/api/events`                     | 否   | `learning.getEvents`                     |
 | 学习中心     | 获取活动详情                       | GET  | `/api/event/detail`               | 否   | `learning.getEventDetail`                |
 | 学习中心     | 活动报名                           | POST | `/api/event/register`             | 是   | `learning.registerEvent`                 |
+| 学习中心     | 获取电子票详情（含二维码）         | GET  | `/api/event/ticket`               | 是   | `learning.getEventTicket`                |
+| 学习中心     | 活动签到核销                       | POST | `/api/event/checkin`              | 是   | `learning.checkinEvent`                  |
 | 学习中心     | 获取我的活动列表（已报名的活动）   | GET  | `/api/user/events`                | 是   | `learning.getUserEvents`                 |
 | 学习中心     | 获取学习统计数据                   | GET  | `/api/user/learning/stats`        | 是   | `learning.getUserLearningStats`          |
 | 商机对接(V2) | 商机数据看板                       | GET  | `/api/opportunities/stats`        | 否   | `opportunity.getOpportunityStats`        |
@@ -1577,6 +1579,69 @@
 | order_id        | integer \| null | 否   | 订单ID（付费活动时返回）      |          |
 | order_no        | string \| null  | 否   | 订单编号（付费活动时返回）    |          |
 | pay_amount      | string \| null  | 否   | 支付金额（付费活动时返回）    |          |
+
+### 获取电子票详情（含二维码）
+
+- 方法：`GET`
+- 路径：`/api/event/ticket`
+- 认证：是
+- Service：`learning.getEventTicket`
+
+请求 Query：
+
+| 字段            | 类型                        | 必填 | 说明       | 示例 |
+| --------------- | --------------------------- | ---- | ---------- | ---- |
+| registration_id | string \| number \| boolean | 是   | 报名记录ID | 1    |
+
+响应 Data：
+
+| 字段            | 类型            | 必填 | 说明             | 示例 |
+| --------------- | --------------- | ---- | ---------------- | ---- |
+| registration_id | number(integer) | 否   | 报名记录ID       |      |
+| event_id        | number(integer) | 否   | 活动ID           |      |
+| order_id        | integer \| null | 否   | 关联订单ID       |      |
+| event_title     | string          | 否   | 活动标题         |      |
+| cover_image     | string          | 否   | 封面图URL        |      |
+| event_date      | string          | 否   | 活动日期         |      |
+| start_time      | string          | 否   | 开始时间         |      |
+| end_time        | string          | 否   | 结束时间         |      |
+| location        | string          | 否   | 活动地点         |      |
+| real_name       | string          | 否   | 报名姓名         |      |
+| phone           | string          | 否   | 联系电话         |      |
+| company_name    | string          | 否   | 公司名称         |      |
+| status          | number(integer) | 否   | 报名状态         |      |
+| status_text     | string          | 否   | 状态文字         |      |
+| qrcode          | string          | 否   | 电子票二维码图片 |      |
+| qrcode_content  | string          | 否   | 电子票二维码内容 |      |
+
+### 活动签到核销
+
+- 方法：`POST`
+- 路径：`/api/event/checkin`
+- 认证：是
+- Service：`learning.checkinEvent`
+
+请求 Query：
+
+无。
+
+请求 Body：
+
+| 字段 | 类型   | 必填 | 说明                   | 示例 |
+| ---- | ------ | ---- | ---------------------- | ---- |
+| code | string | 否   | 扫码识别到的二维码内容 |      |
+
+响应 Data：
+
+| 字段            | 类型            | 必填 | 说明       | 示例 |
+| --------------- | --------------- | ---- | ---------- | ---- |
+| registration_id | number(integer) | 否   | 报名记录ID |      |
+| event_id        | number(integer) | 否   | 活动ID     |      |
+| event_title     | string          | 否   | 活动标题   |      |
+| real_name       | string          | 否   | 报名姓名   |      |
+| phone           | string          | 否   | 联系电话   |      |
+| status          | number(integer) | 否   | 核销状态   |      |
+| status_text     | string          | 否   | 状态文字   |      |
 
 ### 获取我的活动列表（已报名的活动）
 
