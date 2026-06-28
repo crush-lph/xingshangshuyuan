@@ -1,9 +1,9 @@
 import { useEffect, useState } from 'react'
 import Taro from '@tarojs/taro'
 import { Text, View } from '@tarojs/components'
-import { ActionBar, EmptyState, FieldList, SectionCard } from '@/components/business'
+import { ActionBar, FieldList, SectionCard, StateNotice } from '@/components/business'
 import { PageShell } from '@/components/PageShell'
-import { cancelOrder, getOrderDetail, paymentCallback, uploadFileRecord, type GetOrderDetailData } from '@/services'
+import { cancelOrder, getOrderDetail, paymentCallback, uploadFile, type GetOrderDetailData } from '@/services'
 import { ensureLoggedIn } from '@/shared/auth-guard'
 import { router, routes } from '@/shared/router'
 import { getPageParam, priceOf, textOrPlaceholder } from '@/shared/view-data'
@@ -11,14 +11,20 @@ import { getPageParam, priceOf, textOrPlaceholder } from '@/shared/view-data'
 export default function PaymentTransferPage() {
   const [order, setOrder] = useState<GetOrderDetailData | null>(null)
   const [voucherPath, setVoucherPath] = useState('')
+  const [isLoading, setIsLoading] = useState(true)
+  const [hasError, setHasError] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
 
   useEffect(() => {
     async function loadOrder() {
+      setIsLoading(true)
+      setHasError(false)
+
       const orderNo = getPageParam('order_no')
 
       if (!orderNo) {
         setOrder(null)
+        setIsLoading(false)
         return
       }
 
@@ -26,7 +32,12 @@ export default function PaymentTransferPage() {
       setOrder(response.data.order_no ? response.data : null)
     }
 
-    void loadOrder().catch(() => setOrder(null))
+    void loadOrder()
+      .catch(() => {
+        setOrder(null)
+        setHasError(true)
+      })
+      .finally(() => setIsLoading(false))
   }, [])
 
   async function handlePickVoucher() {
@@ -66,14 +77,23 @@ export default function PaymentTransferPage() {
     Taro.showLoading({ title: '提交中' })
 
     try {
-      await uploadFileRecord({
-        order_no: order.order_no,
-        file_path: voucherPath,
-        scene: 'bank_transfer_voucher'
+      const voucher = await uploadFile({
+        filePath: voucherPath,
+        scene: 'bank_transfer_voucher',
+        formData: {
+          order_no: order.order_no
+        }
       })
-      await paymentCallback()
+
+      await paymentCallback({
+        order_no: order.order_no,
+        voucher_url: voucher.fileUrl,
+        pay_method: 'bank_transfer'
+      })
       Taro.showToast({ title: '凭证已提交', icon: 'success' })
       router.redirect(routes.userOrders)
+    } catch {
+      Taro.showToast({ title: '凭证提交失败，请稍后重试', icon: 'none' })
     } finally {
       Taro.hideLoading()
       setIsSubmitting(false)
@@ -89,14 +109,22 @@ export default function PaymentTransferPage() {
       return
     }
 
-    await cancelOrder({ order_no: order.order_no })
-    Taro.showToast({ title: '订单已取消', icon: 'success' })
-    router.redirect(routes.userOrders)
+    try {
+      await cancelOrder({ order_no: order.order_no })
+      Taro.showToast({ title: '订单已取消', icon: 'success' })
+      router.redirect(routes.userOrders)
+    } catch {
+      Taro.showToast({ title: '取消订单失败，请稍后重试', icon: 'none' })
+    }
   }
 
   return (
     <PageShell title="对公支付凭证" subtitle="上传转账凭证后由财务确认到账。">
-      {order ? (
+      {isLoading ? (
+        <StateNotice state="loading" />
+      ) : hasError ? (
+        <StateNotice state="error" />
+      ) : order ? (
         <View className="grid gap-3">
           <FieldList
             fields={[
@@ -129,7 +157,7 @@ export default function PaymentTransferPage() {
           />
         </View>
       ) : (
-        <EmptyState title="暂无订单详情" />
+        <StateNotice state="empty" copy={{ title: '暂无订单详情', desc: '当前缺少订单号或接口没有返回订单详情。' }} />
       )}
     </PageShell>
   )

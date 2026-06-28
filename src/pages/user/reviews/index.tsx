@@ -3,7 +3,7 @@ import Taro from '@tarojs/taro'
 import { Text, View } from '@tarojs/components'
 import Rate from '@nutui/nutui-react-taro/dist/es/packages/rate'
 import '@nutui/nutui-react-taro/dist/es/packages/rate/style/css'
-import { ActionBar, EmptyState, FormSection, FormTextareaField, ReviewList } from '@/components/business'
+import { ActionBar, FormSection, FormTextareaField, ReviewList, StateNotice } from '@/components/business'
 import { PageShell } from '@/components/PageShell'
 import { getUserReviews, submitReview, type UserReviewItem } from '@/services'
 import { router, routes } from '@/shared/router'
@@ -15,6 +15,8 @@ export default function UserReviewsPage() {
   const [items, setItems] = useState<UserReviewItem[]>([])
   const [rating, setRating] = useState(5)
   const [content, setContent] = useState('')
+  const [isLoading, setIsLoading] = useState(true)
+  const [hasError, setHasError] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
 
   const pageTitle = useMemo(() => (orderId ? '提交评价' : '我的评价'), [orderId])
@@ -31,12 +33,24 @@ export default function UserReviewsPage() {
   }))
 
   async function loadReviews() {
-    const response = await getUserReviews({ page: 1, page_size: 20 })
-    setItems(response.data.list ?? [])
+    setIsLoading(true)
+    setHasError(false)
+    try {
+      const response = await getUserReviews({ page: 1, page_size: 20 })
+      setItems(response.data.list ?? [])
+    } catch {
+      setHasError(true)
+      throw new Error('load reviews failed')
+    } finally {
+      setIsLoading(false)
+    }
   }
 
   useEffect(() => {
     let isMounted = true
+
+    setIsLoading(true)
+    setHasError(false)
 
     void getUserReviews({ page: 1, page_size: 20 })
       .then((response) => {
@@ -47,6 +61,12 @@ export default function UserReviewsPage() {
       .catch(() => {
         if (isMounted) {
           setItems([])
+          setHasError(true)
+        }
+      })
+      .finally(() => {
+        if (isMounted) {
+          setIsLoading(false)
         }
       })
 
@@ -82,6 +102,8 @@ export default function UserReviewsPage() {
       setRating(5)
       await loadReviews()
       router.redirect(routes.userReviews)
+    } catch {
+      Taro.showToast({ title: '评价提交失败，请稍后重试', icon: 'none' })
     } finally {
       Taro.hideLoading()
       setIsSubmitting(false)
@@ -117,10 +139,30 @@ export default function UserReviewsPage() {
           </FormSection>
         ) : null}
 
-        {reviewItems.length ? (
+        {!orderId ? (
+          <StateNotice
+            state="empty"
+            copy={{
+              title: '待评价来源以订单为准',
+              desc: '当前不展示静态待评价数量；可评价入口仅来自真实已完成订单。'
+            }}
+          />
+        ) : null}
+
+        {isLoading ? (
+          <StateNotice state="loading" />
+        ) : hasError ? (
+          <StateNotice state="error" />
+        ) : reviewItems.length ? (
           <ReviewList items={reviewItems} />
         ) : (
-          <EmptyState title={orderId ? '暂无历史评价' : '暂无评价'} />
+          <StateNotice
+            state="empty"
+            copy={{
+              title: orderId ? '暂无历史评价' : '暂无评价',
+              desc: orderId ? '当前接口没有返回该订单的历史评价。' : '当前接口没有返回评价记录。'
+            }}
+          />
         )}
       </View>
     </PageShell>

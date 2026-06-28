@@ -1,24 +1,24 @@
 import { useEffect, useState } from 'react'
-import { Text, View } from '@tarojs/components'
-import { EmptyState, ItemList, SectionCard, type ListItem } from '@/components/business'
+import { View } from '@tarojs/components'
+import { ItemList, StateNotice, type ListItem } from '@/components/business'
 import { PageShell } from '@/components/PageShell'
 import { getUserCertificates, getUserLearningStats } from '@/services'
 import { firstRecordList, textOf, textOrPlaceholder } from '@/shared/view-data'
 
 export default function UserPointsPage() {
-  const [score, setScore] = useState('')
   const [items, setItems] = useState<ListItem[]>([])
+  const [isLoading, setIsLoading] = useState(true)
+  const [hasError, setHasError] = useState(false)
 
   useEffect(() => {
     async function loadPoints() {
+      setIsLoading(true)
+      setHasError(false)
+
       const [statsResult, certificatesResult] = await Promise.allSettled([
         getUserLearningStats(),
         getUserCertificates()
       ])
-
-      if (statsResult.status === 'fulfilled') {
-        setScore(textOf(statsResult.value.data.certificates_count) ?? '')
-      }
 
       if (certificatesResult.status === 'fulfilled') {
         setItems(
@@ -32,26 +32,37 @@ export default function UserPointsPage() {
           }))
         )
       }
+
+      setHasError(statsResult.status === 'rejected' && certificatesResult.status === 'rejected')
     }
 
-    void loadPoints().catch(() => {
-      setScore('')
-      setItems([])
-    })
+    void loadPoints()
+      .catch(() => {
+        setItems([])
+        setHasError(true)
+      })
+      .finally(() => setIsLoading(false))
   }, [])
 
   return (
-    <PageShell title="我的积分" subtitle="积分可用于活动抵扣和会员权益兑换。">
+    <PageShell title="我的积分" subtitle="积分余额和流水接口暂未接入，当前仅展示证书记录。">
       <View className="grid gap-3">
-        {score ? (
-          <SectionCard>
-            <Text className="block text-3xl font-bold text-gold">{score}</Text>
-            <Text className="mt-2 block text-sm text-muted">接口返回的证书数量</Text>
-          </SectionCard>
+        <StateNotice
+          state="empty"
+          copy={{ title: '积分接口暂未接入', desc: '当前没有稳定接口返回积分余额和积分流水，因此不展示积分数。' }}
+        />
+        {isLoading ? (
+          <StateNotice state="loading" copy={{ title: '正在加载证书记录', desc: '证书记录不等同于积分余额。' }} />
+        ) : hasError ? (
+          <StateNotice
+            state="error"
+            copy={{ title: '证书记录加载失败', desc: '积分接口暂未接入，证书记录也暂时无法加载。' }}
+          />
+        ) : items.length ? (
+          <ItemList items={items} />
         ) : (
-          <EmptyState title="暂无积分统计" />
+          <StateNotice state="empty" copy={{ title: '暂无证书记录', desc: '当前接口没有返回证书记录。' }} />
         )}
-        {items.length ? <ItemList items={items} /> : <EmptyState title="暂无证书记录" />}
       </View>
     </PageShell>
   )

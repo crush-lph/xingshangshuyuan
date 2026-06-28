@@ -1,9 +1,16 @@
 import { useEffect, useState } from 'react'
 import Taro from '@tarojs/taro'
 import { Text, View } from '@tarojs/components'
-import { ActionBar, FieldList, PaymentStatusPoller, SectionCard } from '@/components/business'
+import { ActionBar, FieldList, PaymentStatusPoller, SectionCard, StateNotice } from '@/components/business'
 import { PageShell } from '@/components/PageShell'
-import { createVipOrder, getUserProfile, getVipLevels, payVipOrder, queryVipPaymentStatus, type CreateVipOrderData } from '@/services'
+import {
+  createVipOrder,
+  getUserProfile,
+  getVipLevels,
+  payVipOrder,
+  queryVipPaymentStatus,
+  type CreateVipOrderData
+} from '@/services'
 import type { VipLevelItem } from '@/services'
 import { ensureLoggedIn } from '@/shared/auth-guard'
 import { router, routes } from '@/shared/router'
@@ -33,9 +40,14 @@ export default function MemberConfirmPage() {
   const [targetLevel, setTargetLevel] = useState<VipLevelItem | null>(null)
   const [perkFields, setPerkFields] = useState<Array<{ label: string; value: string }>>([])
   const [order, setOrder] = useState<CreateVipOrderData | null>(null)
+  const [isLoading, setIsLoading] = useState(true)
+  const [hasError, setHasError] = useState(false)
 
   useEffect(() => {
     async function loadMemberConfig() {
+      setIsLoading(true)
+      setHasError(false)
+
       const [profileResult, levelsResult] = await Promise.allSettled([getUserProfile(), getVipLevels()])
 
       if (profileResult.status === 'fulfilled') {
@@ -48,13 +60,18 @@ export default function MemberConfirmPage() {
         setTargetLevel(level ?? null)
         setPerkFields(getPerkFields(level ?? null))
       }
+
+      setHasError(profileResult.status === 'rejected' && levelsResult.status === 'rejected')
     }
 
-    void loadMemberConfig().catch(() => {
-      setLevelText('')
-      setTargetLevel(null)
-      setPerkFields([])
-    })
+    void loadMemberConfig()
+      .catch(() => {
+        setLevelText('')
+        setTargetLevel(null)
+        setPerkFields([])
+        setHasError(true)
+      })
+      .finally(() => setIsLoading(false))
   }, [])
 
   async function ensureOrder() {
@@ -66,10 +83,17 @@ export default function MemberConfirmPage() {
       return order
     }
 
-    Taro.showLoading({ title: '生成订单中' })
-    const orderResult = await createVipOrder({ vip_level: targetLevel?.level ?? DEFAULT_TARGET_LEVEL_VALUE })
-    setOrder(orderResult.data)
-    return orderResult.data
+    try {
+      Taro.showLoading({ title: '生成订单中' })
+      const orderResult = await createVipOrder({ vip_level: targetLevel?.level ?? DEFAULT_TARGET_LEVEL_VALUE })
+      setOrder(orderResult.data)
+      return orderResult.data
+    } catch {
+      Taro.showToast({ title: '会员订单生成失败，请稍后重试', icon: 'none' })
+      return null
+    } finally {
+      Taro.hideLoading()
+    }
   }
 
   async function handleWechatPayment() {
@@ -137,23 +161,34 @@ export default function MemberConfirmPage() {
   return (
     <PageShell title="会员升级确认" subtitle="确认升级行商·领航会员后生成订单。">
       <View className="grid gap-3">
-        <SectionCard title="会员方案">
-          <Text className="block text-base font-bold text-ink">{displayTargetLevel}</Text>
-          <Text className="mt-2 block text-sm leading-6 text-muted">
-            升级后可获得更高等级的供应链底价、商机优先和客户经理支持，最终权益以接口返回配置为准。
-          </Text>
-          {order?.order_no ? <Text className="mt-2 block text-xs text-brand">最近订单：{order.order_no}</Text> : null}
-        </SectionCard>
-        <FieldList
-          fields={[
-            { label: '当前会员', value: levelText || '暂无会员信息' },
-            { label: '目标等级', value: displayTargetLevel },
-            { label: '支付金额', value: displayAmount },
-            { label: '原价', value: priceOf(targetLevel?.original_price) ?? '未提供' },
-            { label: '订单状态', value: textOrPlaceholder(order?.status_text, '未生成') },
-            { label: '到期时间', value: textOrPlaceholder(order?.expire_at, '支付后生效') }
-          ]}
-        />
+        {isLoading ? <StateNotice state="loading" /> : null}
+        {hasError ? <StateNotice state="error" /> : null}
+        {!isLoading && !hasError && !targetLevel ? (
+          <StateNotice state="empty" copy={{ title: '暂无会员方案', desc: '当前接口没有返回可开通会员等级。' }} />
+        ) : null}
+        {!isLoading && !hasError && targetLevel ? (
+          <>
+            <SectionCard title="会员方案">
+              <Text className="block text-base font-bold text-ink">{displayTargetLevel}</Text>
+              <Text className="mt-2 block text-sm leading-6 text-muted">
+                升级后可获得更高等级的供应链底价、商机优先和客户经理支持，最终权益以接口返回配置为准。
+              </Text>
+              {order?.order_no ? (
+                <Text className="mt-2 block text-xs text-brand">最近订单：{order.order_no}</Text>
+              ) : null}
+            </SectionCard>
+            <FieldList
+              fields={[
+                { label: '当前会员', value: levelText || '暂无会员信息' },
+                { label: '目标等级', value: displayTargetLevel },
+                { label: '支付金额', value: displayAmount },
+                { label: '原价', value: priceOf(targetLevel?.original_price) ?? '未提供' },
+                { label: '订单状态', value: textOrPlaceholder(order?.status_text, '未生成') },
+                { label: '到期时间', value: textOrPlaceholder(order?.expire_at, '支付后生效') }
+              ]}
+            />
+          </>
+        ) : null}
         {perkFields.length ? (
           <SectionCard title="升级权益">
             <View className="grid gap-3">

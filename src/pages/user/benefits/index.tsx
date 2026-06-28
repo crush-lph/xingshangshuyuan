@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Text, View } from '@tarojs/components'
-import { ActionBar, EmptyState, FieldList, SectionCard } from '@/components/business'
+import { ActionBar, FieldList, SectionCard, StateNotice } from '@/components/business'
 import { PageShell } from '@/components/PageShell'
 import { getUserProfile, getUserVip } from '@/services'
 import { routes } from '@/shared/router'
@@ -9,9 +9,14 @@ import { firstRecordList, isRecord, textOf, textOrPlaceholder } from '@/shared/v
 export default function UserBenefitsPage() {
   const [levelText, setLevelText] = useState('')
   const [fields, setFields] = useState<Array<{ label: string; value: string }>>([])
+  const [isLoading, setIsLoading] = useState(true)
+  const [hasError, setHasError] = useState(false)
 
   useEffect(() => {
     async function loadBenefits() {
+      setIsLoading(true)
+      setHasError(false)
+
       const [profileResult, vipResult] = await Promise.allSettled([getUserProfile(), getUserVip()])
 
       if (profileResult.status === 'fulfilled') {
@@ -31,26 +36,48 @@ export default function UserBenefitsPage() {
           )
         }
       }
+
+      setHasError(profileResult.status === 'rejected' && vipResult.status === 'rejected')
     }
 
-    void loadBenefits().catch(() => {
-      setLevelText('')
-      setFields([])
-    })
+    void loadBenefits()
+      .catch(() => {
+        setLevelText('')
+        setFields([])
+        setHasError(true)
+      })
+      .finally(() => setIsLoading(false))
   }, [])
 
   return (
     <PageShell title="我的权益" subtitle="查看当前会员等级、权益使用情况和升级入口。">
       <View className="grid gap-3">
-        {levelText ? (
+        {isLoading ? <StateNotice state="loading" /> : hasError ? <StateNotice state="error" /> : null}
+        {!isLoading && !hasError && levelText ? (
           <SectionCard title="当前会员">
             <Text className="block text-lg font-bold text-gold">{levelText}</Text>
           </SectionCard>
         ) : (
-          <EmptyState title="暂无会员信息" />
+          !isLoading &&
+          !hasError && (
+            <StateNotice state="empty" copy={{ title: '暂无会员信息', desc: '当前接口没有返回会员等级。' }} />
+          )
         )}
-        {fields.length ? <FieldList fields={fields} /> : <EmptyState title="暂无权益明细" />}
-        <ActionBar actions={[{ label: '升级会员', variant: 'gold', path: routes.memberBenefit }]} />
+        {!isLoading && !hasError && fields.length ? (
+          <FieldList fields={fields} />
+        ) : (
+          !isLoading &&
+          !hasError && (
+            <StateNotice
+              state="empty"
+              copy={{
+                title: '暂无权益明细',
+                desc: '当前接口没有返回权益配置；权益使用状态、剩余额度仍需接口补齐。'
+              }}
+            />
+          )
+        )}
+        <ActionBar actions={[{ label: '升级领航会员', variant: 'gold', path: routes.memberBenefit }]} />
       </View>
     </PageShell>
   )

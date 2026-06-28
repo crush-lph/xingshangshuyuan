@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Text, View } from '@tarojs/components'
-import { EmptyState, ItemList, SectionCard, type ListItem } from '@/components/business'
+import { ItemList, SectionCard, StateNotice, type ListItem } from '@/components/business'
 import { PageShell } from '@/components/PageShell'
 import { getOrders } from '@/services'
 import { routes } from '@/shared/router'
@@ -15,9 +15,14 @@ function isCompletedOrder(order: Record<string, unknown>) {
 
 export default function UserOrdersPage() {
   const [items, setItems] = useState<ListItem[]>([])
+  const [isLoading, setIsLoading] = useState(true)
+  const [hasError, setHasError] = useState(false)
 
   useEffect(() => {
     async function loadOrders() {
+      setIsLoading(true)
+      setHasError(false)
+
       const response = await getOrders({ page: 1, page_size: 20 })
       setItems(
         firstRecordList(response.data).map((order) => {
@@ -34,7 +39,7 @@ export default function UserOrdersPage() {
             tag: textOf(order.status_text),
             icon: 'file-list-3-line',
             tone: isCompleted ? 'success' : 'gold',
-            path: isCompleted ? routes.userReviews : routes.paymentTransfer,
+            path: isCompleted ? routes.userReviews : orderNo ? routes.paymentTransfer : undefined,
             query: isCompleted
               ? {
                   ...(orderId ? { order_id: orderId } : {}),
@@ -43,13 +48,18 @@ export default function UserOrdersPage() {
               : orderNo
                 ? { order_no: orderNo }
                 : undefined,
-            action: isCompleted ? '去评价' : '查看'
+            action: isCompleted ? '去评价' : orderNo ? '查看' : '订单号缺失'
           }
         })
       )
     }
 
-    void loadOrders().catch(() => setItems([]))
+    void loadOrders()
+      .catch(() => {
+        setItems([])
+        setHasError(true)
+      })
+      .finally(() => setIsLoading(false))
   }, [])
 
   return (
@@ -64,7 +74,15 @@ export default function UserOrdersPage() {
             ))}
           </View>
         </SectionCard>
-        {items.length ? <ItemList items={items} /> : <EmptyState title="暂无订单" />}
+        {isLoading ? (
+          <StateNotice state="loading" />
+        ) : hasError ? (
+          <StateNotice state="error" />
+        ) : items.length ? (
+          <ItemList items={items} />
+        ) : (
+          <StateNotice state="empty" copy={{ title: '暂无订单', desc: '当前接口没有返回订单记录。' }} />
+        )}
       </View>
     </PageShell>
   )

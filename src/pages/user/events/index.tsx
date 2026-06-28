@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
-import { EmptyState, ItemList, type ListItem } from '@/components/business'
+import { View } from '@tarojs/components'
+import { ItemList, StateNotice, type ListItem } from '@/components/business'
 import { PageShell } from '@/components/PageShell'
 import { getUserCourses } from '@/services'
 import { routes } from '@/shared/router'
@@ -7,9 +8,14 @@ import { compactJoin, textOrPlaceholder } from '@/shared/view-data'
 
 export default function UserEventsPage() {
   const [items, setItems] = useState<ListItem[]>([])
+  const [isLoading, setIsLoading] = useState(true)
+  const [hasError, setHasError] = useState(false)
 
   useEffect(() => {
     async function loadUserCourses() {
+      setIsLoading(true)
+      setHasError(false)
+
       const response = await getUserCourses({ page: 1, page_size: 20 })
       setItems(
         (response.data.list ?? []).map((item) => ({
@@ -26,12 +32,40 @@ export default function UserEventsPage() {
       )
     }
 
-    void loadUserCourses().catch(() => setItems([]))
+    void loadUserCourses()
+      .catch(() => {
+        setItems([])
+        setHasError(true)
+      })
+      .finally(() => setIsLoading(false))
   }, [])
 
   return (
-    <PageShell title="我的活动" subtitle="管理报名记录、电子票和活动评价。">
-      {items.length ? <ItemList items={items} /> : <EmptyState title="暂无学习记录" />}
+    <PageShell title="我的活动" subtitle="活动报名记录接口暂未接入，当前不展示电子票或活动评价入口。">
+      <View className="grid gap-3">
+        <StateNotice
+          state="empty"
+          copy={{
+            title: '活动报名记录接口暂未接入',
+            desc: '当前没有稳定接口返回我的活动报名、电子票或核销状态，因此不展示活动动作。'
+          }}
+        />
+        {isLoading ? (
+          <StateNotice
+            state="loading"
+            copy={{ title: '正在加载学习记录', desc: '仅作为学习记录展示，不代表活动报名。' }}
+          />
+        ) : hasError ? (
+          <StateNotice
+            state="error"
+            copy={{ title: '学习记录加载失败', desc: '活动报名记录接口暂未接入，学习记录也暂时无法加载。' }}
+          />
+        ) : items.length ? (
+          <ItemList items={items} />
+        ) : (
+          <StateNotice state="empty" copy={{ title: '暂无学习记录', desc: '当前课程接口没有返回学习记录。' }} />
+        )}
+      </View>
     </PageShell>
   )
 }

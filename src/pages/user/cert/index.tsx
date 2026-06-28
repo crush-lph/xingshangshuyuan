@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import Taro from '@tarojs/taro'
 import { Image, Text, View } from '@tarojs/components'
-import { ActionBar, FieldList, FormSection, FormTextField, SectionCard } from '@/components/business'
+import { ActionBar, FieldList, FormSection, FormTextField, SectionCard, StateNotice } from '@/components/business'
 import { PageShell } from '@/components/PageShell'
 import {
   getUserCertification,
@@ -118,10 +118,15 @@ function UploadCard({ label, placeholder, value, isUploading, onClick }: UploadC
 export default function UserCertPage() {
   const [certification, setCertification] = useState<GetUserCertificationData | null>(null)
   const [form, setForm] = useState<CertificationForm>(initialForm)
+  const [isLoading, setIsLoading] = useState(true)
+  const [hasError, setHasError] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [uploadingKey, setUploadingKey] = useState<CertificationUploadKey | null>(null)
 
   useEffect(() => {
+    setIsLoading(true)
+    setHasError(false)
+
     void getUserCertification()
       .then((response) => {
         const nextCertification = response.data.certification_id ? response.data : null
@@ -131,7 +136,9 @@ export default function UserCertPage() {
       .catch(() => {
         setCertification(null)
         setForm(initialForm)
+        setHasError(true)
       })
+      .finally(() => setIsLoading(false))
   }, [])
 
   function updateField<Key extends keyof CertificationForm>(key: Key, value: CertificationForm[Key]) {
@@ -172,6 +179,10 @@ export default function UserCertPage() {
 
   async function handleUploadDocument(item: CertificationUploadItem) {
     if (uploadingKey) {
+      return
+    }
+
+    if (!(await ensureLoggedIn('登录后才能上传认证材料'))) {
       return
     }
 
@@ -247,6 +258,8 @@ export default function UserCertPage() {
         status: response.data.status,
         status_text: response.data.status_text
       })
+    } catch {
+      Taro.showToast({ title: '认证提交失败，请稍后重试', icon: 'none' })
     } finally {
       Taro.hideLoading()
       setIsSubmitting(false)
@@ -256,7 +269,14 @@ export default function UserCertPage() {
   return (
     <PageShell title="企业认证" subtitle="认证通过后可申请商机、发布需求并享受平台合作权益。">
       <View className="grid gap-3">
-        {certification ? (
+        {isLoading ? <StateNotice state="loading" /> : null}
+        {hasError ? (
+          <StateNotice
+            state="error"
+            copy={{ title: '认证资料加载失败', desc: '暂时无法读取历史认证资料，可稍后重试。' }}
+          />
+        ) : null}
+        {!isLoading && !hasError && certification ? (
           <View className="grid gap-3">
             <SectionCard title="认证状态">
               <Text className="block text-lg font-bold text-[#38A169]">

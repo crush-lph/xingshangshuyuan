@@ -78,10 +78,16 @@ export function cancelOrder(data: CancelOrderPayload, options?: ApiBodyRequestOp
   return api.post<CancelOrderResponse, CancelOrderPayload>('/api/order/cancel', data, options)
 }
 
+export interface PaymentCallbackPayload {
+  order_no: string
+  voucher_url: string
+  pay_method: string | number
+}
+
 export type PaymentCallbackData = unknown
 
 export type PaymentCallbackResponse = ApiResponse<PaymentCallbackData>
 
-export function paymentCallback(options?: ApiBodyRequestOptions) {
-  return api.post<PaymentCallbackResponse>('/api/payment/callback', undefined, options)
+export function paymentCallback(data: PaymentCallbackPayload, options?: ApiBodyRequestOptions<PaymentCallbackPayload>) {
+  return api.post<PaymentCallbackResponse, PaymentCallbackPayload>('/api/payment/callback', data, options)
 }

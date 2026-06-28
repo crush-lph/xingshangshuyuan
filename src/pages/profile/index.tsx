@@ -1,13 +1,18 @@
 import { useEffect, useState } from 'react'
 import { View } from '@tarojs/components'
-import { EmptyState } from '@/components/business'
+import { StateNotice } from '@/components/business'
 import { ManagerCard } from './components/ManagerCard'
 import { MemberCard } from './components/MemberCard'
 import { MenuGroup } from './components/MenuGroup'
 import { MetricGrid } from './components/MetricGrid'
 import { ProfileHeader } from './components/ProfileHeader'
-import { IdentityIconPreview } from './components/IdentityIconPreview'
-import { getCustomerServiceConfig, getUnreadMessageCount, getUserLearningStats, getUserProfile } from '@/services'
+import {
+  getCustomerServiceConfig,
+  getUnreadMessageCount,
+  getUserInfo,
+  getUserLearningStats,
+  getUserProfile
+} from '@/services'
 import { accountMenus, memberActions, serviceMenus } from './profile.data'
 import type { ManagerInfo, MetricItem } from './types'
 import { isRecord, textOf } from '@/shared/view-data'
@@ -15,24 +20,37 @@ import { routes } from '@/shared/router'
 import { getUserIdentity, type UserIdentity } from '@/shared/user-identity'
 
 export default function ProfilePage() {
-  const [metricItems, setMetricItems] = useState<MetricItem[]>([])
+  const [metricItems, setMetricItems] = useState<MetricItem[]>([
+    { label: '我的订单', value: '--', color: 'text-brand', path: routes.userOrders },
+    { label: '我的活动', value: '--', color: 'text-brand', path: routes.userEvents },
+    { label: '我的积分', value: '--', color: 'text-gold', path: routes.userPoints },
+    { label: '我的评价', value: '--', color: 'text-[#38A169]', path: routes.userReviews }
+  ])
   const [serviceMenuItems, setServiceMenuItems] = useState(serviceMenus)
   const [accountMenuItems, setAccountMenuItems] = useState(accountMenus)
   const [identity, setIdentity] = useState<UserIdentity>(() => getUserIdentity())
   const [manager, setManager] = useState<ManagerInfo | null>(null)
+  const [isLoading, setIsLoading] = useState(true)
+  const [hasError, setHasError] = useState(false)
 
   useEffect(() => {
     async function loadProfileData() {
-      const [profileResult, unreadResult, learningResult, customerServiceResult] = await Promise.allSettled([
-        getUserProfile(),
-        getUnreadMessageCount(),
-        getUserLearningStats(),
-        getCustomerServiceConfig()
-      ])
+      setIsLoading(true)
+      setHasError(false)
+
+      const [userInfoResult, profileResult, unreadResult, learningResult, customerServiceResult] =
+        await Promise.allSettled([
+          getUserInfo(),
+          getUserProfile(),
+          getUnreadMessageCount(),
+          getUserLearningStats(),
+          getCustomerServiceConfig()
+        ])
 
       if (profileResult.status === 'fulfilled') {
         const profile = profileResult.value.data
-        setIdentity(getUserIdentity(profile))
+        const userInfo = userInfoResult.status === 'fulfilled' ? userInfoResult.value.data : undefined
+        setIdentity(getUserIdentity({ ...userInfo, ...profile }))
 
         setAccountMenuItems((items) =>
           items.map((item) =>
@@ -44,6 +62,8 @@ export default function ProfilePage() {
               : item
           )
         )
+      } else if (userInfoResult.status === 'fulfilled') {
+        setIdentity(getUserIdentity(userInfoResult.value.data))
       }
 
       if (unreadResult.status === 'fulfilled') {
@@ -62,16 +82,22 @@ export default function ProfilePage() {
 
       if (learningResult.status === 'fulfilled') {
         const learning = learningResult.value.data
-        setMetricItems(
-          [
-            { label: '我的订单', value: undefined, color: 'text-brand', path: routes.userOrders },
-            { label: '我的活动', value: learning.total_courses, color: 'text-brand', path: routes.userEvents },
-            { label: '我的积分', value: learning.certificates_count, color: 'text-gold', path: routes.userPoints },
-            { label: '已完成', value: learning.completed_courses, color: 'text-[#38A169]', path: routes.userReviews }
-          ]
-            .filter((item) => item.value !== undefined && item.value !== null)
-            .map((item) => ({ ...item, value: String(item.value) }))
-        )
+        setMetricItems([
+          { label: '我的订单', value: '--', color: 'text-brand', path: routes.userOrders },
+          { label: '我的活动', value: '--', color: 'text-brand', path: routes.userEvents },
+          {
+            label: '证书记录',
+            value: learning.certificates_count === undefined ? '--' : String(learning.certificates_count),
+            color: 'text-gold',
+            path: routes.userPoints
+          },
+          {
+            label: '已学课程',
+            value: learning.completed_courses === undefined ? '--' : String(learning.completed_courses),
+            color: 'text-[#38A169]',
+            path: routes.userEvents
+          }
+        ])
       }
 
       if (customerServiceResult.status === 'fulfilled' && isRecord(customerServiceResult.value.data)) {
@@ -82,9 +108,17 @@ export default function ProfilePage() {
           setManager({ name, phone })
         }
       }
+
+      setHasError(
+        [userInfoResult, profileResult, unreadResult, learningResult, customerServiceResult].every(
+          (result) => result.status === 'rejected'
+        )
+      )
     }
 
     void loadProfileData()
+      .catch(() => setHasError(true))
+      .finally(() => setIsLoading(false))
   }, [])
 
   return (
@@ -95,11 +129,13 @@ export default function ProfilePage() {
       </View>
 
       <View className="-mt-4 px-4">
-        {metricItems.length ? <MetricGrid items={metricItems} /> : <EmptyState title="暂无个人统计" />}
-
-        <View className="mt-3">
-          <IdentityIconPreview />
-        </View>
+        {isLoading ? (
+          <StateNotice state="loading" />
+        ) : hasError ? (
+          <StateNotice state="error" />
+        ) : (
+          <MetricGrid items={metricItems} />
+        )}
 
         <View className="mt-3">
           <MenuGroup items={serviceMenuItems} />
