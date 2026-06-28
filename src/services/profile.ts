@@ -1,9 +1,31 @@
 // Generated from Apifox export. Update through the Apifox document, not by hand.
 
-import { api, type ApiRequestOptions, type ApiBodyRequestOptions } from '@/shared/request'
-import type { ApiResponse, EmptyObject, QueryValue } from './types'
+import { api, type ApiRequestOptions } from '@/shared/request'
+import type { ApiResponse, QueryValue } from './types'
 
-export type GetUserVipData = EmptyObject
+export interface ProfileRecord {
+  [key: string]: unknown
+}
+
+export interface PaginatedListData<TItem extends ProfileRecord = ProfileRecord> {
+  list?: TItem[]
+  total?: number
+  page?: number
+  page_size?: number
+  [key: string]: unknown
+}
+
+export interface GetUserVipData extends ProfileRecord {
+  level?: number
+  level_text?: string
+  vip_level?: number
+  vip_level_text?: string
+  expire_at?: string
+  perks?: ProfileRecord[] | PaginatedListData
+  rights?: ProfileRecord[] | PaginatedListData
+  items?: ProfileRecord[] | PaginatedListData
+  list?: ProfileRecord[]
+}
 
 export type GetUserVipResponse = ApiResponse<GetUserVipData>
 
@@ -17,7 +39,21 @@ export interface GetOrdersQuery {
   page_size?: QueryValue
 }
 
-export type GetOrdersData = EmptyObject
+export interface OrderListItem extends ProfileRecord {
+  id?: number | string
+  order_id?: number
+  order_no?: string
+  title?: string
+  description?: string
+  remark?: string
+  status?: number
+  status_text?: string
+  pay_amount?: string
+  total_amount?: string
+  amount?: string
+}
+
+export type GetOrdersData = PaginatedListData<OrderListItem> | OrderListItem[]
 
 export type GetOrdersResponse = ApiResponse<GetOrdersData>
 
@@ -28,7 +64,18 @@ export function getOrders(params?: GetOrdersQuery, options?: Omit<ApiRequestOpti
   })
 }
 
-export type GetUserCertificatesData = Array<EmptyObject>
+export interface UserCertificateItem extends ProfileRecord {
+  id?: number | string
+  title?: string
+  name?: string
+  certificate_name?: string
+  status?: number
+  status_text?: string
+  issued_at?: string
+  created_at?: string
+}
+
+export type GetUserCertificatesData = UserCertificateItem[]
 
 export type GetUserCertificatesResponse = ApiResponse<GetUserCertificatesData>
 
@@ -43,7 +90,19 @@ export interface GetUserCustomersQuery {
   page_size?: QueryValue
 }
 
-export type GetUserCustomersData = EmptyObject
+export interface UserCustomerItem extends ProfileRecord {
+  id?: number | string
+  name?: string
+  customer_name?: string
+  title?: string
+  company_name?: string
+  description?: string
+  status?: number
+  status_text?: string
+  created_at?: string
+}
+
+export type GetUserCustomersData = PaginatedListData<UserCustomerItem> | UserCustomerItem[]
 
 export type GetUserCustomersResponse = ApiResponse<GetUserCustomersData>
 
@@ -63,7 +122,19 @@ export interface GetContractsQuery {
   page_size?: QueryValue
 }
 
-export type GetContractsData = EmptyObject
+export interface ContractItem extends ProfileRecord {
+  id?: number | string
+  contract_id?: number | string
+  contract_no?: string
+  title?: string
+  name?: string
+  description?: string
+  status?: number
+  status_text?: string
+  created_at?: string
+}
+
+export type GetContractsData = PaginatedListData<ContractItem> | ContractItem[]
 
 export type GetContractsResponse = ApiResponse<GetContractsData>
 
@@ -78,7 +149,12 @@ export interface GetContractDetailQuery {
   contract_id: QueryValue
 }
 
-export type GetContractDetailData = EmptyObject
+export interface GetContractDetailData extends ContractItem {
+  content?: string
+  file_url?: string
+  start_time?: string
+  end_time?: string
+}
 
 export type GetContractDetailResponse = ApiResponse<GetContractDetailData>
 
@@ -98,7 +174,18 @@ export interface GetInvoicesQuery {
   page_size?: QueryValue
 }
 
-export type GetInvoicesData = EmptyObject
+export interface InvoiceItem extends ProfileRecord {
+  id?: number | string
+  invoice_no?: string
+  title?: string
+  description?: string
+  amount?: string
+  status?: number
+  status_text?: string
+  created_at?: string
+}
+
+export type GetInvoicesData = PaginatedListData<InvoiceItem> | InvoiceItem[]
 
 export type GetInvoicesResponse = ApiResponse<GetInvoicesData>
 
@@ -109,24 +196,13 @@ export function getInvoices(params?: GetInvoicesQuery, options?: Omit<ApiRequest
   })
 }
 
-export interface UploadFileRecordPayload {
-  order_no?: string
-  file_path?: string
-  scene?: string
+export interface GetCustomerServiceConfigData extends ProfileRecord {
+  name?: string
+  manager_name?: string
+  phone?: string
+  manager_phone?: string
+  qrcode_url?: string
 }
-
-export type UploadFileRecordData = EmptyObject
-
-export type UploadFileRecordResponse = ApiResponse<UploadFileRecordData>
-
-export function uploadFileRecord(
-  data?: UploadFileRecordPayload,
-  options?: ApiBodyRequestOptions<UploadFileRecordPayload>
-) {
-  return api.post<UploadFileRecordResponse, UploadFileRecordPayload>('/api/upload', data, options)
-}
-
-export type GetCustomerServiceConfigData = EmptyObject
 
 export type GetCustomerServiceConfigResponse = ApiResponse<GetCustomerServiceConfigData>
 
@@ -134,7 +210,12 @@ export function getCustomerServiceConfig(options?: ApiRequestOptions) {
   return api.get<GetCustomerServiceConfigResponse>('/api/customer-service/config', options)
 }
 
-export type GetAboutData = EmptyObject
+export interface GetAboutData extends ProfileRecord {
+  title?: string
+  description?: string
+  content?: string
+  about?: string
+}
 
 export type GetAboutResponse = ApiResponse<GetAboutData>
 
@@ -142,7 +223,12 @@ export function getAbout(options?: ApiRequestOptions) {
   return api.get<GetAboutResponse>('/api/about', options)
 }
 
-export type GetVipLevelPerksData = EmptyObject
+export interface GetVipLevelPerksData extends ProfileRecord {
+  list?: ProfileRecord[]
+  perks?: ProfileRecord[] | PaginatedListData
+  levels?: ProfileRecord[] | PaginatedListData
+  items?: ProfileRecord[] | PaginatedListData
+}
 
 export type GetVipLevelPerksResponse = ApiResponse<GetVipLevelPerksData>
 

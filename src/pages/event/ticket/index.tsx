@@ -5,14 +5,16 @@ import { PageShell } from '@/components/PageShell'
 import {
   getEventDetail,
   getEvents,
-  getEventTicket,
+  getUserEvents,
   getUserProfile,
   type GetEventDetailData,
-  type GetEventTicketData,
+  type GetUserEventsData,
   type GetUserProfileData
 } from '@/services'
 import { routes } from '@/shared/router'
 import { getPageParam, textOrPlaceholder } from '@/shared/view-data'
+
+type UserEventTicket = NonNullable<GetUserEventsData['list']>[number]
 
 async function resolveEventId() {
   const pageId = getPageParam('event_id')
@@ -27,7 +29,7 @@ async function resolveEventId() {
 
 export default function EventTicketPage() {
   const [event, setEvent] = useState<GetEventDetailData | null>(null)
-  const [ticket, setTicket] = useState<GetEventTicketData | null>(null)
+  const [ticket, setTicket] = useState<UserEventTicket | null>(null)
   const [profile, setProfile] = useState<GetUserProfileData | null>(null)
   const [hasRegistrationParam, setHasRegistrationParam] = useState(false)
   const [isLoading, setIsLoading] = useState(true)
@@ -47,8 +49,10 @@ export default function EventTicketPage() {
       }
 
       if (registrationId) {
-        const ticketResult = await getEventTicket({ registration_id: registrationId })
-        setTicket(ticketResult.data.registration_id ? ticketResult.data : null)
+        const eventsResult = await getUserEvents({ page: 1, page_size: 50 })
+        const nextTicket =
+          eventsResult.data.list?.find((item) => String(item.registration_id) === String(registrationId)) ?? null
+        setTicket(nextTicket)
         setEvent(null)
         setIsLoading(false)
         return
@@ -76,24 +80,24 @@ export default function EventTicketPage() {
   }, [])
 
   return (
-    <PageShell title="电子票" subtitle="展示后台返回的电子票二维码，现场扫码核销。">
+    <PageShell title="电子票" subtitle="展示活动报名记录和票券状态。">
       {isLoading ? (
         <StateNotice state="loading" />
       ) : hasError ? (
         <StateNotice state="error" />
       ) : ticket ? (
         <View className="grid gap-3">
-          <SectionCard title="核销二维码">
+          <SectionCard title="票券状态">
             <View className="items-center rounded-lg border border-line bg-canvas px-4 py-5">
-              {ticket.qrcode ? (
-                <Image className="mx-auto h-48 w-48 rounded bg-white" mode="aspectFit" src={ticket.qrcode} />
+              {ticket.cover_image ? (
+                <Image className="mx-auto h-48 w-48 rounded bg-white" mode="aspectFit" src={ticket.cover_image} />
               ) : (
                 <Text className="block rounded-lg border border-dashed border-line bg-white px-4 py-8 text-center text-sm leading-6 text-muted">
-                  后台未返回二维码图片，请联系现场工作人员使用核销码核验。
+                  当前接口未返回电子票二维码，请联系现场工作人员按报名记录核验。
                 </Text>
               )}
               <Text className="mt-3 block text-center text-xs leading-5 text-muted">
-                {textOrPlaceholder(ticket.qrcode_content, '未返回核销码')}
+                {ticket.registration_id ? `报名记录 ${ticket.registration_id}` : '未返回报名记录ID'}
               </Text>
             </View>
           </SectionCard>

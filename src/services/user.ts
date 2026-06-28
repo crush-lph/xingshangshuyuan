@@ -100,6 +100,10 @@ export interface GetUserInfoData {
   nickname?: string
   avatar?: string
   phone?: string
+  role?: number
+  role_text?: string
+  vip_level?: number
+  vip_level_text?: string
   last_login_at?: string
 }
 
@@ -136,5 +140,5 @@ export function uploadUserAvatar(
   data: UploadUserAvatarPayload,
   options?: ApiBodyRequestOptions<UploadUserAvatarPayload>
 ) {
-  return api.post<UploadUserAvatarResponse, UploadUserAvatarPayload>('/api/user/upload_avatar', data, options)
+  return api.post<UploadUserAvatarResponse, UploadUserAvatarPayload>('/api/upload', data, options)
 }

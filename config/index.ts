@@ -1,8 +1,63 @@
 import { defineConfig, type UserConfigExport } from '@tarojs/cli'
+import fs from 'node:fs'
 import path from 'node:path'
 import { UnifiedWebpackPluginV5 } from 'weapp-tailwindcss/webpack'
 
+const DEFAULT_API_BASE_URL = 'http://152.136.125.82/'
+
+function parseEnvValue(value: string) {
+  const trimmedValue = value.trim()
+
+  if (
+    (trimmedValue.startsWith('"') && trimmedValue.endsWith('"')) ||
+    (trimmedValue.startsWith("'") && trimmedValue.endsWith("'"))
+  ) {
+    return trimmedValue.slice(1, -1)
+  }
+
+  return trimmedValue
+}
+
+function loadEnvFile(filePath: string) {
+  if (!fs.existsSync(filePath)) {
+    return
+  }
+
+  const lines = fs.readFileSync(filePath, 'utf8').split(/\r?\n/)
+
+  lines.forEach((line) => {
+    const trimmedLine = line.trim()
+
+    if (!trimmedLine || trimmedLine.startsWith('#')) {
+      return
+    }
+
+    const separatorIndex = trimmedLine.indexOf('=')
+
+    if (separatorIndex <= 0) {
+      return
+    }
+
+    const key = trimmedLine.slice(0, separatorIndex).trim()
+    const value = parseEnvValue(trimmedLine.slice(separatorIndex + 1))
+
+    if (!process.env[key]) {
+      process.env[key] = value
+    }
+  })
+}
+
+function loadLocalEnv() {
+  const rootDir = path.resolve(__dirname, '..')
+  loadEnvFile(path.join(rootDir, '.env'))
+  loadEnvFile(path.join(rootDir, '.env.local'))
+}
+
+loadLocalEnv()
+
 export default defineConfig<'webpack5'>(async () => {
+  const apiBaseUrl = process.env.TARO_APP_API_BASE_URL?.trim() || DEFAULT_API_BASE_URL
+
   const config: UserConfigExport<'webpack5'> = {
     projectName: 'xingshangshuyuan',
     date: '2026-06-19',
@@ -25,7 +80,9 @@ export default defineConfig<'webpack5'>(async () => {
       '@': path.resolve(__dirname, '..', 'src')
     },
     plugins: ['@tarojs/plugin-html'],
-    defineConstants: {},
+    defineConstants: {
+      __API_BASE_URL__: JSON.stringify(apiBaseUrl)
+    },
     copy: {
       patterns: [],
       options: {}

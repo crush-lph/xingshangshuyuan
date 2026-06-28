@@ -13,6 +13,10 @@ export interface WxLoginData {
   nickname?: string
   avatar?: string
   phone?: string
+  role?: number
+  role_text?: string
+  vip_level?: number
+  vip_level_text?: string
   is_new?: boolean
 }
 
@@ -47,6 +51,10 @@ export interface PhoneLoginData {
   nickname?: string
   avatar?: string
   phone?: string
+  role?: number
+  role_text?: string
+  vip_level?: number
+  vip_level_text?: string
   is_new?: boolean
 }
 

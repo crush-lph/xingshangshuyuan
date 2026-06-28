@@ -3,7 +3,7 @@ import { Text, View } from '@tarojs/components'
 import { ActionBar, FieldList, SectionCard, StateNotice } from '@/components/business'
 import { PageShell } from '@/components/PageShell'
 import { getEventDetail, getEvents, type GetEventDetailData } from '@/services'
-import { routes } from '@/shared/router'
+import { openEventSignupIfAvailable } from '@/shared/event-registration'
 import { getPageParam, priceOf, textOrPlaceholder } from '@/shared/view-data'
 
 async function resolveEventId() {
@@ -69,11 +69,7 @@ export default function EventGroupPage() {
               { label: '活动价格', value: priceOf(event.price) ?? '未提供' }
             ]}
           />
-          <ActionBar
-            actions={[
-              { label: '前往报名', path: routes.eventSignup, query: event.id ? { event_id: event.id } : undefined }
-            ]}
-          />
+          <ActionBar actions={[{ label: '前往报名', onClick: () => openEventSignupIfAvailable(event) }]} />
         </View>
       ) : (
         <StateNotice state="empty" copy={{ title: '暂无拼团活动', desc: '当前接口没有返回可参与拼团的活动。' }} />

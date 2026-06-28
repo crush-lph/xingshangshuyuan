@@ -3,6 +3,7 @@ import Taro from '@tarojs/taro'
 import { Button as TaroButton, Image, Input, Text, View } from '@tarojs/components'
 import { AppIcon } from '@/components/AppIcon'
 import { IdentityBadge } from '@/components/business'
+import adminIcon from '@/assets/identity/identity-admin.png'
 import { uploadUserAvatar } from '@/services'
 import { readImageFileAsDataUri } from '@/shared/image-file'
 import { router, routes } from '@/shared/router'
@@ -11,11 +12,11 @@ import { useUserInfo } from '@/stores/user-info'
 import { textOrPlaceholder, textOf } from '@/shared/view-data'
 
 export function ProfileHeader() {
-  const { bindWechatPhone, isPhoneBound, loadUserInfo, profile, updateWechatProfile, userInfo } = useUserInfo()
+  const { bindWechatPhone, isAdmin, isPhoneBound, loadUserInfo, profile, updateWechatProfile, userInfo } = useUserInfo()
   const nickname = textOf(profile?.nickname ?? userInfo?.nickname)
   const avatar = textOf(profile?.avatar ?? userInfo?.avatar)
   const hasAccount = Boolean(profile || userInfo)
-  const identity = hasAccount ? getUserIdentity(profile) : undefined
+  const identity = hasAccount ? getUserIdentity({ ...userInfo, ...profile }) : undefined
   const avatarText = nickname?.slice(0, 1)
   const [draftNickname, setDraftNickname] = useState<string>()
   const [draftAvatar, setDraftAvatar] = useState<string>()
@@ -144,24 +145,27 @@ export function ProfileHeader() {
       )}
       <View className="min-w-0 flex-1">
         {hasAccount ? (
-          <Input
-            className="h-8 min-w-0 text-xl font-bold text-white"
-            confirmType="done"
-            disabled={isSavingProfile}
-            placeholder="填写微信昵称"
-            placeholderStyle="color: rgba(255,255,255,0.72)"
-            type="nickname"
-            value={displayNickname}
-            onBlur={(event) => {
-              void handleNicknameSave(event.detail.value)
-            }}
-            onConfirm={(event) => {
-              void handleNicknameSave(event.detail.value)
-            }}
-            onInput={(event) => {
-              setDraftNickname(event.detail.value)
-            }}
-          />
+          <View className="flex min-w-0 items-center gap-1.5">
+            <Input
+              className="h-8 min-w-0 flex-1 text-xl font-bold text-white"
+              confirmType="done"
+              disabled={isSavingProfile}
+              placeholder="填写微信昵称"
+              placeholderStyle="color: rgba(255,255,255,0.72)"
+              type="nickname"
+              value={displayNickname}
+              onBlur={(event) => {
+                void handleNicknameSave(event.detail.value)
+              }}
+              onConfirm={(event) => {
+                void handleNicknameSave(event.detail.value)
+              }}
+              onInput={(event) => {
+                setDraftNickname(event.detail.value)
+              }}
+            />
+            {isAdmin ? <Image className="h-5 w-5 shrink-0" src={adminIcon} mode="aspectFit" /> : null}
+          </View>
         ) : (
           <Text className="block text-xl font-bold text-white">去登录</Text>
         )}

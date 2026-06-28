@@ -1,32 +1,16 @@
-import Taro from '@tarojs/taro'
-
-import { API_BASE_URL } from '@/shared/api-config'
-import { getAuthToken, notifyUnauthorized } from '@/shared/auth-session'
-
-type UploadFormValue = string | number | boolean
+import { readImageFileAsDataUri } from '@/shared/image-file'
+import { uploadUserAvatar } from './user'
 
 export interface UploadFileOptions {
   filePath: string
   scene?: string
   name?: string
-  formData?: Record<string, UploadFormValue>
+  formData?: Record<string, string | number | boolean>
 }
 
 export interface UploadFileResult {
   fileUrl: string
   raw: unknown
-}
-
-function isAbsoluteUrl(url: string) {
-  return /^https?:\/\//i.test(url)
-}
-
-function joinUrl(baseURL: string | undefined, url: string) {
-  if (!baseURL || isAbsoluteUrl(url)) {
-    return url
-  }
-
-  return `${baseURL.replace(/\/+$/, '')}/${url.replace(/^\/+/, '')}`
 }
 
 function toRecord(value: unknown): Record<string, unknown> | undefined {
@@ -39,14 +23,6 @@ function toRecord(value: unknown): Record<string, unknown> | undefined {
 
 function toNonEmptyString(value: unknown) {
   return typeof value === 'string' && value.trim() ? value.trim() : undefined
-}
-
-function parseUploadData(data: string) {
-  try {
-    return JSON.parse(data) as unknown
-  } catch {
-    return data
-  }
 }
 
 function extractFileUrl(response: unknown): string | undefined {
@@ -67,7 +43,7 @@ function extractFileUrl(response: unknown): string | undefined {
   }
 
   const dataRecord = toRecord(nestedData)
-  const fields = ['url', 'file_url', 'fileUrl', 'file_path', 'filePath', 'path', 'src', 'full_url', 'fullUrl']
+  const fields = ['url', 'file_url', 'fileUrl', 'file_path', 'filePath', 'path', 'src', 'full_url', 'fullUrl', 'key']
 
   for (const field of fields) {
     const nestedValue = dataRecord ? toNonEmptyString(dataRecord[field]) : undefined
@@ -86,27 +62,8 @@ function extractFileUrl(response: unknown): string | undefined {
 }
 
 export async function uploadFile(options: UploadFileOptions): Promise<UploadFileResult> {
-  const token = getAuthToken()
-  const response = await Taro.uploadFile({
-    url: joinUrl(API_BASE_URL, '/api/upload'),
-    filePath: options.filePath,
-    name: options.name ?? 'file',
-    header: token ? { Authorization: `Bearer ${token}` } : undefined,
-    formData: {
-      ...(options.scene ? { scene: options.scene } : {}),
-      ...options.formData
-    }
-  })
-
-  if (response.statusCode === 401) {
-    notifyUnauthorized()
-  }
-
-  if (response.statusCode < 200 || response.statusCode >= 300) {
-    throw new Error(`文件上传失败(${response.statusCode})`)
-  }
-
-  const raw = parseUploadData(response.data)
+  const image = readImageFileAsDataUri(options.filePath)
+  const raw = await uploadUserAvatar({ image })
   const fileUrl = extractFileUrl(raw)
 
   if (!fileUrl) {

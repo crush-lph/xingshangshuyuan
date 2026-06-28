@@ -17,6 +17,7 @@ import {
 import { AppIcon } from '@/components/AppIcon'
 import { StateNotice } from '@/components/business'
 import type { AppIconName } from '@/shared/app-icons'
+import { openEventSignupIfAvailable } from '@/shared/event-registration'
 import { router, routes, type RoutePath } from '@/shared/router'
 import { compactJoin, priceOf, textOf, textOrPlaceholder } from '@/shared/view-data'
 import { HomeBannerCarousel, type HomeBannerItem } from './components/HomeBannerCarousel'
@@ -43,6 +44,8 @@ interface EventEntry {
   meta: string
   month: string
   day: string
+  status?: number
+  status_text?: string
 }
 
 interface OpportunityEntry {
@@ -157,6 +160,8 @@ function mapEvent(item: NonNullable<GetEventsData['list']>[number]): EventEntry 
     id: item.id,
     title: textOrPlaceholder(item.title, '未命名活动'),
     meta: compactJoin([item.city, item.location, item.start_time]) || '接口未返回活动时间地点',
+    status: item.status,
+    status_text: item.status_text,
     ...getDateParts(item.start_time ?? item.event_date)
   }
 }
@@ -471,7 +476,10 @@ export default function HomePage() {
                     <Button
                       type="primary"
                       size="small"
-                      onClick={() => router.to(routes.eventSignup, event.id ? { event_id: event.id } : undefined)}
+                      onClick={(clickEvent) => {
+                        clickEvent.stopPropagation()
+                        openEventSignupIfAvailable(event)
+                      }}
                     >
                       报名
                     </Button>

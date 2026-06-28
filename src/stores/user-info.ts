@@ -25,6 +25,7 @@ export interface UserInfoState {
   isLoggingIn: boolean
   isLoggedIn: boolean
   isPhoneBound: boolean
+  isAdmin: boolean
   error?: string
   hydrateFromStorage: () => Promise<void>
   loadUserInfo: () => Promise<void>
@@ -57,6 +58,10 @@ function getIsPhoneBound(userInfo: GetUserInfoData | null, profile: GetUserProfi
   return Boolean(userInfo?.phone || profile?.phone)
 }
 
+function getIsAdmin(userInfo: GetUserInfoData | null, profile: GetUserProfileData | null) {
+  return Number(profile?.role ?? userInfo?.role) === 3
+}
+
 let hasBoundUnauthorizedListener = false
 
 export const useUserInfo = create<UserInfoState>()((set, get) => ({
@@ -67,6 +72,7 @@ export const useUserInfo = create<UserInfoState>()((set, get) => ({
   isLoggingIn: false,
   isLoggedIn: Boolean(getAuthToken()),
   isPhoneBound: false,
+  isAdmin: false,
   error: undefined,
 
   async hydrateFromStorage() {
@@ -81,6 +87,7 @@ export const useUserInfo = create<UserInfoState>()((set, get) => ({
           token: undefined,
           isLoggedIn: false,
           isPhoneBound: false,
+          isAdmin: false,
           isLoading: false,
           isLoggingIn: false,
           error: '登录已失效，请重新登录'
@@ -89,7 +96,7 @@ export const useUserInfo = create<UserInfoState>()((set, get) => ({
     }
 
     if (!token) {
-      set({ token: undefined, isLoggedIn: false, isPhoneBound: false })
+      set({ token: undefined, isLoggedIn: false, isPhoneBound: false, isAdmin: false })
       return
     }
 
@@ -115,6 +122,7 @@ export const useUserInfo = create<UserInfoState>()((set, get) => ({
       token: nextToken,
       isLoggedIn: getIsLoggedIn(userInfo, profile, nextToken),
       isPhoneBound: getIsPhoneBound(userInfo, profile),
+      isAdmin: getIsAdmin(userInfo, profile),
       isLoading: false,
       error
     })
@@ -137,7 +145,11 @@ export const useUserInfo = create<UserInfoState>()((set, get) => ({
             id: loginData.user_id,
             nickname: loginData.nickname,
             avatar: loginData.avatar,
-            phone: loginData.phone
+            phone: loginData.phone,
+            role: loginData.role,
+            role_text: loginData.role_text,
+            vip_level: loginData.vip_level,
+            vip_level_text: loginData.vip_level_text
           }
         : null
 
@@ -147,7 +159,8 @@ export const useUserInfo = create<UserInfoState>()((set, get) => ({
         token,
         userInfo,
         isLoggedIn: getIsLoggedIn(userInfo, get().profile, token),
-        isPhoneBound: getIsPhoneBound(userInfo, get().profile)
+        isPhoneBound: getIsPhoneBound(userInfo, get().profile),
+        isAdmin: getIsAdmin(userInfo, get().profile)
       })
 
       await get().loadUserInfo()
@@ -184,6 +197,7 @@ export const useUserInfo = create<UserInfoState>()((set, get) => ({
       userInfo: nextUserInfo,
       profile: nextProfile,
       isPhoneBound: getIsPhoneBound(nextUserInfo, nextProfile),
+      isAdmin: getIsAdmin(nextUserInfo, nextProfile),
       error: undefined
     })
   },
@@ -210,6 +224,7 @@ export const useUserInfo = create<UserInfoState>()((set, get) => ({
       profile: nextProfile,
       isLoggedIn: getIsLoggedIn(nextUserInfo, nextProfile, get().token),
       isPhoneBound: getIsPhoneBound(nextUserInfo, nextProfile),
+      isAdmin: getIsAdmin(nextUserInfo, nextProfile),
       error: undefined
     })
   },
@@ -227,6 +242,7 @@ export const useUserInfo = create<UserInfoState>()((set, get) => ({
       token: nextToken,
       isLoggedIn: getIsLoggedIn(nextUserInfo, nextProfile, nextToken),
       isPhoneBound: getIsPhoneBound(nextUserInfo, nextProfile),
+      isAdmin: getIsAdmin(nextUserInfo, nextProfile),
       error: undefined
     })
   },
@@ -239,6 +255,7 @@ export const useUserInfo = create<UserInfoState>()((set, get) => ({
       token: undefined,
       isLoggedIn: false,
       isPhoneBound: false,
+      isAdmin: false,
       isLoading: false,
       isLoggingIn: false,
       error: undefined

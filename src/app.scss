@@ -119,28 +119,37 @@ page {
   background: #f5f7fa;
   color: #333d55;
   font-family: -apple-system, BlinkMacSystemFont, 'PingFang SC', 'Helvetica Neue', sans-serif;
+  --nutui-color-primary: #0a1f5c;
+  --nutui-color-primary-disabled: #9aa7bd;
+  --nutui-color-primary-disabled-special: #9aa7bd;
+  --nutui-color-primary-stop-1: #0a1f5c;
+  --nutui-color-primary-stop-2: #1a3580;
+  --nutui-button-primary-border-color: #0a1f5c;
+  --nutui-button-primary-disabled: #9aa7bd;
 }
 
 .nut-button {
   font-weight: 600;
 }
 
-.nut-button--primary {
-  --nutui-color-primary: #0a1f5c;
-  --nutui-color-primary-disabled: #9aa7bd;
-  --nutui-color-primary-disabled-special: #9aa7bd;
-  --nutui-color-primary-stop-1: #0a1f5c;
-  --nutui-color-primary-stop-2: #1a3580;
-  --nutui-button-primary-background-color: linear-gradient(135deg, #0a1f5c 0%, #1a3580 100%);
-  --nutui-button-primary-border-color: #0a1f5c;
-  --nutui-button-primary-disabled: #9aa7bd;
-}
-
 .app-action-button-primary.nut-button,
-.app-action-button-primary.nut-button--primary {
+.app-action-button-primary.nut-button-primary {
   color: #ffffff;
   border-color: #0a1f5c;
   background: linear-gradient(135deg, #0a1f5c 0%, #1a3580 100%);
+}
+
+.app-action-button-primary.nut-button-disabled,
+.app-action-button-primary.nut-button-primary-disabled,
+.app-action-button-primary.nut-button-primary-solid-disabled,
+.app-action-button-primary.nut-button-primary-outline-disabled {
+  color: #ffffff;
+  border-color: #9aa7bd;
+  background: #9aa7bd;
+}
+
+.app-action-button-primary.nut-button-disabled .nut-button-children {
+  color: #ffffff;
 }
 
 .app-action-button-outline.nut-button {

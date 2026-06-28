@@ -46,19 +46,25 @@ function includesAny(value: string, keywords: string[]) {
   return keywords.some((keyword) => value.includes(keyword))
 }
 
+function withBackendLabel(identity: UserIdentity, label?: string | null): UserIdentity {
+  const nextLabel = textOf(label)
+
+  return nextLabel ? { ...identity, label: nextLabel } : identity
+}
+
 export function getUserIdentity(source?: UserIdentitySource | null): UserIdentity {
   const roleText = textOf(source?.role_text)?.toLowerCase() ?? ''
   const vipText = textOf(source?.vip_level_text) ?? ''
   const role = numberOf(source?.role)
   const vipLevel = numberOf(source?.vip_level) ?? 0
 
-  if (role === 9 || includesAny(roleText, ['admin', '管理员', '后台', '平台'])) {
-    return identityByType.admin
+  if (role === 3 || includesAny(roleText, ['admin', '管理员', '后台', '平台'])) {
+    return withBackendLabel(identityByType.admin, source?.role_text)
   }
 
   if (vipLevel >= 2 || includesAny(vipText, ['领航', '付费', '高级', 'navigator'])) {
-    return identityByType.navigator
+    return withBackendLabel(identityByType.navigator, source?.vip_level_text)
   }
 
-  return identityByType.elite
+  return withBackendLabel(identityByType.elite, source?.vip_level_text)
 }

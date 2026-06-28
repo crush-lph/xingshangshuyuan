@@ -67,6 +67,7 @@
 | 学习中心     | 获取线下活动列表                   | GET  | `/api/events`                     | 否   | `learning.getEvents`                     |
 | 学习中心     | 获取活动详情                       | GET  | `/api/event/detail`               | 否   | `learning.getEventDetail`                |
 | 学习中心     | 活动报名                           | POST | `/api/event/register`             | 是   | `learning.registerEvent`                 |
+| 学习中心     | 获取我的活动列表（已报名的活动）   | GET  | `/api/user/events`                | 是   | `learning.getUserEvents`                 |
 | 学习中心     | 获取学习统计数据                   | GET  | `/api/user/learning/stats`        | 是   | `learning.getUserLearningStats`          |
 | 商机对接(V2) | 商机数据看板                       | GET  | `/api/opportunities/stats`        | 否   | `opportunity.getOpportunityStats`        |
 | 商机对接(V2) | 商机列表（展示中）                 | GET  | `/api/opportunities`              | 否   | `opportunity.getOpportunities`           |
@@ -961,28 +962,28 @@
 
 请求 Body：
 
-| 字段     | 类型   | 必填 | 说明             | 示例 |
-| -------- | ------ | ---- | ---------------- | ---- |
-| order_no | string | 是   | 会员升级订单号   |      |
+| 字段     | 类型   | 必填 | 说明           | 示例 |
+| -------- | ------ | ---- | -------------- | ---- |
+| order_no | string | 是   | 会员升级订单号 |      |
 
 响应 Data：
 
-| 字段            | 类型             | 必填 | 说明             | 示例 |
-| --------------- | ---------------- | ---- | ---------------- | ---- |
-| order_id        | number(integer)  | 否   | 订单ID           |      |
-| order_no        | string           | 否   | 会员升级订单号   |      |
-| status          | number \| string | 否   | 订单状态         |      |
-| status_text     | string           | 否   | 订单状态文字     |      |
-| pay_status      | number \| string | 否   | 支付状态         |      |
-| pay_status_text | string           | 否   | 支付状态文字     |      |
-| is_paid         | boolean          | 否   | 是否已支付       |      |
-| paid            | boolean          | 否   | 是否已支付       |      |
-| vip_level       | number(integer)  | 否   | 会员等级         |      |
-| vip_level_text  | string           | 否   | 会员等级文字     |      |
-| amount          | string           | 否   | 支付金额         |      |
-| pay_time        | string           | 否   | 支付时间         |      |
-| transaction_id  | string           | 否   | 支付交易号       |      |
-| expire_at       | string           | 否   | 会员到期时间     |      |
+| 字段            | 类型             | 必填 | 说明           | 示例 |
+| --------------- | ---------------- | ---- | -------------- | ---- |
+| order_id        | number(integer)  | 否   | 订单ID         |      |
+| order_no        | string           | 否   | 会员升级订单号 |      |
+| status          | number \| string | 否   | 订单状态       |      |
+| status_text     | string           | 否   | 订单状态文字   |      |
+| pay_status      | number \| string | 否   | 支付状态       |      |
+| pay_status_text | string           | 否   | 支付状态文字   |      |
+| is_paid         | boolean          | 否   | 是否已支付     |      |
+| paid            | boolean          | 否   | 是否已支付     |      |
+| vip_level       | number(integer)  | 否   | 会员等级       |      |
+| vip_level_text  | string           | 否   | 会员等级文字   |      |
+| amount          | string           | 否   | 支付金额       |      |
+| pay_time        | string           | 否   | 支付时间       |      |
+| transaction_id  | string           | 否   | 支付交易号     |      |
+| expire_at       | string           | 否   | 会员到期时间   |      |
 
 业务归一化：`vip.queryVipPaymentStatus` 会调用 `vip.queryVipPay`，并根据后端返回的状态字段与状态文字归一化为 `pending`、`paid`、`failed`、`cancelled`，供前端支付轮询 UI 使用。
 
@@ -1576,6 +1577,47 @@
 | order_id        | integer \| null | 否   | 订单ID（付费活动时返回）      |          |
 | order_no        | string \| null  | 否   | 订单编号（付费活动时返回）    |          |
 | pay_amount      | string \| null  | 否   | 支付金额（付费活动时返回）    |          |
+
+### 获取我的活动列表（已报名的活动）
+
+- 方法：`GET`
+- 路径：`/api/user/events`
+- 认证：是
+- Service：`learning.getUserEvents`
+
+请求 Query：
+
+| 字段      | 类型   | 必填 | 说明     | 示例 |
+| --------- | ------ | ---- | -------- | ---- |
+| page      | string | 否   | 页码     | 1    |
+| page_size | string | 否   | 每页条数 | 10   |
+
+响应 Data：
+
+| 字段                   | 类型            | 必填 | 说明                          | 示例 |
+| ---------------------- | --------------- | ---- | ----------------------------- | ---- |
+| total                  | number(integer) | 否   | 总数                          | 5    |
+| page                   | number(integer) | 否   | 当前页码                      | 1    |
+| page_size              | number(integer) | 否   | 每页条数                      | 10   |
+| total_page             | number(integer) | 否   | 总页数                        | 1    |
+| list                   | array<object>   | 否   | 已报名活动列表                |      |
+| list[].registration_id | number(integer) | 否   | 报名记录ID                    |      |
+| list[].event_id        | number(integer) | 否   | 活动ID                        |      |
+| list[].order_id        | integer \| null | 否   | 关联订单ID（付费活动时有值）  |      |
+| list[].event_title     | string          | 否   | 活动标题                      |      |
+| list[].cover_image     | string          | 否   | 封面图URL                     |      |
+| list[].event_date      | string          | 否   | 活动日期                      |      |
+| list[].start_time      | string          | 否   | 开始时间                      |      |
+| list[].end_time        | string          | 否   | 结束时间                      |      |
+| list[].location        | string          | 否   | 活动地点                      |      |
+| list[].city            | string          | 否   | 所在城市                      |      |
+| list[].price           | string          | 否   | 报名费用                      |      |
+| list[].real_name       | string          | 否   | 报名姓名                      |      |
+| list[].phone           | string          | 否   | 联系电话                      |      |
+| list[].company_name    | string          | 否   | 公司名称                      |      |
+| list[].status          | number(integer) | 否   | 状态(0已取消,1已报名,2已签到) |      |
+| list[].status_text     | string          | 否   | 状态文字                      |      |
+| list[].created_at      | string          | 否   | 报名时间                      |      |
 
 ### 获取学习统计数据
 

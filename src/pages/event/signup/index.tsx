@@ -5,6 +5,7 @@ import { ActionBar, FieldList, FormSection, FormTextField, StateNotice } from '@
 import { PageShell } from '@/components/PageShell'
 import { getEventDetail, getEvents, getUserProfile, registerEvent, type GetEventDetailData } from '@/services'
 import { ensureLoggedIn } from '@/shared/auth-guard'
+import { isEventRegistrationOpen, showEventRegistrationUnavailable } from '@/shared/event-registration'
 import { router, routes } from '@/shared/router'
 import { getPageParam, priceOf, textOf, textOrPlaceholder } from '@/shared/view-data'
 
@@ -60,7 +61,23 @@ export default function EventSignupPage() {
       }
 
       const eventResult = await getEventDetail({ event_id: eventId })
-      setEvent(eventResult.data.id ? eventResult.data : null)
+      const nextEvent = eventResult.data.id ? eventResult.data : null
+
+      if (nextEvent && !isEventRegistrationOpen(nextEvent)) {
+        showEventRegistrationUnavailable(nextEvent)
+        setEvent(null)
+        setTimeout(() => {
+          if (Taro.getCurrentPages().length > 1) {
+            void router.back()
+            return
+          }
+
+          void router.redirect(routes.eventDetail, { event_id: nextEvent.id })
+        }, 800)
+        return
+      }
+
+      setEvent(nextEvent)
     }
 
     void loadData()
@@ -78,6 +95,11 @@ export default function EventSignupPage() {
 
     if (!event?.id) {
       Taro.showToast({ title: '暂无活动数据', icon: 'none' })
+      return
+    }
+
+    if (!isEventRegistrationOpen(event)) {
+      showEventRegistrationUnavailable(event)
       return
     }
 

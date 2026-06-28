@@ -24,7 +24,7 @@
 | 10   | 活动详情页        | `/pages/event/detail/index`                | 阶段 2   | 部分实现 | 详情字段、价格、报名入口、统一状态表达                          |
 | 11   | 活动报名页        | `/pages/event/signup/index`                | 阶段 2   | 部分实现 | 报名表单、必填校验、报名受理反馈、失败反馈                      |
 | 12   | 拼团参与页        | `/pages/event/group/index`                 | 阶段 2   | 部分实现 | 真实活动字段、参与动作、拼团接口缺口说明                        |
-| 13   | 报名成功/电子票   | `/pages/event/ticket/index`                | 阶段 6   | 已实现   | 报名记录查询电子票、展示真实二维码/核销码、无报名记录兜底说明   |
+| 13   | 报名成功/电子票   | `/pages/event/ticket/index`                | 阶段 6   | 部分实现 | 报名记录状态展示；新版接口未提供二维码/核销码                   |
 | 14   | 会员权益页        | `/pages/member/benefit/index`              | 阶段 3   | 部分实现 | 真实会员等级、权益配置、开通入口、失败反馈                      |
 | 15   | 会员开通确认      | `/pages/member/confirm/index`              | 阶段 3   | 部分实现 | 创建会员订单、确认金额、支付入口、无订单号兜底                  |
 | 16   | 对公支付凭证      | `/pages/member/payment-transfer/index`     | 阶段 3   | 部分实现 | 凭证上传、真实订单状态、加载/错误状态、失败反馈                 |
@@ -35,11 +35,11 @@
 | 21   | 我的/企业会员中心 | `/pages/profile/index`                     | 阶段 3   | 部分实现 | 用户信息、会员状态、菜单、统计缺失兜底                          |
 | 22   | 企业认证页        | `/pages/user/cert/index`                   | 阶段 3   | 部分实现 | 认证表单、资料上传、审核状态、提交失败反馈                      |
 | 23   | 我的订单          | `/pages/user/orders/index`                 | 阶段 3   | 部分实现 | 真实订单列表、状态、订单号缺失兜底、统一状态表达                |
-| 24   | 我的活动          | `/pages/user/events/index`                 | 阶段 3   | 部分实现 | 活动报名接口缺口说明、隐藏电子票等假动作                        |
+| 24   | 我的活动          | `/pages/user/events/index`                 | 阶段 3   | 已实现   | 真实报名记录、状态筛选、电子票入口、空态/错误态                 |
 | 25   | 我的权益          | `/pages/user/benefits/index`               | 阶段 3   | 部分实现 | 会员等级、权益配置、使用状态接口缺口说明                        |
 | 26   | 我的积分          | `/pages/user/points/index`                 | 阶段 3   | 部分实现 | 积分余额/流水接口缺口说明、证书记录边界                         |
 | 27   | 我的评价          | `/pages/user/reviews/index`                | 阶段 3   | 部分实现 | 真实评价列表、待评价来源边界、提交失败反馈                      |
-| 28   | 后台核销页        | `/pages/admin/checkin/index`               | 阶段 6   | 已实现   | 权限态、扫码核销、真实签到接口反馈、当前活动字段展示            |
+| 28   | 后台核销页        | `/pages/admin/checkin/index`               | 阶段 6   | 部分实现 | 权限态、当前活动字段展示；新版接口未提供扫码核销动作            |
 | 29   | 后台认证审核      | `/pages/admin/cert/index`                  | 阶段 4   | 部分实现 | 权限态、认证资料来源限制、后台审核接口缺口说明                  |
 | 30   | 后台订单确认      | `/pages/admin/orders/index`                | 阶段 4   | 部分实现 | 权限态、订单/发票来源限制、确认接口缺口说明                     |
 | 31   | 后台资源需求      | `/pages/admin/resource/index`              | 阶段 4   | 部分实现 | 权限态、客户/合同来源限制、资源需求处理接口缺口说明             |
@@ -61,6 +61,6 @@
 
 ## Phase 6 票务与核销闭环
 
-- 已从 OpenAPI 接入 `/api/event/ticket`，报名成功页携带 `registration_id` 时展示后台返回的电子票二维码、二维码原文、参会人和状态。
+- 新版 OpenAPI 未提供 `/api/event/ticket` 和 `/api/event/checkin`；报名成功页携带 `registration_id` 时，电子票页改为从 `/api/user/events` 查询对应报名记录并展示状态。
 - 活动报名提交后不再丢弃响应，优先把 `registration_id` 传入电子票页；付费活动或历史入口未返回报名记录时保留活动详情兜底说明。
-- 后台核销页已接入 `Taro.scanCode` 和 `/api/event/checkin`，扫码后提交二维码原文，并展示后台返回的报名记录、参会人、手机号和签到状态。
+- 后台核销页保留权限态和当前活动展示，但不再调用旧核销接口；扫码核销动作等待接口补齐。

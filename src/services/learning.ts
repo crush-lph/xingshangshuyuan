@@ -335,59 +335,47 @@ export function registerEvent(data: RegisterEventPayload, options?: ApiBodyReque
   return api.post<RegisterEventResponse, RegisterEventPayload>('/api/event/register', data, options)
 }
 
-export interface GetEventTicketQuery {
-  registration_id: QueryValue
+export interface GetUserEventsQuery {
+  page?: QueryValue
+  page_size?: QueryValue
 }
 
-export interface GetEventTicketData {
-  registration_id?: number
-  event_id?: number
-  order_id?: number | null
-  event_title?: string
-  cover_image?: string
-  event_date?: string
-  start_time?: string
-  end_time?: string
-  location?: string
-  real_name?: string
-  phone?: string
-  company_name?: string
-  status?: number
-  status_text?: string
-  qrcode?: string
-  qrcode_content?: string
+export interface GetUserEventsData {
+  total?: number
+  page?: number
+  page_size?: number
+  total_page?: number
+  list?: Array<{
+    registration_id?: number
+    event_id?: number
+    order_id?: number | null
+    event_title?: string
+    cover_image?: string
+    event_date?: string
+    start_time?: string
+    end_time?: string
+    location?: string
+    city?: string
+    price?: string
+    real_name?: string
+    phone?: string
+    company_name?: string
+    status?: number
+    status_text?: string
+    created_at?: string
+  }>
 }
 
-export type GetEventTicketResponse = ApiResponse<GetEventTicketData>
+export type GetUserEventsResponse = ApiResponse<GetUserEventsData>
 
-export function getEventTicket(
-  params: GetEventTicketQuery,
-  options?: Omit<ApiRequestOptions<GetEventTicketQuery>, 'data'>
+export function getUserEvents(
+  params?: GetUserEventsQuery,
+  options?: Omit<ApiRequestOptions<GetUserEventsQuery>, 'data'>
 ) {
-  return api.get<GetEventTicketResponse, GetEventTicketQuery>('/api/event/ticket', {
+  return api.get<GetUserEventsResponse, GetUserEventsQuery>('/api/user/events', {
     ...options,
     data: params
   })
-}
-
-export interface CheckinEventPayload {
-  code?: string
-}
-
-export interface CheckinEventData {
-  registration_id?: number
-  event_id?: number
-  event_title?: string
-  real_name?: string
-  phone?: string
-  status?: number
-  status_text?: string
-}
-
-export type CheckinEventResponse = ApiResponse<CheckinEventData>
-
-export function checkinEvent(data: CheckinEventPayload, options?: ApiBodyRequestOptions<CheckinEventPayload>) {
-  return api.post<CheckinEventResponse, CheckinEventPayload>('/api/event/checkin', data, options)
 }
 
 export interface GetUserLearningStatsData {

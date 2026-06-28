@@ -11,6 +11,7 @@ import {
 } from '@/components/business'
 import { PageShell } from '@/components/PageShell'
 import { getCourseCategories, getCourses, getEvents, getUserLearningStats } from '@/services'
+import { openEventSignupIfAvailable } from '@/shared/event-registration'
 import { routes } from '@/shared/router'
 import { compactJoin, priceOf, textOrPlaceholder, textOf } from '@/shared/view-data'
 
@@ -21,6 +22,8 @@ export default function ShuyuanPage() {
     title: string
     desc: string
     eyebrow?: string
+    status?: number
+    status_text?: string
   } | null>(null)
   const [stats, setStats] = useState<StatItem[]>([])
   const [items, setItems] = useState<ListItem[]>([])
@@ -58,7 +61,9 @@ export default function ShuyuanPage() {
                 id: event.id,
                 eyebrow: textOf(event.status_text),
                 title: textOrPlaceholder(event.title, '未命名活动'),
-                desc: compactJoin([event.city, event.location, event.start_time]) || '接口未返回推荐活动信息'
+                desc: compactJoin([event.city, event.location, event.start_time]) || '接口未返回推荐活动信息',
+                status: event.status,
+                status_text: event.status_text
               }
             : null
         )
@@ -124,8 +129,7 @@ export default function ShuyuanPage() {
                       {
                         label: '立即报名',
                         variant: 'gold',
-                        path: routes.eventDetail,
-                        query: recommendation.id ? { event_id: recommendation.id } : undefined
+                        onClick: () => openEventSignupIfAvailable(recommendation)
                       }
                     ]}
                   />

@@ -3,6 +3,7 @@ import { Text, View } from '@tarojs/components'
 import { ActionBar, FieldList, SectionCard, StateNotice } from '@/components/business'
 import { PageShell } from '@/components/PageShell'
 import { getEventDetail, getEvents, type GetEventDetailData } from '@/services'
+import { openEventSignupIfAvailable } from '@/shared/event-registration'
 import { routes } from '@/shared/router'
 import { compactJoin, getPageParam, priceOf, textOrPlaceholder } from '@/shared/view-data'
 
@@ -94,7 +95,7 @@ export default function EventDetailPage() {
                 query: event.id ? { event_id: event.id } : undefined
               },
               { label: '会员优惠', variant: 'gold', path: routes.memberBenefit },
-              { label: '立即报名', path: routes.eventSignup, query: event.id ? { event_id: event.id } : undefined }
+              { label: '立即报名', onClick: () => openEventSignupIfAvailable(event) }
             ]}
           />
         </View>

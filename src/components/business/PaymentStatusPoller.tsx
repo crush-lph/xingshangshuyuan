@@ -16,6 +16,9 @@ export interface PaymentStatusPollerProps<TResult extends PaymentStatusResult = 
   queryStatus: (orderNo: string) => Promise<TResult>
   intervalMs?: number
   timeoutMs?: number
+  retryQueryLabel?: string
+  retryPaymentLabel?: string
+  backLabel?: string
   onSuccess: (result: TResult) => void
   onRetryPayment?: () => void | Promise<void>
   onBack?: () => void | Promise<void>
@@ -82,6 +85,9 @@ export function PaymentStatusPoller<TResult extends PaymentStatusResult = Paymen
   queryStatus,
   intervalMs = DEFAULT_INTERVAL_MS,
   timeoutMs = DEFAULT_TIMEOUT_MS,
+  retryQueryLabel = '重新查询',
+  retryPaymentLabel = '重新支付',
+  backLabel = '返回上一页',
   onSuccess,
   onRetryPayment,
   onBack,
@@ -198,14 +204,14 @@ export function PaymentStatusPoller<TResult extends PaymentStatusResult = Paymen
     }))
   }
 
-  const actions: ActionItem[] = [{ label: '重新查询', variant: 'outline', onClick: restartPolling }]
+  const actions: ActionItem[] = [{ label: retryQueryLabel, variant: 'outline', onClick: restartPolling }]
 
   if (onRetryPayment) {
-    actions.push({ label: '重新支付', variant: 'gold', onClick: onRetryPayment })
+    actions.push({ label: retryPaymentLabel, variant: 'gold', onClick: onRetryPayment })
   }
 
   if (onBack) {
-    actions.push({ label: '返回上一页', variant: 'primary', onClick: onBack })
+    actions.push({ label: backLabel, variant: 'primary', onClick: onBack })
   }
 
   const shouldShowActions = state === 'failed' || state === 'cancelled' || state === 'timeout'
