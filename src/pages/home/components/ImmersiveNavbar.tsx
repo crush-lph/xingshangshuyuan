@@ -63,17 +63,23 @@ export function ImmersiveNavbar({
   const navMenuSpacerStyle: CSSProperties = {
     width: `${navMetrics.menuPlaceholderWidth}px`
   }
+  const isSolidNav = navProgress > 0.45
   const searchStyle: CSSProperties = {
     height: `${NAV_SEARCH_HEIGHT}px`,
     marginTop: `${NAV_SEARCH_GAP}px`,
-    backgroundColor: `rgba(${navProgress > 0.45 ? '246, 248, 252' : '255, 255, 255'}, ${0.16 + navProgress * 0.78})`,
-    borderColor: `rgba(${navProgress > 0.45 ? '229, 234, 245' : '255, 255, 255'}, ${0.2 + navProgress * 0.64})`,
-    boxShadow: `0 8px 20px rgba(10, 31, 92, ${0.04 + navProgress * 0.06})`,
-    backdropFilter: 'blur(4px)'
+    backgroundColor: isSolidNav
+      ? `rgba(255, 255, 255, ${0.9 + navProgress * 0.08})`
+      : `rgba(255, 255, 255, ${0.16 + navProgress * 0.52})`,
+    borderColor: isSolidNav
+      ? `rgba(10, 31, 92, ${0.08 + navProgress * 0.08})`
+      : `rgba(255, 255, 255, ${0.2 + navProgress * 0.42})`,
+    boxShadow: isSolidNav
+      ? `0 8px 24px rgba(10, 31, 92, ${0.08 + navProgress * 0.05})`
+      : `0 8px 20px rgba(10, 31, 92, ${0.04 + navProgress * 0.04})`
   }
-  const searchIconColor = navProgress > 0.5 ? '#1E5EFF' : 'rgba(255, 255, 255, 0.88)'
+  const searchIconColor = isSolidNav ? '#1E5EFF' : 'rgba(255, 255, 255, 0.88)'
   const searchTextStyle: CSSProperties = {
-    color: navProgress > 0.5 ? '#6B7A99' : 'rgba(255, 255, 255, 0.82)'
+    color: isSolidNav ? '#5F6F8F' : 'rgba(255, 255, 255, 0.82)'
   }
   const lightTitleStyle: CSSProperties = {
     opacity: lightTextOpacity,

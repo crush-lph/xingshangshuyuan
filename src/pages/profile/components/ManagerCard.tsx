@@ -21,6 +21,7 @@ export function ManagerCard({ manager }: ManagerCardProps) {
       <Button
         size="small"
         fill="outline"
+        className="h-9 rounded-full px-4"
         onClick={() => {
           Taro.makePhoneCall({
             phoneNumber: manager.phone

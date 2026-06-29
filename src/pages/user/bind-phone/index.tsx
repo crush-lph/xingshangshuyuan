@@ -56,7 +56,7 @@ export default function UserBindPhonePage() {
           <Button
             block
             type="primary"
-            className="h-11"
+            className="app-action-button app-action-button-primary app-action-button-stacked h-12 w-full rounded-full"
             onClick={() => {
               router.redirect(routes.userLogin, { redirect: buildUrl(redirectRoute.path, redirectRoute.query) })
             }}
@@ -64,12 +64,17 @@ export default function UserBindPhonePage() {
             先去登录
           </Button>
         ) : isPhoneBound ? (
-          <Button block type="primary" className="h-11" onClick={finishBinding}>
+          <Button
+            block
+            type="primary"
+            className="app-action-button app-action-button-primary app-action-button-stacked h-12 w-full rounded-full"
+            onClick={finishBinding}
+          >
             继续
           </Button>
         ) : (
           <TaroButton
-            className="auth-primary-button flex h-12 items-center justify-center rounded-lg border-0 bg-tech px-4 text-base font-semibold text-white"
+            className="auth-primary-button flex h-12 w-full items-center justify-center rounded-full border-0 bg-tech px-4 text-base font-semibold text-white"
             disabled={isBindingPhone}
             openType="getPhoneNumber"
             onGetPhoneNumber={(event) => {

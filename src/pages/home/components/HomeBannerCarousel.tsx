@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Image, Text, View } from '@tarojs/components'
+import { Image, View } from '@tarojs/components'
 import Swiper from '@nutui/nutui-react-taro/dist/es/packages/swiper'
 import SwiperItem from '@nutui/nutui-react-taro/dist/es/packages/swiperitem'
 import '@nutui/nutui-react-taro/dist/es/packages/swiper/style/css'
@@ -18,7 +18,7 @@ interface HomeBannerCarouselProps {
 
 export function HomeBannerCarousel({ items = [] }: HomeBannerCarouselProps) {
   const [activeIndex, setActiveIndex] = useState(0)
-  const bannerItems = items.filter((item) => item.title)
+  const bannerItems = items.filter((item) => item.imageUrl)
   const normalizedActiveIndex = bannerItems.length ? activeIndex % bannerItems.length : 0
 
   if (!bannerItems.length) {
@@ -49,11 +49,6 @@ export function HomeBannerCarousel({ items = [] }: HomeBannerCarouselProps) {
               {item.imageUrl ? (
                 <Image className="absolute inset-0 h-full w-full" src={item.imageUrl} mode="aspectFill" />
               ) : null}
-              <View className="absolute inset-0 bg-brand-deep/45" />
-              <View className="absolute bottom-0 left-0 right-0 p-4">
-                <Text className="block text-lg font-extrabold text-white">{item.title}</Text>
-                {item.subtitle ? <Text className="mt-1 block text-xs text-white/75">{item.subtitle}</Text> : null}
-              </View>
             </View>
           </SwiperItem>
         ))}

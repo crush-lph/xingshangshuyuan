@@ -106,7 +106,7 @@ export default function ServicesPage() {
                 <Button
                   type="primary"
                   size="small"
-                  className="bg-gold border-gold"
+                  className="h-10 rounded-full border-0 bg-gold px-4 text-white"
                   onClick={() => router.to(routes.resourceSubmit)}
                 >
                   提需求

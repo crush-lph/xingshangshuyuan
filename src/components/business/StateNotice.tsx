@@ -19,7 +19,7 @@ export function StateNotice({ state, copy, actionText, onAction }: StateNoticePr
       <Text className="mt-2 block text-sm leading-5 text-muted">{displayCopy.desc}</Text>
       {actionText && onAction ? (
         <View className="mt-4">
-          <Button type="primary" size="small" onClick={onAction}>
+          <Button type="primary" size="small" className="h-10 rounded-full border-0 px-4" onClick={onAction}>
             {actionText}
           </Button>
         </View>

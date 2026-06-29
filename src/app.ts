@@ -1,10 +1,11 @@
 import { PropsWithChildren, useEffect } from 'react'
 import { configureApi } from '@/shared/api-config'
-import { loadAppIconFont } from '@/shared/app-icon-font'
+import { loadAppIconFont, loadIconfont } from '@/shared/app-icon-font'
 import { useUserInfo } from '@/stores/user-info'
 import './app.scss'
 
 loadAppIconFont()
+loadIconfont()
 configureApi()
 
 function App({ children }: PropsWithChildren) {

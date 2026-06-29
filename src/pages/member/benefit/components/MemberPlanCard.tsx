@@ -67,10 +67,10 @@ const textStyle = {
   price: { fontSize: '46rpx', lineHeight: '52rpx' },
   priceSuffix: { fontSize: '26rpx', lineHeight: '32rpx' },
   originalPrice: { fontSize: '22rpx', lineHeight: '30rpx' },
-  perk: { fontSize: '29rpx', lineHeight: '42rpx' },
+  perk: { fontSize: '27rpx', lineHeight: '38rpx' },
   button: {
-    minHeight: '100rpx',
-    height: '100rpx',
+    minHeight: '96rpx',
+    height: '96rpx',
     borderRadius: '999rpx',
     fontSize: '30rpx',
     lineHeight: '38rpx'
@@ -136,13 +136,13 @@ export function MemberPlanCard({ level, isPaymentLocked, onPay }: MemberPlanCard
         </View>
       </View>
 
-      <View className="mb-7 mt-5 grid gap-3">
+      <View className="mb-7 mt-5 grid gap-[22rpx]">
         {perks.map((item) => (
           <View key={item} className="flex items-start gap-3">
             <View
-              className={`mt-0.5 flex h-[20px] w-[20px] shrink-0 items-center justify-center rounded-full ${visual.check}`}
+              className={`mt-[9rpx] flex h-[16px] w-[16px] shrink-0 items-center justify-center rounded-full ${visual.check}`}
             >
-              <AppIcon name="check-line" size={13} color="currentColor" />
+              <AppIcon name="check-line" size={11} color="currentColor" />
             </View>
             <Text className={`flex-1 font-semibold ${visual.perk}`} style={textStyle.perk}>
               {item}

@@ -11,13 +11,32 @@ import {
   getUnreadMessageCount,
   getUserInfo,
   getUserLearningStats,
-  getUserProfile
+  getUserProfile,
+  getUserVip
 } from '@/services'
 import { accountMenus, memberActions, serviceMenus } from './profile.data'
 import type { ManagerInfo, MetricItem } from './types'
-import { isRecord, textOf } from '@/shared/view-data'
+import { isRecord, numberOf, textOf } from '@/shared/view-data'
 import { routes } from '@/shared/router'
 import { getUserIdentity, type UserIdentity } from '@/shared/user-identity'
+
+function isPaidMember(value: unknown, label?: unknown) {
+  const level = numberOf(value) ?? 0
+  const levelText = textOf(label)?.toLowerCase() ?? ''
+
+  return level >= 2 || ['领航', '付费', '高级', 'navigator'].some((keyword) => levelText.includes(keyword))
+}
+
+function formatExpireText(value: unknown) {
+  const expireAt = textOf(value)
+
+  if (!expireAt) {
+    return undefined
+  }
+
+  const dateText = expireAt.split(/[T ]/)[0] ?? expireAt
+  return `到期：${dateText}`
+}
 
 export default function ProfilePage() {
   const [metricItems, setMetricItems] = useState<MetricItem[]>([
@@ -28,7 +47,9 @@ export default function ProfilePage() {
   ])
   const [serviceMenuItems, setServiceMenuItems] = useState(serviceMenus)
   const [accountMenuItems, setAccountMenuItems] = useState(accountMenus)
-  const [identity, setIdentity] = useState<UserIdentity>(() => getUserIdentity())
+  const [memberIdentity, setMemberIdentity] = useState<UserIdentity>(() => getUserIdentity())
+  const [memberLevelText, setMemberLevelText] = useState<string>()
+  const [memberExpireText, setMemberExpireText] = useState<string>()
   const [manager, setManager] = useState<ManagerInfo | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [hasError, setHasError] = useState(false)
@@ -38,10 +59,11 @@ export default function ProfilePage() {
       setIsLoading(true)
       setHasError(false)
 
-      const [userInfoResult, profileResult, unreadResult, learningResult, customerServiceResult] =
+      const [userInfoResult, profileResult, vipResult, unreadResult, learningResult, customerServiceResult] =
         await Promise.allSettled([
           getUserInfo(),
           getUserProfile(),
+          getUserVip(),
           getUnreadMessageCount(),
           getUserLearningStats(),
           getCustomerServiceConfig()
@@ -49,8 +71,8 @@ export default function ProfilePage() {
 
       if (profileResult.status === 'fulfilled') {
         const profile = profileResult.value.data
-        const userInfo = userInfoResult.status === 'fulfilled' ? userInfoResult.value.data : undefined
-        setIdentity(getUserIdentity({ ...userInfo, ...profile }))
+        setMemberIdentity(getUserIdentity({ vip_level: profile.vip_level, vip_level_text: profile.vip_level_text }))
+        setMemberLevelText(textOf(profile.vip_level_text))
 
         setAccountMenuItems((items) =>
           items.map((item) =>
@@ -63,7 +85,19 @@ export default function ProfilePage() {
           )
         )
       } else if (userInfoResult.status === 'fulfilled') {
-        setIdentity(getUserIdentity(userInfoResult.value.data))
+        const userInfo = userInfoResult.value.data
+        setMemberIdentity(getUserIdentity({ vip_level: userInfo.vip_level, vip_level_text: userInfo.vip_level_text }))
+        setMemberLevelText(textOf(userInfo.vip_level_text))
+      }
+
+      if (vipResult.status === 'fulfilled') {
+        const vip = vipResult.value.data
+        const vipLevel = vip.vip_level ?? vip.level
+        const vipLevelText = textOf(vip.vip_level_text) ?? textOf(vip.level_text)
+
+        setMemberIdentity(getUserIdentity({ vip_level: vipLevel, vip_level_text: vipLevelText }))
+        setMemberLevelText(vipLevelText)
+        setMemberExpireText(isPaidMember(vipLevel, vipLevelText) ? formatExpireText(vip.expire_at) : undefined)
       }
 
       if (unreadResult.status === 'fulfilled') {
@@ -110,7 +144,7 @@ export default function ProfilePage() {
       }
 
       setHasError(
-        [userInfoResult, profileResult, unreadResult, learningResult, customerServiceResult].every(
+        [userInfoResult, profileResult, vipResult, unreadResult, learningResult, customerServiceResult].every(
           (result) => result.status === 'rejected'
         )
       )
@@ -125,7 +159,12 @@ export default function ProfilePage() {
     <View className="min-h-screen bg-canvas pb-6 text-ink">
       <View className="bg-brand px-5 pb-8 pt-5">
         <ProfileHeader />
-        <MemberCard actions={memberActions} identity={identity} />
+        <MemberCard
+          actions={memberActions}
+          expireText={memberExpireText}
+          identity={memberIdentity}
+          levelText={memberLevelText}
+        />
       </View>
 
       <View className="-mt-4 px-4">

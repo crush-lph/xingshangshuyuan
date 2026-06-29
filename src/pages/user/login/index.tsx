@@ -25,7 +25,7 @@ export default function UserLoginPage() {
     <AuthShell title="微信授权登录" subtitle="登录后继续完成当前操作。">
       <View>
         <TaroButton
-          className="auth-primary-button flex h-12 items-center justify-center rounded-lg border-0 bg-tech px-4 text-white"
+          className="auth-primary-button flex h-12 w-full items-center justify-center rounded-full border-0 bg-tech px-4 text-white"
           disabled={isLoggingIn}
           onClick={handleLogin}
         >

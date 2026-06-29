@@ -1,5 +1,5 @@
-import { useEffect, useState, type CSSProperties } from 'react'
-import { Image, Text, View } from '@tarojs/components'
+import { useEffect, useState } from 'react'
+import { Text, View } from '@tarojs/components'
 import Button from '@nutui/nutui-react-taro/dist/es/packages/button'
 import '@nutui/nutui-react-taro/dist/es/packages/button/style/css'
 import {
@@ -9,7 +9,6 @@ import {
   getOpportunities,
   getProducts,
   getSystemStatus,
-  getUserProfile,
   type GetEventsData,
   type GetOpportunitiesData,
   type GetProductsData
@@ -21,6 +20,7 @@ import { openEventSignupIfAvailable } from '@/shared/event-registration'
 import { router, routes, type RoutePath } from '@/shared/router'
 import { compactJoin, priceOf, textOf, textOrPlaceholder } from '@/shared/view-data'
 import { HomeBannerCarousel, type HomeBannerItem } from './components/HomeBannerCarousel'
+import { HomeHero } from './components/HomeHero'
 import { DEFAULT_IMMERSIVE_NAVBAR_HEIGHT, ImmersiveNavbar } from './components/ImmersiveNavbar'
 
 interface QuickEntry {
@@ -62,22 +62,11 @@ interface CoreBusinessEntry {
   actionText?: string
 }
 
-interface ProfileView {
-  avatarText: string
-  name: string
-  companyName?: string
-  memberText?: string
-  certificationText?: string
-}
-
 interface HomeSectionErrors {
   products: boolean
   event: boolean
   opportunity: boolean
 }
-
-const FALLBACK_HERO_IMAGE =
-  'https://images.unsplash.com/photo-1511578314322-379afb476865?auto=format&fit=crop&w=1000&q=82'
 
 const HOME_QUICK_ENTRIES: QuickEntry[] = [
   {
@@ -181,7 +170,6 @@ export default function HomePage() {
   const [products, setProducts] = useState<ProductEntry[]>([])
   const [event, setEvent] = useState<EventEntry | null>(null)
   const [opportunity, setOpportunity] = useState<OpportunityEntry | null>(null)
-  const [profile, setProfile] = useState<ProfileView | null>(null)
   const [banners, setBanners] = useState<HomeBannerItem[]>([])
   const [coreBusiness, setCoreBusiness] = useState<CoreBusinessEntry[]>([])
   const [systemStatus, setSystemStatus] = useState('')
@@ -203,23 +191,15 @@ export default function HomePage() {
         opportunity: false
       })
 
-      const [
-        bannersResult,
-        coreBusinessResult,
-        systemStatusResult,
-        productsResult,
-        eventsResult,
-        opportunitiesResult,
-        profileResult
-      ] = await Promise.allSettled([
-        getBanners(),
-        getCoreBusiness(),
-        getSystemStatus(),
-        getProducts({ page: 1, page_size: 2 }),
-        getEvents({ page: 1, page_size: 1 }),
-        getOpportunities({ page: 1, page_size: 1 }),
-        getUserProfile()
-      ])
+      const [bannersResult, coreBusinessResult, systemStatusResult, productsResult, eventsResult, opportunitiesResult] =
+        await Promise.allSettled([
+          getBanners(),
+          getCoreBusiness(),
+          getSystemStatus(),
+          getProducts({ page: 1, page_size: 2 }),
+          getEvents({ page: 1, page_size: 1 }),
+          getOpportunities({ page: 1, page_size: 1 })
+        ])
 
       setHasError(
         bannersResult.status === 'rejected' &&
@@ -227,8 +207,7 @@ export default function HomePage() {
           systemStatusResult.status === 'rejected' &&
           productsResult.status === 'rejected' &&
           eventsResult.status === 'rejected' &&
-          opportunitiesResult.status === 'rejected' &&
-          profileResult.status === 'rejected'
+          opportunitiesResult.status === 'rejected'
       )
       setSectionErrors({
         products: productsResult.status === 'rejected',
@@ -275,23 +254,6 @@ export default function HomePage() {
         setOpportunity(item ? mapOpportunity(item) : null)
       }
 
-      if (profileResult.status === 'fulfilled') {
-        const data = profileResult.value.data
-        const name = textOf(data.nickname)
-
-        setProfile(
-          name
-            ? {
-                avatarText: name.slice(0, 1),
-                name,
-                companyName: textOf(data.company_name),
-                memberText: textOf(data.vip_level_text),
-                certificationText: textOf(data.certification_status_text)
-              }
-            : null
-        )
-      }
-
       setIsLoading(false)
     }
 
@@ -299,10 +261,6 @@ export default function HomePage() {
   }, [])
 
   const primaryBanner = banners[0]
-  const heroImageUrl = primaryBanner?.imageUrl || FALLBACK_HERO_IMAGE
-  const heroStyle: CSSProperties = {
-    height: `${navbarHeight + 96}px`
-  }
 
   return (
     <View className="min-h-screen bg-canvas pb-6 text-ink">
@@ -313,11 +271,7 @@ export default function HomePage() {
         onHeightChange={setNavbarHeight}
       />
 
-      <View className="relative overflow-hidden bg-brand-deep" style={heroStyle}>
-        <Image className="absolute inset-0 h-full w-full" src={heroImageUrl} mode="aspectFill" />
-        <View className="absolute inset-0 bg-brand-deep/55" />
-        <View className="absolute bottom-0 left-0 right-0 h-16 bg-gradient-to-b from-transparent to-canvas" />
-      </View>
+      <HomeHero navbarHeight={navbarHeight} imageUrl={primaryBanner?.imageUrl} />
 
       <View className="px-4 py-3">
         {isLoading ? <StateNotice state="loading" /> : null}
@@ -325,42 +279,6 @@ export default function HomePage() {
 
         {!isLoading && !hasError ? (
           <>
-            {profile ? (
-              <View className="mb-3 flex items-center gap-3 rounded-lg bg-white px-4 py-4 shadow-soft">
-                <View className="flex h-11 w-11 items-center justify-center rounded-lg bg-brand-soft text-brand">
-                  <Text className="font-bold">{profile.avatarText}</Text>
-                </View>
-                <View className="flex-1">
-                  <Text className="block text-sm font-semibold text-ink">
-                    {compactJoin([profile.name, profile.companyName])}
-                  </Text>
-                  {profile.memberText ? (
-                    <Text className="mt-1 block text-xs font-semibold text-gold">{profile.memberText}</Text>
-                  ) : (
-                    <Text className="mt-1 block text-xs text-muted">完善资料后获得更精准撮合推荐</Text>
-                  )}
-                </View>
-                {profile.certificationText ? (
-                  <View className="rounded bg-gold-soft px-2 py-1" onClick={() => router.to(routes.userCert)}>
-                    <Text className="text-xs font-semibold text-gold">{profile.certificationText}</Text>
-                  </View>
-                ) : null}
-              </View>
-            ) : (
-              <View className="mb-3 flex items-center gap-3 rounded-lg bg-white px-4 py-4 shadow-soft">
-                <View className="flex h-11 w-11 items-center justify-center rounded-lg bg-canvas text-muted">
-                  <AppIcon name="user-3-line" size={22} color="#9AA7BD" />
-                </View>
-                <View className="flex-1">
-                  <Text className="block text-sm font-semibold text-ink">未登录</Text>
-                  <Text className="mt-1 block text-xs text-muted">登录后查看会员与认证信息</Text>
-                </View>
-                <View className="rounded bg-brand-soft px-2 py-1" onClick={() => router.to(routes.profile)}>
-                  <Text className="text-xs font-semibold text-brand">登录</Text>
-                </View>
-              </View>
-            )}
-
             <HomeBannerCarousel items={banners} />
 
             <View className="mt-3 flex items-center justify-between rounded-lg bg-white px-4 py-3 shadow-soft">
@@ -476,6 +394,7 @@ export default function HomePage() {
                     <Button
                       type="primary"
                       size="small"
+                      className="h-10 rounded-full border-0 px-4"
                       onClick={(clickEvent) => {
                         clickEvent.stopPropagation()
                         openEventSignupIfAvailable(event)

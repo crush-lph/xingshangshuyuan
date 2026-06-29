@@ -1,3 +1,4 @@
+import type { CSSProperties } from 'react'
 import { View } from '@tarojs/components'
 import Button from '@nutui/nutui-react-taro/dist/es/packages/button'
 import '@nutui/nutui-react-taro/dist/es/packages/button/style/css'
@@ -16,20 +17,39 @@ function getButtonProps(variant: ActionItem['variant']) {
   return { type: 'primary' as const }
 }
 
-function getButtonClassName(variant: ActionItem['variant']) {
+function getButtonClassName(variant: ActionItem['variant'], isPaired: boolean) {
+  const shapeClassName = isPaired
+    ? 'app-action-button-paired rounded-xl'
+    : 'app-action-button-stacked h-12 rounded-full'
+
   if (variant === 'gold') {
-    return 'h-12 border-gold bg-gold text-white'
+    return `app-action-button app-action-button-gold ${shapeClassName} border-0 bg-gold text-white`
   }
 
   if (variant === 'outline') {
-    return 'app-action-button app-action-button-outline h-12 border-brand text-brand'
+    return `app-action-button app-action-button-outline ${shapeClassName} border-brand text-brand`
   }
 
-  return 'app-action-button app-action-button-primary h-12'
+  return `app-action-button app-action-button-primary ${shapeClassName}`
+}
+
+function getButtonStyle(isPaired: boolean): CSSProperties | undefined {
+  return isPaired
+    ? {
+        height: '96rpx',
+        minHeight: '96rpx',
+        borderRadius: '24rpx'
+      }
+    : {
+        height: '96rpx',
+        minHeight: '96rpx',
+        borderRadius: '9999px'
+      }
 }
 
 export function ActionBar({ actions }: ActionBarProps) {
-  const layoutClassName = actions.length === 2 ? 'grid grid-cols-2 gap-2' : 'grid gap-2'
+  const isPaired = actions.length === 2
+  const layoutClassName = isPaired ? 'grid w-full grid-cols-2 gap-[22rpx]' : 'grid w-full gap-2'
 
   return (
     <View className={layoutClassName}>
@@ -37,8 +57,9 @@ export function ActionBar({ actions }: ActionBarProps) {
         <Button
           key={action.label}
           block
-          className={getButtonClassName(action.variant)}
+          className={getButtonClassName(action.variant, isPaired)}
           disabled={action.disabled}
+          style={getButtonStyle(isPaired)}
           {...getButtonProps(action.variant)}
           onClick={() => {
             if (action.disabled) {

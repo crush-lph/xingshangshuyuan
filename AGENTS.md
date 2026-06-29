@@ -100,6 +100,7 @@
 - 业务定制图标建议使用本地 SVG/图片资产，并封装统一 `AppIcon`，避免页面混用多套来源。
 - 复杂运营图、品牌图、彩色插画使用 PNG/WebP，不硬塞进 iconfont。
 - 不优先使用远程 iconfont；如必须使用，需要处理 HTTPS、CORS、加载失败和小程序兼容性。
+- 本地 iconfont 统一放在 `src/assets/iconfont/`：`iconfont-font.ts` 保存 WOFF base64，`iconfont.scss` 保留 iconfont 原始 class/unicode 命名，`index.ts` 暴露字体 family/source；应用启动通过 `src/shared/app-icon-font.ts` 的 `Taro.loadFontFace({ global: true })` 加载，不在页面里散落字体加载逻辑。
 
 ## 9. 代码质量工具
 
