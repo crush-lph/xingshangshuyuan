@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { View } from '@tarojs/components'
-import { ItemList, StateNotice, type ListItem } from '@/components/business'
+import { InterfaceGapNotice, ItemList, StateNotice, type ListItem } from '@/components/business'
 import { PageShell } from '@/components/PageShell'
 import { getInvoices, getOrders } from '@/services'
 import { routes } from '@/shared/router'
@@ -37,7 +37,7 @@ function AdminOrdersContent() {
             tone: 'gold' as const,
             path: routes.paymentTransfer,
             query: orderNo ? { order_no: orderNo } : undefined,
-            action: '查看'
+            action: '查看状态'
           }
         }),
         ...invoices.map((invoice) => ({
@@ -47,7 +47,7 @@ function AdminOrdersContent() {
           tag: textOf(invoice.status_text),
           icon: 'file-list-3-line',
           tone: 'tech' as const,
-          action: '查看'
+          action: '查看状态'
         }))
       ])
 
@@ -65,12 +65,15 @@ function AdminOrdersContent() {
   return (
     <PageShell title="订单确认" subtitle="处理对公转账、会员开通和资源采购订单。">
       <View className="grid gap-3">
-        <StateNotice
-          state="empty"
-          copy={{
-            title: '后台订单确认接口待补',
-            desc: '当前展示已有订单/发票接口数据，来源受限，不等同后台待确认队列。'
-          }}
+        <InterfaceGapNotice
+          title="当前可查看，暂不能确认"
+          desc="当前接口可以读取订单和发票类数据，但还没有后台确认到账或驳回凭证接口，因此页面不提供确认类操作。"
+          items={[
+            '缺少后台待确认订单列表和状态筛选接口。',
+            '缺少确认到账接口，不能在前端模拟财务确认。',
+            '缺少驳回凭证接口，不能展示假的驳回结果。',
+            '缺少确认后驱动会员开通或资源交付状态变更的接口。'
+          ]}
         />
         {isLoading ? (
           <StateNotice state="loading" />

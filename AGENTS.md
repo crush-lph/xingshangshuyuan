@@ -7,6 +7,7 @@
 - 包管理器：`pnpm`。
 - 技术栈：Taro 4、React 18、NutUI React Taro、Tailwind CSS v3、Webpack5。
 - 当前只运行微信小程序端；暂时不需要开发、适配或验证 H5 端。
+- 技术方案和具体实现必须先判断微信小程序端是否支持，提前识别 API、CSS、组件能力、运行时行为和构建产物的明显兼容性风险。
 - 面向用户 review、验收和后续交接的项目文档默认使用中文；只有代码标识、命令、路径、接口字段、提交信息等需要保留原文时才使用英文。
 - 页面样式优先使用 Tailwind className；小程序兼容性优先于 Web 习惯。
 - 不引入复杂架构、重状态机、重工程流，除非已有明确业务收益。
@@ -15,6 +16,7 @@
 ## 1. 工程设计原则
 
 - UI 实现优先使用 NutUI React Taro、项目已有业务组件和基础组件；组件库或项目组件能覆盖的场景，不重复手写等价控件。
+- 不按 Web/H5 默认能力做架构假设；涉及 DOM、浏览器 API、复杂 CSS 特性、第三方依赖或原生能力时，先确认 Taro 微信小程序端可用性和降级方案。
 - 功能重复时优先复用项目中已有实现；没有合适实现时，先封装为清晰的工具函数、服务方法或业务组件，再在页面中使用。
 - 单文件原则上不超过 500 行；接近上限或逻辑复杂时，优先拆分为 `components/`、`*.data.ts`、`types.ts`、`services/` 或 `shared/` 工具模块。
 - 代码设计遵循 SOLID 原则：职责单一、对扩展开放、替换安全、接口聚焦、依赖稳定；不要为短期页面需求制造难以复用或难以测试的耦合。
@@ -25,6 +27,7 @@
 - 设计规范：`docs/reference/002-design-spec.html`
 - 视觉规范沉淀：`design-system/行商书苑/MASTER.md`
 - 架构说明：`docs/architecture.md`
+- 前端技术规范与最佳实践：`docs/frontend-technical-guidelines.md`
 - 接口文档：`docs/api.md`
 - 路由配置：`src/app.config.ts`
 - 路由工具：`src/shared/router.ts`
@@ -86,6 +89,8 @@
 - 少量一次性颜色可以用任意值；重复出现应沉淀到 `tailwind.config.js`。
 - 避免运行时拼接不可扫描的类名，例如 `text-${color}`；使用枚举映射。
 - 小程序布局优先使用稳定的 `flex`、`grid`、`gap`、`px/py`、`rounded-lg`、`shadow-soft`。
+- 小程序页面字体最小值为 `20rpx`（约等于设计稿 `40px`）；辅助说明、标签、统计项等小字也不得低于该尺寸。
+- 页面样式尽量不要写行内 `style`；优先使用 Tailwind className、主题 token、组件库属性或页面样式文件。只有动态值、组件库变量覆盖或小程序兼容性需要时才使用行内样式。
 
 ## 8. 图标策略
 

@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { View } from '@tarojs/components'
-import { ItemList, StateNotice, type ListItem } from '@/components/business'
+import { InterfaceGapNotice, ItemList, StateNotice, type ListItem } from '@/components/business'
 import { PageShell } from '@/components/PageShell'
 import { getUserCertification } from '@/services'
 import { textOrPlaceholder } from '@/shared/view-data'
@@ -12,9 +12,6 @@ function AdminCertContent() {
   const [hasError, setHasError] = useState(false)
 
   useEffect(() => {
-    setIsLoading(true)
-    setHasError(false)
-
     void getUserCertification()
       .then((response) => {
         const data = response.data
@@ -44,12 +41,15 @@ function AdminCertContent() {
   return (
     <PageShell title="认证审核" subtitle="审核企业资料、服务能力和认证标签。">
       <View className="grid gap-3">
-        <StateNotice
-          state="empty"
-          copy={{
-            title: '后台认证审核列表接口待补',
-            desc: '当前仅能读取登录用户认证资料，不能作为后台待审核列表。'
-          }}
+        <InterfaceGapNotice
+          title="当前可查看资料来源受限"
+          desc="当前接口只能读取登录用户认证资料，不能作为后台认证审核队列；页面不提供通过、驳回或补充材料操作。"
+          items={[
+            '缺少后台认证申请列表接口。',
+            '缺少后台认证详情接口，不能查看完整审核材料和历史记录。',
+            '缺少认证通过接口。',
+            '缺少认证驳回和补充材料接口。'
+          ]}
         />
         {isLoading ? (
           <StateNotice state="loading" />

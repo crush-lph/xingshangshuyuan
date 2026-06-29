@@ -12,9 +12,6 @@ export default function ResourceNonstandardDetailPage() {
   const [hasError, setHasError] = useState(false)
 
   useEffect(() => {
-    setIsLoading(true)
-    setHasError(false)
-
     void getCompanyProfile()
       .then((response) => setCompany(response.data.id ? response.data : null))
       .catch(() => {

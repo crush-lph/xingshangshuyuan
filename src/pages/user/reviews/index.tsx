@@ -32,25 +32,8 @@ export default function UserReviewsPage() {
     time: textOf(item.created_at)
   }))
 
-  async function loadReviews() {
-    setIsLoading(true)
-    setHasError(false)
-    try {
-      const response = await getUserReviews({ page: 1, page_size: 20 })
-      setItems(response.data.list ?? [])
-    } catch {
-      setHasError(true)
-      throw new Error('load reviews failed')
-    } finally {
-      setIsLoading(false)
-    }
-  }
-
   useEffect(() => {
     let isMounted = true
-
-    setIsLoading(true)
-    setHasError(false)
 
     void getUserReviews({ page: 1, page_size: 20 })
       .then((response) => {
@@ -74,6 +57,21 @@ export default function UserReviewsPage() {
       isMounted = false
     }
   }, [])
+
+  async function loadReviews() {
+    setIsLoading(true)
+    setHasError(false)
+
+    try {
+      const response = await getUserReviews({ page: 1, page_size: 20 })
+      setItems(response.data.list ?? [])
+    } catch {
+      setHasError(true)
+      throw new Error('load reviews failed')
+    } finally {
+      setIsLoading(false)
+    }
+  }
 
   async function handleSubmit() {
     if (!orderId) {

@@ -124,9 +124,6 @@ export default function UserCertPage() {
   const [uploadingKey, setUploadingKey] = useState<CertificationUploadKey | null>(null)
 
   useEffect(() => {
-    setIsLoading(true)
-    setHasError(false)
-
     void getUserCertification()
       .then((response) => {
         const nextCertification = response.data.certification_id ? response.data : null

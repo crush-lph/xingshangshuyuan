@@ -21,13 +21,20 @@ import { useUserInfo } from '@/stores/user-info'
 const DEFAULT_TARGET_LEVEL = '行商·领航会员'
 const DEFAULT_TARGET_LEVEL_VALUE = 2
 
+function getVipLevelTitle(level: VipLevelItem | null | undefined) {
+  return textOf(level?.level_text ?? level?.name)
+}
+
 function getNavigatorLevel(levels: VipLevelItem[]) {
-  return levels.find((item) => item.level === DEFAULT_TARGET_LEVEL_VALUE || item.name?.includes('领航')) ?? levels[0]
+  return (
+    levels.find((item) => item.level === DEFAULT_TARGET_LEVEL_VALUE || getVipLevelTitle(item)?.includes('领航')) ??
+    levels[0]
+  )
 }
 
 function getPerkFields(level: VipLevelItem | null) {
   return (level?.perks ?? []).map((item, index) => ({
-    label: textOrPlaceholder(item.perk_name, `权益${index + 1}`),
+    label: textOrPlaceholder(typeof item === 'string' ? item : item.perk_name, `权益${index + 1}`),
     value: '已包含'
   }))
 }
@@ -154,7 +161,10 @@ export default function MemberConfirmPage() {
     router.redirect(routes.memberBenefit)
   }
 
-  const displayTargetLevel = textOrPlaceholder(order?.vip_level_text ?? targetLevel?.name, DEFAULT_TARGET_LEVEL)
+  const displayTargetLevel = textOrPlaceholder(
+    order?.vip_level_text ?? getVipLevelTitle(targetLevel),
+    DEFAULT_TARGET_LEVEL
+  )
   const displayAmount = priceOf(order?.amount ?? targetLevel?.current_price) ?? '生成订单后确认'
   const isPaymentLocked = isPaying || Boolean(pollingOrderNo)
 

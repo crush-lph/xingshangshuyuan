@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { View } from '@tarojs/components'
-import { ItemList, StateNotice, type ListItem } from '@/components/business'
+import { InterfaceGapNotice, ItemList, StateNotice, type ListItem } from '@/components/business'
 import { PageShell } from '@/components/PageShell'
 import { getContractDetail, getContracts, getUserCustomers } from '@/services'
 import { firstRecordList, textOf, textOrPlaceholder } from '@/shared/view-data'
@@ -36,7 +36,7 @@ function AdminResourceContent() {
           tag: textOf(item.status_text),
           icon: 'user-3-line',
           tone: 'brand' as const,
-          action: '查看'
+          action: '查看状态'
         })),
         ...contracts.map((item) => ({
           title: textOrPlaceholder(item.contract_no ?? item.title ?? item.name, '未命名合同'),
@@ -50,7 +50,7 @@ function AdminResourceContent() {
           tag: textOf(item.status_text),
           icon: 'archive-line',
           tone: 'tech' as const,
-          action: '查看'
+          action: '查看状态'
         }))
       ])
 
@@ -68,12 +68,15 @@ function AdminResourceContent() {
   return (
     <PageShell title="资源需求" subtitle="跟进非标需求、供应商报价和交付状态。">
       <View className="grid gap-3">
-        <StateNotice
-          state="empty"
-          copy={{
-            title: '后台资源需求处理接口待补',
-            desc: '当前展示已有客户/合同接口数据，来源受限，不等同后台待分配需求队列。'
-          }}
+        <InterfaceGapNotice
+          title="当前可查看，暂不能分配处理"
+          desc="当前接口可以读取客户和合同类数据，但还没有后台资源需求队列、分配或处理接口，因此页面不提供处理类操作。"
+          items={[
+            '缺少后台资源需求列表接口，不能区分用户提交记录和后台待处理记录。',
+            '缺少资源需求分配接口，不能指定供应商、客户经理或处理人。',
+            '缺少资源需求状态更新接口，不能标记处理中、已匹配或已完成。',
+            '缺少资源采购交付进度接口，不能展示服务开通和交付状态。'
+          ]}
         />
         {isLoading ? (
           <StateNotice state="loading" />

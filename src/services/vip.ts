@@ -160,11 +160,12 @@ export interface VipLevelPerk {
 
 export interface VipLevelItem {
   level?: number
+  level_text?: string
   name?: string
-  original_price?: string
-  current_price?: string
+  original_price?: string | number | null
+  current_price?: string | number | null
   discount_rate?: number
-  perks?: VipLevelPerk[]
+  perks?: Array<VipLevelPerk | string>
 }
 
 export type GetVipLevelsData = VipLevelItem[]
@@ -172,5 +173,5 @@ export type GetVipLevelsData = VipLevelItem[]
 export type GetVipLevelsResponse = ApiResponse<GetVipLevelsData>
 
 export function getVipLevels(options?: ApiRequestOptions) {
-  return api.get<GetVipLevelsResponse>('/api/vip/levels', options)
+  return api.get<GetVipLevelsResponse>('/api/user/vip/level-perks', options)
 }

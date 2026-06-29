@@ -1,0 +1,55 @@
+html,
+body {
+  width: 100%;
+  max-width: 100vw;
+  overflow-x: hidden;
+}
+
+.page {
+  max-width: 100vw;
+}
+
+.hero,
+.content,
+.sticky-buy,
+.hero-card,
+.plan,
+.compare {
+  width: 100%;
+  max-width: 100%;
+}
+
+.hero-stats {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.compare-head,
+.compare-row {
+  grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr) minmax(0, 1fr);
+}
+
+.stat,
+.price,
+.compare-cell {
+  min-width: 0;
+}
+
+.stat span,
+.compare-cell {
+  overflow-wrap: anywhere;
+}
+
+.price strong {
+  word-break: keep-all;
+}
+
+.cta {
+  max-width: 100%;
+}
+
+@media (max-width: 520px) {
+  .page {
+    width: min(100vw, 390px);
+    margin: 0;
+  }
+}
