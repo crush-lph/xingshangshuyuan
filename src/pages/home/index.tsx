@@ -260,8 +260,6 @@ export default function HomePage() {
     void loadHomeData()
   }, [])
 
-  const primaryBanner = banners[0]
-
   return (
     <View className="min-h-screen bg-canvas pb-6 text-ink">
       <ImmersiveNavbar
@@ -271,7 +269,7 @@ export default function HomePage() {
         onHeightChange={setNavbarHeight}
       />
 
-      <HomeHero navbarHeight={navbarHeight} imageUrl={primaryBanner?.imageUrl} />
+      <HomeHero navbarHeight={navbarHeight} />
 
       <View className="px-4 py-3">
         {isLoading ? <StateNotice state="loading" /> : null}

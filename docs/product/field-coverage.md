@@ -9,19 +9,19 @@
 
 ## 入口与列表
 
-| 页面     | 原型模块/字段                | 当前接口字段                                                                 | 展示策略                                                       | 缺口类型 |
-| -------- | ---------------------------- | ---------------------------------------------------------------------------- | -------------------------------------------------------------- | -------- |
-| 首页     | banner 标题/副标题/图片/动作 | `getBanners().data.list.title/subtitle/image_url/action_url`                 | 有数据展示轮播；无数据使用业务安全空态或默认背景，不展示假活动 | 已覆盖   |
-| 首页     | 核心业务入口                 | `getCoreBusiness().data.list.title/subtitle/action_text`                     | 有数据展示；无数据隐藏该模块                                   | 已覆盖   |
-| 首页     | 平台统计                     | `getPlatformStats().data.list.stat_value/stat_label`                         | 后续接入；未接入前不展示假数字                                 | 接口待补 |
-| 服务商城 | 服务分类                     | `getProductCategories().data.list.name/icon`                                 | 展示真实分类；无分类显示空态                                   | 已覆盖   |
-| 服务商城 | 服务商品                     | `getProducts().data.list.name/description/product_type_text/price/vip_price` | 展示真实商品；缺价格时隐藏价格                                 | 已覆盖   |
-| 书苑     | 学习分类                     | `getCourseCategories().data[].name`                                          | 展示真实分类；无分类显示空态                                   | 已覆盖   |
-| 书苑     | 推荐活动                     | `getEvents().data.list.title/city/location/start_time/status_text`           | 展示真实活动；无活动显示空态                                   | 已覆盖   |
-| 资源列表 | 分类筛选                     | `getProductCategories().data.list.name/id`                                   | 使用真实分类和“全部”                                           | 已覆盖   |
-| 资源列表 | 资源卡片                     | `getProducts().data.list`                                                    | 展示名称、描述、类型、价格、销量                               | 已覆盖   |
-| 活动列表 | 活动卡片                     | `getEvents().data.list`                                                      | 展示标题、城市、地点、时间、价格、人数                         | 已覆盖   |
-| 商机列表 | 商机卡片                     | `getOpportunities().data.list`                                               | 展示标题、类型、城市、标签、申请数                             | 已覆盖   |
+| 页面     | 原型模块/字段       | 当前接口字段                                                                 | 展示策略                                           | 缺口类型 |
+| -------- | ------------------- | ---------------------------------------------------------------------------- | -------------------------------------------------- | -------- |
+| 首页     | Hero 背景与首屏指标 | 静态视觉配置，不接入 `getBanners()`                                          | 使用固定 Hero 背景；不展示 banner 标题/副标题/轮播 | 暂不展示 |
+| 首页     | 核心业务入口        | `getCoreBusiness().data.list.title/subtitle/action_text`                     | 有数据展示；无数据隐藏该模块                       | 已覆盖   |
+| 首页     | 平台统计            | `getPlatformStats().data.list.stat_value/stat_label`                         | 后续接入；未接入前不展示假数字                     | 接口待补 |
+| 服务商城 | 服务分类            | `getProductCategories().data.list.name/icon`                                 | 展示真实分类；无分类显示空态                       | 已覆盖   |
+| 服务商城 | 服务商品            | `getProducts().data.list.name/description/product_type_text/price/vip_price` | 展示真实商品；缺价格时隐藏价格                     | 已覆盖   |
+| 书苑     | 学习分类            | `getCourseCategories().data[].name`                                          | 展示真实分类；无分类显示空态                       | 已覆盖   |
+| 书苑     | 推荐活动            | `getEvents().data.list.title/city/location/start_time/status_text`           | 展示真实活动；无活动显示空态                       | 已覆盖   |
+| 资源列表 | 分类筛选            | `getProductCategories().data.list.name/id`                                   | 使用真实分类和“全部”                               | 已覆盖   |
+| 资源列表 | 资源卡片            | `getProducts().data.list`                                                    | 展示名称、描述、类型、价格、销量                   | 已覆盖   |
+| 活动列表 | 活动卡片            | `getEvents().data.list`                                                      | 展示标题、城市、地点、时间、价格、人数             | 已覆盖   |
+| 商机列表 | 商机卡片            | `getOpportunities().data.list`                                               | 展示标题、类型、城市、标签、申请数                 | 已覆盖   |
 
 ## 详情与转化
 

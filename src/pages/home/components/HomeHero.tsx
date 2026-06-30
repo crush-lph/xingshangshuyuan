@@ -1,5 +1,5 @@
 import type { CSSProperties } from 'react'
-import { Image, Text, View } from '@tarojs/components'
+import { Text, View } from '@tarojs/components'
 
 const HOME_TRUST_STATS = [
   { value: '7000+', label: '合作机构' },
@@ -10,10 +10,9 @@ const HOME_TRUST_STATS = [
 
 interface HomeHeroProps {
   navbarHeight: number
-  imageUrl?: string
 }
 
-export function HomeHero({ navbarHeight, imageUrl }: HomeHeroProps) {
+export function HomeHero({ navbarHeight }: HomeHeroProps) {
   const heroStyle: CSSProperties = {
     height: `${navbarHeight + 96}px`
   }
@@ -23,8 +22,6 @@ export function HomeHero({ navbarHeight, imageUrl }: HomeHeroProps) {
       className="relative overflow-hidden bg-[linear-gradient(145deg,#07143A_0%,#0A1F5C_58%,#0B3348_100%)]"
       style={heroStyle}
     >
-      {imageUrl ? <Image className="absolute inset-0 h-full w-full" src={imageUrl} mode="aspectFill" /> : null}
-      {imageUrl ? <View className="absolute inset-0 bg-brand-deep/58" /> : null}
       <View className="absolute left-4 right-4 top-[330rpx] h-[3rpx] rounded-full bg-gradient-to-r from-transparent via-gold-light/85 to-transparent" />
       <View className="absolute inset-x-4 bottom-5 overflow-hidden rounded-[18px] border border-white/20 bg-white/[0.16] shadow-medium">
         <View className="h-[4rpx] bg-gradient-to-r from-transparent via-gold-light/90 to-transparent" />
