@@ -151,7 +151,7 @@ function mapEvent(item: NonNullable<GetEventsData['list']>[number]): EventEntry 
     meta: compactJoin([item.city, item.location, item.start_time]) || '接口未返回活动时间地点',
     status: item.status,
     status_text: item.status_text,
-    ...getDateParts(item.start_time ?? item.event_date)
+    ...getDateParts(item.event_date ?? item.start_time)
   }
 }
 
