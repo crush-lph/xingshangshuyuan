@@ -155,6 +155,10 @@ function mapEvent(item: NonNullable<GetEventsData['list']>[number]): EventEntry 
   }
 }
 
+function isOpenRegistrationEvent(item: NonNullable<GetEventsData['list']>[number]) {
+  return item.status === 1 || textOf(item.status_text) === '报名中'
+}
+
 function mapOpportunity(item: NonNullable<GetOpportunitiesData['list']>[number]): OpportunityEntry {
   return {
     id: item.id,
@@ -197,7 +201,7 @@ export default function HomePage() {
           getCoreBusiness(),
           getSystemStatus(),
           getProducts({ page: 1, page_size: 2 }),
-          getEvents({ page: 1, page_size: 1 }),
+          getEvents({ status: 1, page: 1, page_size: 5 }),
           getOpportunities({ page: 1, page_size: 1 })
         ])
 
@@ -245,7 +249,8 @@ export default function HomePage() {
       }
 
       if (eventsResult.status === 'fulfilled') {
-        const item = eventsResult.value.data.list?.[0]
+        const eventList = eventsResult.value.data.list ?? []
+        const item = eventList.find(isOpenRegistrationEvent) ?? eventList[0]
         setEvent(item ? mapEvent(item) : null)
       }
 
