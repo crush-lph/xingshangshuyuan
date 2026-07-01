@@ -84,9 +84,9 @@ export default function EventTicketPage() {
       ) : ticket ? (
         <View className="grid gap-3">
           <SectionCard title="核销二维码">
-            <View className="items-center rounded-lg border border-line bg-canvas px-4 py-5">
+            <View className="flex flex-col items-center rounded-lg border border-line bg-canvas px-4 py-5">
               {ticket.qrcode ? (
-                <Image className="mx-auto h-48 w-48 rounded bg-white" mode="aspectFit" src={ticket.qrcode} />
+                <Image className="h-48 w-48 rounded bg-white" mode="aspectFit" src={ticket.qrcode} />
               ) : (
                 <Text className="block rounded-lg border border-dashed border-line bg-white px-4 py-8 text-center text-sm leading-6 text-muted">
                   后台未返回二维码图片，请联系现场工作人员使用核销码核验。

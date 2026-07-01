@@ -19,6 +19,7 @@ import type { ManagerInfo, MetricItem } from './types'
 import { isRecord, numberOf, textOf } from '@/shared/view-data'
 import { routes } from '@/shared/router'
 import { getUserIdentity, type UserIdentity } from '@/shared/user-identity'
+import { useUserInfo } from '@/stores/user-info'
 
 function isPaidMember(value: unknown, label?: unknown) {
   const level = numberOf(value) ?? 0
@@ -38,7 +39,34 @@ function formatExpireText(value: unknown) {
   return `到期：${dateText}`
 }
 
+function hasUserIdentityData(value: {
+  id?: unknown
+  user_id?: unknown
+  nickname?: unknown
+  phone?: unknown
+  company_name?: unknown
+}) {
+  return Boolean(
+    numberOf(value.id) ||
+    numberOf(value.user_id) ||
+    textOf(value.nickname) ||
+    textOf(value.phone) ||
+    textOf(value.company_name)
+  )
+}
+
+function hasVipIdentityData(value: {
+  level?: unknown
+  vip_level?: unknown
+  level_text?: unknown
+  vip_level_text?: unknown
+}) {
+  return Boolean(numberOf(value.vip_level ?? value.level) || textOf(value.vip_level_text) || textOf(value.level_text))
+}
+
 export default function ProfilePage() {
+  const isLoggedIn = useUserInfo((state) => state.isLoggedIn)
+  const userRefreshVersion = useUserInfo((state) => state.refreshVersion)
   const [metricItems, setMetricItems] = useState<MetricItem[]>([
     { label: '我的订单', value: '--', color: 'text-brand', path: routes.userOrders },
     { label: '我的活动', value: '--', color: 'text-brand', path: routes.userEvents },
@@ -47,7 +75,7 @@ export default function ProfilePage() {
   ])
   const [serviceMenuItems, setServiceMenuItems] = useState(serviceMenus)
   const [accountMenuItems, setAccountMenuItems] = useState(accountMenus)
-  const [memberIdentity, setMemberIdentity] = useState<UserIdentity>(() => getUserIdentity())
+  const [memberIdentity, setMemberIdentity] = useState<UserIdentity | null>(null)
   const [memberLevelText, setMemberLevelText] = useState<string>()
   const [memberExpireText, setMemberExpireText] = useState<string>()
   const [manager, setManager] = useState<ManagerInfo | null>(null)
@@ -58,6 +86,9 @@ export default function ProfilePage() {
     async function loadProfileData() {
       setIsLoading(true)
       setHasError(false)
+      setMemberIdentity(null)
+      setMemberLevelText(undefined)
+      setMemberExpireText(undefined)
 
       const [userInfoResult, profileResult, vipResult, unreadResult, learningResult, customerServiceResult] =
         await Promise.allSettled([
@@ -69,7 +100,7 @@ export default function ProfilePage() {
           getCustomerServiceConfig()
         ])
 
-      if (profileResult.status === 'fulfilled') {
+      if (profileResult.status === 'fulfilled' && hasUserIdentityData(profileResult.value.data)) {
         const profile = profileResult.value.data
         setMemberIdentity(getUserIdentity({ vip_level: profile.vip_level, vip_level_text: profile.vip_level_text }))
         setMemberLevelText(textOf(profile.vip_level_text))
@@ -84,13 +115,13 @@ export default function ProfilePage() {
               : item
           )
         )
-      } else if (userInfoResult.status === 'fulfilled') {
+      } else if (userInfoResult.status === 'fulfilled' && hasUserIdentityData(userInfoResult.value.data)) {
         const userInfo = userInfoResult.value.data
         setMemberIdentity(getUserIdentity({ vip_level: userInfo.vip_level, vip_level_text: userInfo.vip_level_text }))
         setMemberLevelText(textOf(userInfo.vip_level_text))
       }
 
-      if (vipResult.status === 'fulfilled') {
+      if (vipResult.status === 'fulfilled' && hasVipIdentityData(vipResult.value.data)) {
         const vip = vipResult.value.data
         const vipLevel = vip.vip_level ?? vip.level
         const vipLevelText = textOf(vip.vip_level_text) ?? textOf(vip.level_text)
@@ -153,18 +184,20 @@ export default function ProfilePage() {
     void loadProfileData()
       .catch(() => setHasError(true))
       .finally(() => setIsLoading(false))
-  }, [])
+  }, [userRefreshVersion])
 
   return (
     <View className="min-h-screen bg-canvas pb-6 text-ink">
       <View className="bg-brand px-5 pb-8 pt-5">
         <ProfileHeader />
-        <MemberCard
-          actions={memberActions}
-          expireText={memberExpireText}
-          identity={memberIdentity}
-          levelText={memberLevelText}
-        />
+        {isLoggedIn && memberIdentity ? (
+          <MemberCard
+            actions={memberActions}
+            expireText={memberExpireText}
+            identity={memberIdentity}
+            levelText={memberLevelText}
+          />
+        ) : null}
       </View>
 
       <View className="-mt-4 px-4">

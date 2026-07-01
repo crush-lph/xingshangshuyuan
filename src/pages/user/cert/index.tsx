@@ -12,6 +12,7 @@ import {
   type SubmitUserCertificationPayload
 } from '@/services'
 import { ensureLoggedIn } from '@/shared/auth-guard'
+import { useUserInfo } from '@/stores/user-info'
 import { textOf, textOrPlaceholder } from '@/shared/view-data'
 
 interface CertificationForm {
@@ -312,6 +313,7 @@ function CertificationFormView({
 }
 
 export default function UserCertPage() {
+  const refreshUserInfo = useUserInfo((state) => state.refreshUserInfo)
   const [certification, setCertification] = useState<GetUserCertificationData | null>(null)
   const [form, setForm] = useState<CertificationForm>(initialForm)
   const [isEditing, setIsEditing] = useState(true)
@@ -454,6 +456,7 @@ export default function UserCertPage() {
         status: response.data.status,
         status_text: response.data.status_text
       })
+      await refreshUserInfo()
       setIsEditing(false)
     } catch {
       Taro.showToast({ title: '认证提交失败，请稍后重试', icon: 'none' })

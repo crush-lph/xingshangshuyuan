@@ -16,6 +16,9 @@ export function HomeHero({ navbarHeight }: HomeHeroProps) {
   const heroStyle: CSSProperties = {
     height: `${navbarHeight + 96}px`
   }
+  const trustPanelStyle: CSSProperties = {
+    top: `${navbarHeight + 12}px`
+  }
 
   return (
     <View
@@ -23,7 +26,10 @@ export function HomeHero({ navbarHeight }: HomeHeroProps) {
       style={heroStyle}
     >
       <View className="absolute left-4 right-4 top-[330rpx] h-[3rpx] rounded-full bg-gradient-to-r from-transparent via-gold-light/85 to-transparent" />
-      <View className="absolute inset-x-4 bottom-5 overflow-hidden rounded-[18px] border border-white/20 bg-white/[0.16] shadow-medium">
+      <View
+        className="absolute inset-x-4 overflow-hidden rounded-[18px] border border-white/20 bg-white/[0.16] shadow-medium"
+        style={trustPanelStyle}
+      >
         <View className="h-[4rpx] bg-gradient-to-r from-transparent via-gold-light/90 to-transparent" />
         <View className="grid grid-cols-4">
           {HOME_TRUST_STATS.map((item, index) => (

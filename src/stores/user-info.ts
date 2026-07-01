@@ -26,6 +26,7 @@ export interface UserInfoState {
   isLoggedIn: boolean
   isPhoneBound: boolean
   isAdmin: boolean
+  refreshVersion: number
   error?: string
   hydrateFromStorage: () => Promise<void>
   loadUserInfo: () => Promise<void>
@@ -73,6 +74,7 @@ export const useUserInfo = create<UserInfoState>()((set, get) => ({
   isLoggedIn: Boolean(getAuthToken()),
   isPhoneBound: false,
   isAdmin: false,
+  refreshVersion: 0,
   error: undefined,
 
   async hydrateFromStorage() {
@@ -88,6 +90,7 @@ export const useUserInfo = create<UserInfoState>()((set, get) => ({
           isLoggedIn: false,
           isPhoneBound: false,
           isAdmin: false,
+          refreshVersion: get().refreshVersion + 1,
           isLoading: false,
           isLoggingIn: false,
           error: '登录已失效，请重新登录'
@@ -123,6 +126,7 @@ export const useUserInfo = create<UserInfoState>()((set, get) => ({
       isLoggedIn: getIsLoggedIn(userInfo, profile, nextToken),
       isPhoneBound: getIsPhoneBound(userInfo, profile),
       isAdmin: getIsAdmin(userInfo, profile),
+      refreshVersion: get().refreshVersion + 1,
       isLoading: false,
       error
     })
@@ -200,6 +204,7 @@ export const useUserInfo = create<UserInfoState>()((set, get) => ({
       isAdmin: getIsAdmin(nextUserInfo, nextProfile),
       error: undefined
     })
+    await get().loadUserInfo()
   },
 
   async updateWechatProfile(payload) {
@@ -214,19 +219,7 @@ export const useUserInfo = create<UserInfoState>()((set, get) => ({
 
     await updateUserProfile(nextProfilePayload)
 
-    const currentUserInfo = get().userInfo
-    const currentProfile = get().profile
-    const nextUserInfo = currentUserInfo ? { ...currentUserInfo, ...nextProfilePayload } : currentUserInfo
-    const nextProfile = currentProfile ? { ...currentProfile, ...nextProfilePayload } : currentProfile
-
-    set({
-      userInfo: nextUserInfo,
-      profile: nextProfile,
-      isLoggedIn: getIsLoggedIn(nextUserInfo, nextProfile, get().token),
-      isPhoneBound: getIsPhoneBound(nextUserInfo, nextProfile),
-      isAdmin: getIsAdmin(nextUserInfo, nextProfile),
-      error: undefined
-    })
+    await get().loadUserInfo()
   },
 
   setUserInfo(payload) {
@@ -243,6 +236,7 @@ export const useUserInfo = create<UserInfoState>()((set, get) => ({
       isLoggedIn: getIsLoggedIn(nextUserInfo, nextProfile, nextToken),
       isPhoneBound: getIsPhoneBound(nextUserInfo, nextProfile),
       isAdmin: getIsAdmin(nextUserInfo, nextProfile),
+      refreshVersion: get().refreshVersion + 1,
       error: undefined
     })
   },
@@ -256,6 +250,7 @@ export const useUserInfo = create<UserInfoState>()((set, get) => ({
       isLoggedIn: false,
       isPhoneBound: false,
       isAdmin: false,
+      refreshVersion: get().refreshVersion + 1,
       isLoading: false,
       isLoggingIn: false,
       error: undefined

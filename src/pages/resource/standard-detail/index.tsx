@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Text, View } from '@tarojs/components'
+import { RichText, Text, View } from '@tarojs/components'
 import { ActionBar, FieldList, ReviewList, SectionCard, StateNotice } from '@/components/business'
 import { PageShell } from '@/components/PageShell'
 import {
@@ -25,6 +25,7 @@ async function resolveProductId() {
 
 export default function ResourceStandardDetailPage() {
   const [product, setProduct] = useState<GetProductDetailData | null>(null)
+  const [selectedSpecIndex, setSelectedSpecIndex] = useState(0)
   const [reviews, setReviews] = useState<ProductReviewItem[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [hasError, setHasError] = useState(false)
@@ -43,7 +44,9 @@ export default function ResourceStandardDetailPage() {
       }
 
       const response = await getProductDetail({ product_id: productId })
-      setProduct(response.data.id ? response.data : null)
+      const nextProduct = response.data.id ? response.data : null
+      setProduct(nextProduct)
+      setSelectedSpecIndex(0)
 
       void getProductReviews({ product_id: productId, page: 1, page_size: 3 })
         .then((reviewsResponse) => setReviews(reviewsResponse.data.list ?? []))
@@ -69,6 +72,7 @@ export default function ResourceStandardDetailPage() {
     thumbnail: textOf(item.avatar),
     time: textOf(item.created_at)
   }))
+  const selectedSpec = product?.specs?.[selectedSpecIndex]
 
   return (
     <PageShell
@@ -116,23 +120,41 @@ export default function ResourceStandardDetailPage() {
 
           <SectionCard title="资源说明">
             <Text className="block text-sm leading-6 text-muted">
-              {textOrPlaceholder(product.description ?? product.detail, '接口未返回资源说明')}
+              {textOrPlaceholder(product.description, '接口未返回资源说明')}
             </Text>
+          </SectionCard>
+
+          <SectionCard title="资源详情">
+            {textOf(product.detail) ? (
+              <RichText className="block text-sm leading-6 text-muted" nodes={textOf(product.detail) ?? ''} />
+            ) : (
+              <Text className="block text-sm leading-6 text-muted">接口未返回资源详情</Text>
+            )}
           </SectionCard>
 
           <SectionCard title="商品规格">
             {product.specs?.length ? (
               <View className="grid gap-2">
-                {product.specs.map((spec) => (
-                  <View key={spec.id ?? spec.spec_name} className="rounded-lg bg-canvas px-3 py-3">
-                    <Text className="block text-sm font-semibold text-ink">
-                      {textOrPlaceholder(spec.spec_name, '未命名规格')}
-                    </Text>
-                    <Text className="mt-1 block text-xs text-muted">
-                      {priceOf(spec.vip_price ?? spec.price, spec.price_unit) ?? '未提供价格'}
-                    </Text>
-                  </View>
-                ))}
+                {product.specs.map((spec, index) => {
+                  const isSelected = index === selectedSpecIndex
+
+                  return (
+                    <View
+                      key={spec.id ?? `${spec.spec_name}-${index}`}
+                      className={`rounded-lg border px-3 py-3 ${
+                        isSelected ? 'border-brand bg-brand-soft' : 'border-transparent bg-canvas'
+                      }`}
+                      onClick={() => setSelectedSpecIndex(index)}
+                    >
+                      <Text className="block text-sm font-semibold text-ink">
+                        {textOrPlaceholder(spec.spec_name, '未命名规格')}
+                      </Text>
+                      <Text className="mt-1 block text-xs text-muted">
+                        {priceOf(spec.vip_price ?? spec.price, spec.price_unit) ?? '未提供价格'}
+                      </Text>
+                    </View>
+                  )
+                })}
               </View>
             ) : (
               <StateNotice state="empty" copy={{ title: '暂无规格', desc: '商品详情接口未返回规格数据。' }} />
@@ -157,7 +179,7 @@ export default function ResourceStandardDetailPage() {
               {
                 label: '立即采购',
                 path: routes.resourcePurchase,
-                query: product.id ? { product_id: product.id } : undefined
+                query: product.id ? { product_id: product.id, spec_id: selectedSpec?.id } : undefined
               }
             ]}
           />
