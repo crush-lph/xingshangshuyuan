@@ -8,16 +8,21 @@ const HOME_TRUST_STATS = [
   { value: '10+', label: '战略供应商' }
 ]
 
+const TRUST_PANEL_GAP = 4
+const TRUST_PANEL_HEIGHT = 62
+const HERO_BOTTOM_SPACE = 16
+
 interface HomeHeroProps {
   navbarHeight: number
 }
 
 export function HomeHero({ navbarHeight }: HomeHeroProps) {
   const heroStyle: CSSProperties = {
-    height: `${navbarHeight + 96}px`
+    height: `${navbarHeight + TRUST_PANEL_GAP + TRUST_PANEL_HEIGHT + HERO_BOTTOM_SPACE}px`
   }
   const trustPanelStyle: CSSProperties = {
-    top: `${navbarHeight + 12}px`
+    top: `${navbarHeight + TRUST_PANEL_GAP}px`,
+    height: `${TRUST_PANEL_HEIGHT}px`
   }
 
   return (
@@ -31,11 +36,18 @@ export function HomeHero({ navbarHeight }: HomeHeroProps) {
         style={trustPanelStyle}
       >
         <View className="h-[4rpx] bg-gradient-to-r from-transparent via-gold-light/90 to-transparent" />
-        <View className="grid grid-cols-4">
+        <View className="grid h-full grid-cols-4">
           {HOME_TRUST_STATS.map((item, index) => (
-            <View key={item.label} className={`px-1 py-3 text-center ${index === 0 ? '' : 'border-l border-white/16'}`}>
+            <View
+              key={item.label}
+              className={`flex min-w-0 flex-col items-center justify-center px-1 text-center ${
+                index === 0 ? '' : 'border-l border-white/16'
+              }`}
+            >
               <Text className="block text-[28rpx] font-bold leading-[36rpx] text-gold-light">{item.value}</Text>
-              <Text className="mt-1 block text-[20rpx] font-semibold leading-[28rpx] text-white/82">{item.label}</Text>
+              <Text className="mt-[4rpx] block text-[20rpx] font-semibold leading-[28rpx] text-white/82">
+                {item.label}
+              </Text>
             </View>
           ))}
         </View>

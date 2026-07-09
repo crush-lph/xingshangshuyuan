@@ -5,7 +5,7 @@ import { PageShell } from '@/components/PageShell'
 import { getEventDetail, getEvents, type GetEventDetailData } from '@/services'
 import { openEventSignupIfAvailable } from '@/shared/event-registration'
 import { routes } from '@/shared/router'
-import { compactJoin, getPageParam, priceOf, textOrPlaceholder } from '@/shared/view-data'
+import { compactJoin, dateTimeRangeOf, getPageParam, priceOf, textOrPlaceholder } from '@/shared/view-data'
 
 async function resolveEventId() {
   const pageId = getPageParam('event_id')
@@ -51,7 +51,12 @@ export default function EventDetailPage() {
   return (
     <PageShell
       title="活动详情"
-      subtitle={event ? compactJoin([event.city, event.start_time]) || '活动接口详情' : '活动接口详情'}
+      subtitle={
+        event
+          ? compactJoin([event.city, dateTimeRangeOf(event.event_date, event.start_time, event.end_time)]) ||
+            '活动接口详情'
+          : '活动接口详情'
+      }
     >
       {isLoading ? (
         <StateNotice state="loading" />
@@ -61,7 +66,8 @@ export default function EventDetailPage() {
         <View className="grid gap-3">
           <View className="rounded-lg bg-brand-deep p-4 shadow-medium">
             <Text className="block text-xs font-semibold text-gold-light">
-              {compactJoin([event.city, event.start_time, event.end_time]) || '接口未返回时间地点'}
+              {compactJoin([event.city, dateTimeRangeOf(event.event_date, event.start_time, event.end_time)]) ||
+                '接口未返回时间地点'}
             </Text>
             <Text className="mt-2 block text-xl font-bold text-white">
               {textOrPlaceholder(event.title, '未命名活动')}

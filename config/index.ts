@@ -3,7 +3,7 @@ import fs from 'node:fs'
 import path from 'node:path'
 import { UnifiedWebpackPluginV5 } from 'weapp-tailwindcss/webpack'
 
-const DEFAULT_API_BASE_URL = 'http://152.136.125.82/'
+const DEFAULT_API_BASE_URL = 'https://www.xssy365.com/'
 
 function parseEnvValue(value: string) {
   const trimmedValue = value.trim()

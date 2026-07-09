@@ -9,7 +9,7 @@ interface SectionCardProps {
 
 export function SectionCard({ title, more, children }: SectionCardProps) {
   return (
-    <View className="rounded-lg bg-white p-4 shadow-soft">
+    <View className="max-w-full overflow-hidden rounded-lg bg-white p-4 shadow-soft">
       {title ? (
         <View className="mb-3 flex items-center justify-between">
           <View className="flex items-center gap-2">

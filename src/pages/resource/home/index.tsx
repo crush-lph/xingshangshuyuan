@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Text, View } from '@tarojs/components'
+import { ScrollView, Text, View } from '@tarojs/components'
 import { ActionBar, ItemList, SectionCard, StateNotice, type ListItem } from '@/components/business'
 import { PageShell } from '@/components/PageShell'
 import { getProductCategories, getProducts } from '@/services'
@@ -79,11 +79,18 @@ export default function ResourceHomePage() {
             </View>
             <SectionCard title="资源分类">
               {categories.length ? (
-                <View className="flex flex-wrap gap-2">
+                <ScrollView
+                  scrollX
+                  enhanced
+                  showScrollbar={false}
+                  className="w-full max-w-full whitespace-nowrap overflow-hidden"
+                >
                   {categories.map((item, index) => (
                     <View
                       key={`${item.id ?? item.name}-${index}`}
-                      className={`rounded-full px-3 py-2 ${index === 0 ? 'bg-brand' : 'bg-brand-soft'}`}
+                      className={`mr-2 inline-flex shrink-0 rounded-full border px-4 py-2 ${
+                        index === 0 ? 'border-brand bg-brand' : 'border-transparent bg-brand-soft'
+                      }`}
                       onClick={() => router.to(routes.resourceList, item.id ? { category_id: item.id } : undefined)}
                     >
                       <Text className={`text-xs font-semibold ${index === 0 ? 'text-white' : 'text-brand'}`}>
@@ -91,14 +98,14 @@ export default function ResourceHomePage() {
                       </Text>
                     </View>
                   ))}
-                </View>
+                </ScrollView>
               ) : (
                 <StateNotice state="empty" copy={{ title: '暂无资源分类', desc: '当前接口没有返回资源分类。' }} />
               )}
             </SectionCard>
             <SectionCard title="战略供应商推荐">
               {items.length ? (
-                <ItemList items={items} />
+                <ItemList items={items} variant="embedded" />
               ) : (
                 <StateNotice state="empty" copy={{ title: '暂无资源', desc: '当前接口没有返回推荐资源。' }} />
               )}

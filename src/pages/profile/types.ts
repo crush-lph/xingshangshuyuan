@@ -24,5 +24,6 @@ export interface MenuItem {
 
 export interface ManagerInfo {
   name: string
-  phone: string
+  phone?: string
+  qrcodeUrl?: string
 }

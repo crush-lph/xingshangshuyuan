@@ -83,6 +83,13 @@ export const useUserInfo = create<UserInfoState>()((set, get) => ({
     if (!hasBoundUnauthorizedListener) {
       hasBoundUnauthorizedListener = true
       onUnauthorized(() => {
+        const current = get()
+        const hadSession = Boolean(current.token || current.isLoggedIn || current.userInfo || current.profile)
+
+        if (!hadSession) {
+          return
+        }
+
         set({
           userInfo: null,
           profile: null,

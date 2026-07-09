@@ -7,7 +7,7 @@ import { getEventDetail, getEvents, getUserProfile, registerEvent, type GetEvent
 import { ensureLoggedIn } from '@/shared/auth-guard'
 import { isEventRegistrationOpen, showEventRegistrationUnavailable } from '@/shared/event-registration'
 import { router, routes } from '@/shared/router'
-import { getPageParam, priceOf, textOf, textOrPlaceholder } from '@/shared/view-data'
+import { dateTimeRangeOf, getPageParam, priceOf, textOf, textOrPlaceholder } from '@/shared/view-data'
 
 interface SignupForm {
   realName: string
@@ -147,7 +147,10 @@ export default function EventSignupPage() {
           <FieldList
             fields={[
               { label: '活动', value: textOrPlaceholder(event.title) },
-              { label: '时间', value: textOrPlaceholder(event.start_time ?? event.event_date) },
+              {
+                label: '时间',
+                value: textOrPlaceholder(dateTimeRangeOf(event.event_date, event.start_time, event.end_time))
+              },
               { label: '地点', value: textOrPlaceholder(event.location ?? event.city) },
               { label: '票价', value: priceOf(event.price) ?? '未提供' }
             ]}

@@ -1,5 +1,4 @@
 import { useEffect, useState } from 'react'
-import Taro from '@tarojs/taro'
 import { Text, View } from '@tarojs/components'
 import {
   ActionBar,
@@ -118,9 +117,7 @@ export default function OpportunityHomePage() {
                 {
                   label: '我的申请',
                   variant: 'outline',
-                  onClick: () => {
-                    void Taro.showToast({ title: '我的申请列表暂未开放', icon: 'none' })
-                  }
+                  path: routes.opportunityApplications
                 }
               ]}
             />

@@ -6,18 +6,22 @@ import {
   getBanners,
   getCoreBusiness,
   getEvents,
+  getNotifications,
   getOpportunities,
+  getPlatformStats,
   getProducts,
-  getSystemStatus,
+  getQuickEntries,
   type GetEventsData,
+  type GetNotificationsData,
   type GetOpportunitiesData,
+  type GetPlatformStatsData,
   type GetProductsData
 } from '@/services'
 import { AppIcon } from '@/components/AppIcon'
-import { StateNotice } from '@/components/business'
-import type { AppIconName } from '@/shared/app-icons'
+import { StateNotice, StatGrid, type StatItem } from '@/components/business'
+import { getAppIconName, type AppIconName } from '@/shared/app-icons'
 import { openEventSignupIfAvailable } from '@/shared/event-registration'
-import { router, routes, type RoutePath } from '@/shared/router'
+import { parseRouteUrl, router, routes, type Query, type RoutePath } from '@/shared/router'
 import { compactJoin, priceOf, textOf, textOrPlaceholder } from '@/shared/view-data'
 import { HomeBannerCarousel, type HomeBannerItem } from './components/HomeBannerCarousel'
 import { HomeHero } from './components/HomeHero'
@@ -27,8 +31,17 @@ interface QuickEntry {
   label: string
   icon: AppIconName
   path: RoutePath
+  query?: Query
   iconBackground: string
   iconColor: string
+}
+
+interface NotificationEntry {
+  id?: number
+  title: string
+  summary?: string
+  meta?: string
+  tag?: string
 }
 
 interface ProductEntry {
@@ -113,8 +126,44 @@ const HOME_QUICK_ENTRIES: QuickEntry[] = [
   }
 ]
 
-function routeFromApi(linkUrl: string | undefined): RoutePath | undefined {
-  return linkUrl?.startsWith('/pages/') ? (linkUrl as RoutePath) : undefined
+const knownRoutePaths = new Set<RoutePath>(Object.values(routes))
+
+function routeFromApi(linkUrl: string | undefined) {
+  const parsed = parseRouteUrl(linkUrl)
+
+  if (!parsed || !knownRoutePaths.has(parsed.path)) {
+    return undefined
+  }
+
+  return parsed
+}
+
+function routePathFromApi(linkUrl: string | undefined): RoutePath | undefined {
+  return routeFromApi(linkUrl)?.path
+}
+
+function routeFromQuickEntryLabel(label: string): Pick<QuickEntry, 'path' | 'query'> | undefined {
+  if (label.includes('代账')) {
+    return { path: routes.resourceList, query: { keyword: label } }
+  }
+
+  if (label.includes('课程') || label.includes('学习') || label.includes('书苑') || label.includes('财税资讯')) {
+    return { path: routes.shuyuan }
+  }
+
+  if (label.includes('商机')) {
+    return { path: routes.opportunityHome }
+  }
+
+  if (label.includes('资质') || label.includes('认证')) {
+    return { path: routes.userCert }
+  }
+
+  if (label.includes('咨询')) {
+    return { path: routes.services }
+  }
+
+  return undefined
 }
 
 function getDateParts(value: string | null | undefined): Pick<EventEntry, 'month' | 'day'> {
@@ -169,6 +218,42 @@ function mapOpportunity(item: NonNullable<GetOpportunitiesData['list']>[number])
   }
 }
 
+function mapNotification(item: NonNullable<GetNotificationsData['list']>[number]): NotificationEntry {
+  return {
+    id: item.id,
+    title: textOrPlaceholder(item.title, '未命名动态'),
+    summary: textOf(item.summary),
+    meta: textOf(item.published_at),
+    tag: item.is_top ? '置顶' : textOf(item.type_text)
+  }
+}
+
+function mapPlatformStat(item: NonNullable<GetPlatformStatsData['list']>[number]): StatItem {
+  return {
+    label: textOrPlaceholder(item.stat_label ?? item.stat_key, '平台数据'),
+    value: textOrPlaceholder(item.stat_value),
+    tone: 'brand'
+  }
+}
+
+function mapQuickEntry(item: { name?: string; icon?: string; link_url?: string }, index: number): QuickEntry {
+  const fallback = HOME_QUICK_ENTRIES[index % HOME_QUICK_ENTRIES.length]
+  const label = textOrPlaceholder(item.name, fallback.label)
+  const apiRoute = routeFromApi(item.link_url)
+  const labelRoute = routeFromQuickEntryLabel(label)
+  const path = apiRoute?.path ?? labelRoute?.path ?? fallback.path
+  const query = apiRoute?.query ?? labelRoute?.query
+
+  return {
+    label,
+    icon: getAppIconName(label, item.icon, path, fallback.icon),
+    path,
+    query,
+    iconBackground: fallback.iconBackground,
+    iconColor: fallback.iconColor
+  }
+}
+
 export default function HomePage() {
   const [navbarHeight, setNavbarHeight] = useState(DEFAULT_IMMERSIVE_NAVBAR_HEIGHT)
   const [products, setProducts] = useState<ProductEntry[]>([])
@@ -176,7 +261,9 @@ export default function HomePage() {
   const [opportunity, setOpportunity] = useState<OpportunityEntry | null>(null)
   const [banners, setBanners] = useState<HomeBannerItem[]>([])
   const [coreBusiness, setCoreBusiness] = useState<CoreBusinessEntry[]>([])
-  const [systemStatus, setSystemStatus] = useState('')
+  const [quickEntries, setQuickEntries] = useState<QuickEntry[]>(HOME_QUICK_ENTRIES)
+  const [platformStats, setPlatformStats] = useState<StatItem[]>([])
+  const [notifications, setNotifications] = useState<NotificationEntry[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [hasError, setHasError] = useState(false)
   const [sectionErrors, setSectionErrors] = useState<HomeSectionErrors>({
@@ -195,20 +282,32 @@ export default function HomePage() {
         opportunity: false
       })
 
-      const [bannersResult, coreBusinessResult, systemStatusResult, productsResult, eventsResult, opportunitiesResult] =
-        await Promise.allSettled([
-          getBanners(),
-          getCoreBusiness(),
-          getSystemStatus(),
-          getProducts({ page: 1, page_size: 2 }),
-          getEvents({ status: 1, page: 1, page_size: 5 }),
-          getOpportunities({ page: 1, page_size: 1 })
-        ])
+      const [
+        bannersResult,
+        coreBusinessResult,
+        quickEntriesResult,
+        platformStatsResult,
+        notificationsResult,
+        productsResult,
+        eventsResult,
+        opportunitiesResult
+      ] = await Promise.allSettled([
+        getBanners(),
+        getCoreBusiness(),
+        getQuickEntries(),
+        getPlatformStats(),
+        getNotifications({ page: 1, page_size: 3 }),
+        getProducts({ page: 1, page_size: 2 }),
+        getEvents({ status: 1, page: 1, page_size: 5 }),
+        getOpportunities({ page: 1, page_size: 1 })
+      ])
 
       setHasError(
         bannersResult.status === 'rejected' &&
           coreBusinessResult.status === 'rejected' &&
-          systemStatusResult.status === 'rejected' &&
+          quickEntriesResult.status === 'rejected' &&
+          platformStatsResult.status === 'rejected' &&
+          notificationsResult.status === 'rejected' &&
           productsResult.status === 'rejected' &&
           eventsResult.status === 'rejected' &&
           opportunitiesResult.status === 'rejected'
@@ -225,7 +324,7 @@ export default function HomePage() {
             title: textOrPlaceholder(item.title, '未命名轮播'),
             subtitle: textOf(item.subtitle),
             imageUrl: textOf(item.image_url),
-            path: routeFromApi(item.action_url)
+            path: routePathFromApi(item.action_url)
           }))
         )
       }
@@ -240,8 +339,17 @@ export default function HomePage() {
         )
       }
 
-      if (systemStatusResult.status === 'fulfilled') {
-        setSystemStatus(compactJoin([systemStatusResult.value.data.app, systemStatusResult.value.data.version]))
+      if (quickEntriesResult.status === 'fulfilled') {
+        const entries = quickEntriesResult.value.data.list ?? []
+        setQuickEntries(entries.length ? entries.slice(0, 6).map(mapQuickEntry) : HOME_QUICK_ENTRIES)
+      }
+
+      if (platformStatsResult.status === 'fulfilled') {
+        setPlatformStats((platformStatsResult.value.data.list ?? []).slice(0, 4).map(mapPlatformStat))
+      }
+
+      if (notificationsResult.status === 'fulfilled') {
+        setNotifications((notificationsResult.value.data.list ?? []).slice(0, 3).map(mapNotification))
       }
 
       if (productsResult.status === 'fulfilled') {
@@ -284,20 +392,14 @@ export default function HomePage() {
           <>
             <HomeBannerCarousel items={banners} />
 
-            <View className="mt-3 flex items-center justify-between rounded-lg bg-white px-4 py-3 shadow-soft">
-              <View>
-                <Text className="block text-sm font-semibold text-ink">运营待办</Text>
-                <Text className="mt-1 block text-xs text-muted">{systemStatus || '活动签到、资质审核和资源管理'}</Text>
-              </View>
-              <View className="rounded-lg bg-brand px-3 py-2" onClick={() => router.to(routes.adminCheckin)}>
-                <Text className="text-xs font-semibold text-white">查看</Text>
-              </View>
-            </View>
-
             <View className="mt-3 rounded-lg bg-white p-[14px] shadow-soft">
               <View className="grid grid-cols-3 gap-3">
-                {HOME_QUICK_ENTRIES.map((entry) => (
-                  <View key={entry.label} className="items-center text-center" onClick={() => router.to(entry.path)}>
+                {quickEntries.map((entry) => (
+                  <View
+                    key={entry.label}
+                    className="items-center text-center"
+                    onClick={() => router.to(entry.path, entry.query)}
+                  >
                     <View
                       className="mx-auto flex h-12 w-12 items-center justify-center rounded-[14px]"
                       style={{ background: entry.iconBackground }}
@@ -326,6 +428,39 @@ export default function HomePage() {
                       {item.actionText ? (
                         <Text className="mt-2 block text-xs font-semibold text-tech">{item.actionText}</Text>
                       ) : null}
+                    </View>
+                  ))}
+                </View>
+              </View>
+            ) : null}
+
+            {platformStats.length ? (
+              <View className="mt-3">
+                <StatGrid items={platformStats} />
+              </View>
+            ) : null}
+
+            {notifications.length ? (
+              <View className="mt-3 rounded-lg bg-white p-4 shadow-soft">
+                <View className="mb-3 flex items-center gap-2">
+                  <View className="h-4 w-1 rounded bg-gold" />
+                  <Text className="text-base font-bold text-ink">平台动态</Text>
+                </View>
+                <View className="grid gap-3">
+                  {notifications.map((item) => (
+                    <View key={item.id ?? item.title} className="rounded-lg bg-canvas px-3 py-3">
+                      <View className="flex items-start justify-between gap-2">
+                        <Text className="flex-1 text-sm font-semibold leading-5 text-ink">{item.title}</Text>
+                        {item.tag ? (
+                          <Text className="rounded bg-brand-soft px-2 py-1 text-xs font-semibold text-brand">
+                            {item.tag}
+                          </Text>
+                        ) : null}
+                      </View>
+                      {item.summary ? (
+                        <Text className="mt-1 block text-xs leading-5 text-muted">{item.summary}</Text>
+                      ) : null}
+                      {item.meta ? <Text className="mt-2 block text-xs text-muted">{item.meta}</Text> : null}
                     </View>
                   ))}
                 </View>

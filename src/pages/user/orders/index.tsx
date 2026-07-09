@@ -13,30 +13,11 @@ interface OrderTab {
 
 const orderTabs: OrderTab[] = [{ label: '全部' }, { label: '待支付', status: 0 }, { label: '已完成', status: 2 }]
 
-function isPendingPaymentOrder(order: Record<string, unknown>) {
-  const status = numberOf(order.status)
-  const statusText = textOf(order.status_text)
-
-  return status === 0 || statusText === '待支付'
-}
-
 function isCompletedOrder(order: Record<string, unknown>) {
   const status = numberOf(order.status)
   const statusText = textOf(order.status_text)
 
   return status === 2 || statusText === '已完成'
-}
-
-function matchesActiveTab(order: Record<string, unknown>, tab: OrderTab) {
-  if (tab.status === 0) {
-    return isPendingPaymentOrder(order)
-  }
-
-  if (tab.status === 2) {
-    return isCompletedOrder(order)
-  }
-
-  return true
 }
 
 export default function UserOrdersPage() {
@@ -56,34 +37,32 @@ export default function UserOrdersPage() {
         page_size: 20
       })
       setItems(
-        firstRecordList(response.data)
-          .filter((order) => matchesActiveTab(order, activeTab))
-          .map((order) => {
-            const orderNo = textOf(order.order_no ?? order.id)
-            const orderId = textOf(order.order_id ?? order.id)
-            const isCompleted = isCompletedOrder(order)
-            const title = textOrPlaceholder(order.title ?? order.order_no ?? order.id, '未命名订单')
+        firstRecordList(response.data).map((order) => {
+          const orderNo = textOf(order.order_no ?? order.id)
+          const orderId = textOf(order.order_id ?? order.id)
+          const isCompleted = isCompletedOrder(order)
+          const title = textOrPlaceholder(order.title ?? order.order_no ?? order.id, '未命名订单')
 
-            return {
-              title,
-              desc: textOrPlaceholder(order.description ?? order.remark ?? order.status_text, '接口未返回订单描述'),
-              meta: orderNo,
-              price: priceOf(order.pay_amount ?? order.total_amount ?? order.amount),
-              tag: textOf(order.status_text),
-              icon: 'file-list-3-line',
-              tone: isCompleted ? 'success' : 'gold',
-              path: isCompleted ? routes.userReviews : orderNo ? routes.paymentTransfer : undefined,
-              query: isCompleted
-                ? {
-                    ...(orderId ? { order_id: orderId } : {}),
-                    title
-                  }
-                : orderNo
-                  ? { order_no: orderNo }
-                  : undefined,
-              action: isCompleted ? '去评价' : orderNo ? '查看' : '订单号缺失'
-            }
-          })
+          return {
+            title,
+            desc: textOrPlaceholder(order.description ?? order.remark ?? order.status_text, '接口未返回订单描述'),
+            meta: orderNo,
+            price: priceOf(order.pay_amount ?? order.total_amount ?? order.amount),
+            tag: textOf(order.status_text),
+            icon: 'file-list-3-line',
+            tone: isCompleted ? 'success' : 'gold',
+            path: isCompleted ? routes.userReviews : orderNo ? routes.paymentTransfer : undefined,
+            query: isCompleted
+              ? {
+                  ...(orderId ? { order_id: orderId } : {}),
+                  title
+                }
+              : orderNo
+                ? { order_no: orderNo }
+                : undefined,
+            action: isCompleted ? '去评价' : orderNo ? '查看' : '订单号缺失'
+          }
+        })
       )
     }
 

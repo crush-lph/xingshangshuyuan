@@ -17,12 +17,16 @@ export default defineAppConfig({
       pages: ['home/index', 'list/index', 'detail/index', 'signup/index', 'group/index', 'ticket/index']
     },
     {
+      root: 'pages/course',
+      pages: ['detail/index', 'learn/index', 'purchase/index']
+    },
+    {
       root: 'pages/member',
       pages: ['benefit/index', 'confirm/index', 'payment-transfer/index']
     },
     {
       root: 'pages/opportunity',
-      pages: ['home/index', 'detail/index', 'publish/index', 'apply/index']
+      pages: ['home/index', 'detail/index', 'publish/index', 'apply/index', 'applications/index']
     },
     {
       root: 'pages/user',
@@ -32,6 +36,8 @@ export default defineAppConfig({
         'cert/index',
         'orders/index',
         'events/index',
+        'courses/index',
+        'messages/index',
         'benefits/index',
         'points/index',
         'reviews/index',

@@ -1,0 +1,4 @@
+interface:
+  display_name: "Taro Weapp Standards"
+  short_description: "Reusable Taro mini-program architecture rules"
+  default_prompt: "Use $taro-weapp-project-standards to guide a Taro WeChat mini-program project setup or feature implementation."

@@ -37,6 +37,21 @@ export const serviceMenus: MenuItem[] = [
     icon: 'briefcase-4-line',
     iconClass: 'bg-[#FFF3E0] text-[#C05621]',
     path: routes.opportunityHome
+  },
+  {
+    label: '消息中心',
+    icon: 'notification-3-line',
+    iconClass: 'bg-brand-soft text-brand',
+    path: routes.userMessages
+  }
+]
+
+export const adminMenus: MenuItem[] = [
+  {
+    label: '核验门票',
+    icon: 'ticket-line',
+    iconClass: 'bg-[#E8F0FE] text-tech',
+    path: routes.adminCheckin
   }
 ]
 

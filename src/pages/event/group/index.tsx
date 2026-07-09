@@ -4,7 +4,7 @@ import { ActionBar, FieldList, SectionCard, StateNotice } from '@/components/bus
 import { PageShell } from '@/components/PageShell'
 import { getEventDetail, getEvents, type GetEventDetailData } from '@/services'
 import { openEventSignupIfAvailable } from '@/shared/event-registration'
-import { getPageParam, priceOf, textOrPlaceholder } from '@/shared/view-data'
+import { dateTimeRangeOf, getPageParam, priceOf, textOrPlaceholder } from '@/shared/view-data'
 
 async function resolveEventId() {
   const pageId = getPageParam('event_id')
@@ -65,7 +65,10 @@ export default function EventGroupPage() {
             fields={[
               { label: '活动城市', value: textOrPlaceholder(event.city) },
               { label: '活动地点', value: textOrPlaceholder(event.location) },
-              { label: '活动时间', value: textOrPlaceholder(event.start_time) },
+              {
+                label: '活动时间',
+                value: textOrPlaceholder(dateTimeRangeOf(event.event_date, event.start_time, event.end_time))
+              },
               { label: '活动价格', value: priceOf(event.price) ?? '未提供' }
             ]}
           />

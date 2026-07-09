@@ -105,7 +105,7 @@ export async function request<TResponse = unknown, TData extends RequestData = T
     return response.data
   }
 
-  if (response.statusCode === 401) {
+  if (response.statusCode === 401 && token) {
     notifyUnauthorized()
   }
 

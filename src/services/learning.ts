@@ -1,7 +1,7 @@
 // Generated from Apifox export. Update through the Apifox document, not by hand.
 
 import { api, type ApiRequestOptions, type ApiBodyRequestOptions } from '@/shared/request'
-import type { ApiResponse, EmptyObject, QueryValue } from './types'
+import type { ApiResponse, QueryValue } from './types'
 
 export type GetCourseCategoriesData = Array<{
   id?: number
@@ -99,7 +99,7 @@ export interface GetCourseSectionsQuery {
   course_id: QueryValue
 }
 
-export type GetCourseSectionsData = Array<{
+export interface CourseSectionData {
   id?: number
   title?: string
   parent_id?: number
@@ -110,8 +110,10 @@ export type GetCourseSectionsData = Array<{
   is_completed?: boolean
   last_position?: number
   sort_order?: number
-  children?: Array<EmptyObject>
-}>
+  children?: CourseSectionData[]
+}
+
+export type GetCourseSectionsData = CourseSectionData[]
 
 export type GetCourseSectionsResponse = ApiResponse<GetCourseSectionsData>
 
@@ -241,6 +243,7 @@ export function updateUserCourseProgress(
 
 export interface GetEventsQuery {
   status?: QueryValue
+  city?: QueryValue
   page?: QueryValue
   page_size?: QueryValue
 }
@@ -256,6 +259,7 @@ export interface GetEventsData {
     cover_image?: string
     event_date?: string
     start_time?: string
+    end_time?: string
     location?: string
     city?: string
     max_participants?: number | null
@@ -391,6 +395,7 @@ export function checkinEvent(data: CheckinEventPayload, options?: ApiBodyRequest
 }
 
 export interface GetUserEventsQuery {
+  status?: QueryValue
   page?: QueryValue
   page_size?: QueryValue
 }

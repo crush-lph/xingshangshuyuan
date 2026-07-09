@@ -12,7 +12,7 @@ import {
   type GetUserProfileData
 } from '@/services'
 import { routes } from '@/shared/router'
-import { getPageParam, textOrPlaceholder } from '@/shared/view-data'
+import { dateTimeRangeOf, getPageParam, textOrPlaceholder } from '@/shared/view-data'
 
 async function resolveEventId() {
   const pageId = getPageParam('event_id')
@@ -104,7 +104,10 @@ export default function EventTicketPage() {
               { label: '手机号', value: textOrPlaceholder(ticket.phone) },
               { label: '公司', value: textOrPlaceholder(ticket.company_name) },
               { label: '地点', value: textOrPlaceholder(ticket.location) },
-              { label: '时间', value: textOrPlaceholder(ticket.start_time ?? ticket.event_date) },
+              {
+                label: '时间',
+                value: textOrPlaceholder(dateTimeRangeOf(ticket.event_date, ticket.start_time, ticket.end_time))
+              },
               { label: '状态', value: textOrPlaceholder(ticket.status_text) }
             ]}
           />

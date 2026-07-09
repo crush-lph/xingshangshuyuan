@@ -3,14 +3,14 @@ import Taro from '@tarojs/taro'
 import { Button as TaroButton, Image, Text, View } from '@tarojs/components'
 import { AppIcon } from '@/components/AppIcon'
 import adminIcon from '@/assets/identity/identity-admin.png'
-import { uploadUserAvatar } from '@/services'
-import { readImageFileAsDataUri } from '@/shared/image-file'
 import { router, routes } from '@/shared/router'
+import { uploadWechatAvatarFromLocalFile } from '@/shared/user-avatar'
 import { useUserInfo } from '@/stores/user-info'
 import { textOrPlaceholder, textOf } from '@/shared/view-data'
 
 export function ProfileHeader() {
-  const { bindWechatPhone, isAdmin, isPhoneBound, loadUserInfo, profile, updateWechatProfile, userInfo } = useUserInfo()
+  const { bindWechatPhone, isAdmin, isPhoneBound, loadUserInfo, profile, token, updateWechatProfile, userInfo } =
+    useUserInfo()
   const nickname = textOf(profile?.nickname ?? userInfo?.nickname)
   const avatar = textOf(profile?.avatar ?? userInfo?.avatar)
   const hasAccount = Boolean(profile || userInfo)
@@ -25,8 +25,12 @@ export function ProfileHeader() {
     )
 
   useEffect(() => {
+    if (!token) {
+      return
+    }
+
     void loadUserInfo()
-  }, [loadUserInfo])
+  }, [loadUserInfo, token])
 
   async function handleBindPhone(event: { detail?: { code?: string; errMsg?: string } }) {
     const errMsg = event.detail?.errMsg
@@ -63,14 +67,7 @@ export function ProfileHeader() {
 
     try {
       setIsSavingProfile(true)
-      const image = readImageFileAsDataUri(nextAvatar)
-      const response = await uploadUserAvatar({ image })
-      const uploadedAvatar = textOf(response.data.url)
-
-      if (!uploadedAvatar) {
-        throw new Error('上传头像接口未返回地址')
-      }
-
+      const uploadedAvatar = await uploadWechatAvatarFromLocalFile(nextAvatar)
       await updateWechatProfile({ avatar: uploadedAvatar })
       setDraftAvatar(undefined)
       Taro.showToast({ title: '头像已更新', icon: 'success' })
@@ -85,6 +82,9 @@ export function ProfileHeader() {
 
   const goLogin = () => {
     router.to(routes.userLogin, { redirect: routes.profile })
+  }
+  const goSettings = () => {
+    router.to(routes.userSettings)
   }
   const displayAvatar = draftAvatar || avatar
   const renderAvatarContent = () =>
@@ -136,6 +136,11 @@ export function ProfileHeader() {
           </Text>
         ) : null}
       </View>
+      {hasAccount ? (
+        <View className="shrink-0 px-1 py-1" onClick={goSettings}>
+          <AppIcon name="settings-3-line" size={18} color="rgba(255,255,255,0.82)" />
+        </View>
+      ) : null}
       {hasAccount && !isPhoneBound ? (
         <TaroButton
           className="ml-auto rounded border border-white bg-transparent px-2 py-1 text-xs font-semibold leading-5 text-white"

@@ -4,7 +4,7 @@ import { ItemList, SectionCard, StatGrid, StateNotice, type ListItem, type StatI
 import { PageShell } from '@/components/PageShell'
 import { getEvents } from '@/services'
 import { routes } from '@/shared/router'
-import { compactJoin, priceOf, textOrPlaceholder, textOf } from '@/shared/view-data'
+import { compactJoin, dateTimeRangeOf, priceOf, textOrPlaceholder, textOf } from '@/shared/view-data'
 
 export default function EventHomePage() {
   const [notice, setNotice] = useState('')
@@ -46,7 +46,12 @@ export default function EventHomePage() {
           events.map((item) => ({
             title: textOrPlaceholder(item.title, '未命名活动'),
             desc: textOrPlaceholder(item.status_text, '接口未返回活动状态'),
-            meta: compactJoin([item.city, item.location, item.start_time]) || '接口未返回活动时间地点',
+            meta:
+              compactJoin([
+                item.city,
+                item.location,
+                dateTimeRangeOf(item.event_date, item.start_time, item.end_time)
+              ]) || '接口未返回活动时间地点',
             price: priceOf(item.price),
             tag: item.max_participants ? `限${item.max_participants}人` : undefined,
             icon: 'calendar-event-line',

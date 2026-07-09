@@ -210,6 +210,7 @@ export function getOpportunityApplications(
 }
 
 export interface GetUserApplicationsQuery {
+  status?: QueryValue
   page?: QueryValue
   page_size?: QueryValue
 }

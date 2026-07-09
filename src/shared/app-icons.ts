@@ -12,11 +12,14 @@ export type AppIconName =
   | 'file-list-3-line'
   | 'graduation-cap-line'
   | 'hand-heart-line'
+  | 'map-pin-line'
+  | 'notification-3-line'
   | 'search-line'
   | 'service-line'
   | 'settings-3-line'
   | 'shopping-bag-3-line'
   | 'star-line'
+  | 'ticket-line'
   | 'trophy-line'
   | 'user-3-line'
   | 'vip-crown-line'
@@ -40,9 +43,12 @@ const iconByRoute: Partial<Record<KnownRoutePath, AppIconName>> = {
   [routes.userCert]: 'building-2-line',
   [routes.userOrders]: 'file-list-3-line',
   [routes.userEvents]: 'calendar-event-line',
+  [routes.userCourses]: 'book-open-line',
+  [routes.userMessages]: 'notification-3-line',
   [routes.userBenefits]: 'vip-crown-line',
   [routes.userPoints]: 'coins-line',
-  [routes.userReviews]: 'star-line'
+  [routes.userReviews]: 'star-line',
+  [routes.adminCheckin]: 'ticket-line'
 }
 
 const iconByKeyword: Array<{ keywords: string[]; icon: AppIconName }> = [

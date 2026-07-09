@@ -37,6 +37,60 @@ export function textOrPlaceholder(value: unknown, placeholder = '未提供') {
   return textOf(value) ?? placeholder
 }
 
+export function dateTimeRangeOf(date: unknown, startTime?: unknown, endTime?: unknown) {
+  const dateText = textOf(date)
+  const startText = textOf(startTime)
+  const endText = textOf(endTime)
+
+  if (dateText && startText && endText) {
+    return `${dateText} ${startText}-${endText}`
+  }
+
+  if (dateText && startText) {
+    return `${dateText} ${startText}`
+  }
+
+  if (startText && endText) {
+    return `${startText}-${endText}`
+  }
+
+  return dateText ?? startText ?? endText
+}
+
+function normalizePriceText(value: string) {
+  const text = value.trim()
+
+  if (!text) {
+    return undefined
+  }
+
+  if (/^(免费|面议)$/u.test(text)) {
+    return text
+  }
+
+  const amount = text.replace(/^￥/u, '¥').replace(/元$/u, '')
+  return amount.startsWith('¥') ? amount : `¥${amount}`
+}
+
+function isStandalonePriceText(value: string) {
+  return /^(免费|面议)$/u.test(value)
+}
+
+function normalizePriceUnit(unit: unknown) {
+  const text = textOf(unit)
+
+  if (!text) {
+    return undefined
+  }
+
+  const normalized = text
+    .replace(/^\/+/u, '')
+    .replace(/^每/u, '')
+    .replace(/^元\/?/u, '')
+
+  return normalized && normalized !== '元' ? normalized : undefined
+}
+
 export function priceOf(value: unknown, unit?: unknown) {
   const price = textOf(value)
 
@@ -44,8 +98,17 @@ export function priceOf(value: unknown, unit?: unknown) {
     return undefined
   }
 
-  const suffix = textOf(unit)
-  const normalized = price.startsWith('¥') ? price : `¥${price}`
+  const normalized = normalizePriceText(price)
+
+  if (!normalized) {
+    return undefined
+  }
+
+  if (normalized.includes('/') || isStandalonePriceText(normalized)) {
+    return normalized
+  }
+
+  const suffix = normalizePriceUnit(unit)
   return suffix ? `${normalized}/${suffix}` : normalized
 }
 
