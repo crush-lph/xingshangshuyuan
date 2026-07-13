@@ -2,20 +2,13 @@ import { useEffect, useState } from 'react'
 import { Text, View } from '@tarojs/components'
 import { ActionBar, FieldList, SectionCard, StateNotice } from '@/components/business'
 import { PageShell } from '@/components/PageShell'
-import { getEventDetail, getEvents, type GetEventDetailData } from '@/services'
+import { getEventDetail, type GetEventDetailData } from '@/services'
 import { openEventSignupIfAvailable } from '@/shared/event-registration'
 import { routes } from '@/shared/router'
 import { compactJoin, dateTimeRangeOf, getPageParam, priceOf, textOrPlaceholder } from '@/shared/view-data'
 
 async function resolveEventId() {
-  const pageId = getPageParam('event_id')
-
-  if (pageId) {
-    return pageId
-  }
-
-  const events = await getEvents({ page: 1, page_size: 1 })
-  return events.data.list?.[0]?.id
+  return getPageParam('event_id')
 }
 
 export default function EventDetailPage() {
@@ -93,16 +86,14 @@ export default function EventDetailPage() {
           </SectionCard>
 
           <ActionBar
-            actions={[
-              {
-                label: '发起拼团',
-                variant: 'outline',
-                path: routes.eventGroup,
-                query: event.id ? { event_id: event.id } : undefined
-              },
-              { label: '会员优惠', variant: 'gold', path: routes.memberBenefit },
-              { label: '立即报名', onClick: () => openEventSignupIfAvailable(event) }
-            ]}
+            actions={
+              event.is_registered
+                ? [{ label: '查看我的活动', path: routes.userEvents }]
+                : [
+                    { label: '会员优惠', variant: 'gold', path: routes.memberBenefit },
+                    { label: '立即报名', onClick: () => openEventSignupIfAvailable(event) }
+                  ]
+            }
           />
         </View>
       ) : (

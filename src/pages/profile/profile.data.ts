@@ -52,6 +52,30 @@ export const adminMenus: MenuItem[] = [
     icon: 'ticket-line',
     iconClass: 'bg-[#E8F0FE] text-tech',
     path: routes.adminCheckin
+  },
+  {
+    label: '认证审核',
+    icon: 'building-2-line',
+    iconClass: 'bg-[#E8F9F0] text-[#2F855A]',
+    path: routes.adminCert
+  },
+  {
+    label: '订单确认',
+    icon: 'file-list-3-line',
+    iconClass: 'bg-brand-soft text-brand',
+    path: routes.adminOrders
+  },
+  {
+    label: '资源管理',
+    icon: 'archive-line',
+    iconClass: 'bg-[#E8F0FE] text-tech',
+    path: routes.adminResource
+  },
+  {
+    label: '商机撮合',
+    icon: 'briefcase-4-line',
+    iconClass: 'bg-[#FFF3E0] text-[#C05621]',
+    path: routes.adminOpportunity
   }
 ]
 

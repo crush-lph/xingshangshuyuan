@@ -1,10 +1,11 @@
-import { useEffect, useRef, useState } from 'react'
+import { useState } from 'react'
 import { ScrollView, Text, View } from '@tarojs/components'
 import { AppIcon } from '@/components/AppIcon'
-import { StateNotice } from '@/components/business'
+import { ListLoadMore, StateNotice } from '@/components/business'
 import { PageShell } from '@/components/PageShell'
 import { getUserEvents, type GetUserEventsData } from '@/services'
 import { router, routes, type Query, type RoutePath } from '@/shared/router'
+import { usePaginatedList } from '@/shared/use-paginated-list'
 import { compactJoin, priceOf, textOf, textOrPlaceholder } from '@/shared/view-data'
 
 type UserEventRecord = NonNullable<GetUserEventsData['list']>[number]
@@ -153,50 +154,18 @@ function UserEventCard({ item }: { item: UserEventItem }) {
 
 export default function UserEventsPage() {
   const [activeTab, setActiveTab] = useState<(typeof eventTabs)[number]['label']>('全部')
-  const [items, setItems] = useState<UserEventItem[]>([])
-  const [isLoading, setIsLoading] = useState(true)
-  const [hasError, setHasError] = useState(false)
-  const requestIdRef = useRef(0)
-
-  useEffect(() => {
-    const currentRequestId = requestIdRef.current + 1
-    const activeItem = eventTabs.find((item) => item.label === activeTab)
-    const activeStatus = activeItem && 'status' in activeItem ? activeItem.status : undefined
-
-    requestIdRef.current = currentRequestId
-
-    async function loadUserEvents() {
-      setIsLoading(true)
-      setHasError(false)
-
-      try {
-        const response = await getUserEvents({
-          ...(activeStatus !== undefined ? { status: activeStatus } : {}),
-          page: 1,
-          page_size: 20
-        })
-
-        if (requestIdRef.current !== currentRequestId) {
-          return
-        }
-
-        setItems((response.data.list ?? []).map(mapUserEvent))
-      } catch {
-        if (requestIdRef.current !== currentRequestId) {
-          return
-        }
-
-        setItems([])
-        setHasError(true)
-      } finally {
-        if (requestIdRef.current === currentRequestId) {
-          setIsLoading(false)
-        }
-      }
-    }
-
-    void loadUserEvents()
-  }, [activeTab])
+  const activeItem = eventTabs.find((item) => item.label === activeTab)
+  const activeStatus = activeItem && 'status' in activeItem ? activeItem.status : undefined
+  const { hasError, hasMore, isLoading, isLoadingMore, items } = usePaginatedList<UserEventRecord, UserEventItem>({
+    deps: [activeTab],
+    fetchPage: ({ page, page_size }) =>
+      getUserEvents({
+        ...(activeStatus !== undefined ? { status: activeStatus } : {}),
+        page,
+        page_size
+      }),
+    mapItems: (records: UserEventRecord[]) => records.map(mapUserEvent)
+  })
 
   return (
     <PageShell title="我的活动" subtitle="查看已报名活动、报名状态和电子票。">
@@ -232,6 +201,7 @@ export default function UserEventsPage() {
             {items.map((item, index) => (
               <UserEventCard key={`${item.title}-${index}`} item={item} />
             ))}
+            <ListLoadMore hasItems={items.length > 0} hasMore={hasMore} isLoadingMore={isLoadingMore} />
           </View>
         ) : (
           <StateNotice state="empty" copy={{ title: '暂无活动记录', desc: '当前筛选条件下没有报名活动。' }} />

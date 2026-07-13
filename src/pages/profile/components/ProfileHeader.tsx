@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import Taro from '@tarojs/taro'
 import { Button as TaroButton, Image, Text, View } from '@tarojs/components'
 import { AppIcon } from '@/components/AppIcon'
@@ -9,8 +9,7 @@ import { useUserInfo } from '@/stores/user-info'
 import { textOrPlaceholder, textOf } from '@/shared/view-data'
 
 export function ProfileHeader() {
-  const { bindWechatPhone, isAdmin, isPhoneBound, loadUserInfo, profile, token, updateWechatProfile, userInfo } =
-    useUserInfo()
+  const { bindWechatPhone, isAdmin, isPhoneBound, profile, updateWechatProfile, userInfo } = useUserInfo()
   const nickname = textOf(profile?.nickname ?? userInfo?.nickname)
   const avatar = textOf(profile?.avatar ?? userInfo?.avatar)
   const hasAccount = Boolean(profile || userInfo)
@@ -23,14 +22,6 @@ export function ProfileHeader() {
     Boolean(
       certificationText && ['已认证', '认证通过', '已通过', '通过'].some((text) => certificationText.includes(text))
     )
-
-  useEffect(() => {
-    if (!token) {
-      return
-    }
-
-    void loadUserInfo()
-  }, [loadUserInfo, token])
 
   async function handleBindPhone(event: { detail?: { code?: string; errMsg?: string } }) {
     const errMsg = event.detail?.errMsg

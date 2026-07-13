@@ -5,6 +5,7 @@ import { SectionCard } from './SectionCard'
 import type { ActionItem } from './types'
 
 export type PaymentStatus = 'pending' | 'paid' | 'failed' | 'cancelled'
+export type PaymentRetryReason = 'failed' | 'cancelled' | 'timeout'
 
 export interface PaymentStatusResult {
   status: PaymentStatus
@@ -20,7 +21,7 @@ export interface PaymentStatusPollerProps<TResult extends PaymentStatusResult = 
   retryPaymentLabel?: string
   backLabel?: string
   onSuccess: (result: TResult) => void
-  onRetryPayment?: () => void | Promise<void>
+  onRetryPayment?: (reason: PaymentRetryReason) => void | Promise<void>
   onBack?: () => void | Promise<void>
 }
 
@@ -90,12 +91,12 @@ export function PaymentStatusPoller<TResult extends PaymentStatusResult = Paymen
   backLabel = '返回上一页',
   onSuccess,
   onRetryPayment,
-  onBack,
+  onBack
 }: PaymentStatusPollerProps<TResult>) {
   const [snapshot, setSnapshot] = useState<PollerSnapshot>(() => ({
     orderNo,
     attempt: 0,
-    state: 'polling',
+    state: 'polling'
   }))
   const callbacksRef = useRef({ queryStatus, onSuccess, onRetryPayment, onBack })
   const activeAttempt = snapshot.attempt
@@ -148,7 +149,7 @@ export function PaymentStatusPoller<TResult extends PaymentStatusResult = Paymen
             orderNo,
             attempt: activeAttempt,
             state: result.status,
-            message: result.message,
+            message: result.message
           })
           return
         }
@@ -157,7 +158,7 @@ export function PaymentStatusPoller<TResult extends PaymentStatusResult = Paymen
           orderNo,
           attempt: activeAttempt,
           state: 'polling',
-          message: result.message,
+          message: result.message
         })
         if (didTimeout) return
 
@@ -171,7 +172,7 @@ export function PaymentStatusPoller<TResult extends PaymentStatusResult = Paymen
           orderNo,
           attempt: activeAttempt,
           state: 'polling',
-          message: '支付结果查询失败，请稍后重新查询。',
+          message: '支付结果查询失败，请稍后重新查询。'
         })
         pollTimer = setTimeout(() => {
           void poll()
@@ -200,14 +201,18 @@ export function PaymentStatusPoller<TResult extends PaymentStatusResult = Paymen
     setSnapshot((current) => ({
       orderNo,
       attempt: current.attempt + 1,
-      state: 'polling',
+      state: 'polling'
     }))
   }
 
   const actions: ActionItem[] = [{ label: retryQueryLabel, variant: 'outline', onClick: restartPolling }]
 
   if (onRetryPayment) {
-    actions.push({ label: retryPaymentLabel, variant: 'gold', onClick: onRetryPayment })
+    actions.push({
+      label: retryPaymentLabel,
+      variant: 'gold',
+      onClick: () => onRetryPayment(state as PaymentRetryReason)
+    })
   }
 
   if (onBack) {

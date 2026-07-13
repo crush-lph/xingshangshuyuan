@@ -1,10 +1,11 @@
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import { Text, View } from '@tarojs/components'
-import { ItemList, SectionCard, StateNotice, type ListItem } from '@/components/business'
+import { ItemList, ListLoadMore, SectionCard, StateNotice, type ListItem } from '@/components/business'
 import { PageShell } from '@/components/PageShell'
-import { getOrders } from '@/services'
+import { getOrders, type OrderListItem } from '@/services'
 import { routes } from '@/shared/router'
-import { firstRecordList, numberOf, priceOf, textOf, textOrPlaceholder } from '@/shared/view-data'
+import { usePaginatedList } from '@/shared/use-paginated-list'
+import { numberOf, priceOf, textOf, textOrPlaceholder } from '@/shared/view-data'
 
 interface OrderTab {
   label: string
@@ -13,66 +14,52 @@ interface OrderTab {
 
 const orderTabs: OrderTab[] = [{ label: '全部' }, { label: '待支付', status: 0 }, { label: '已完成', status: 2 }]
 
-function isCompletedOrder(order: Record<string, unknown>) {
-  const status = numberOf(order.status)
-  const statusText = textOf(order.status_text)
+function getOrderAction(status: number | undefined, canReview: boolean) {
+  if (canReview) return '评价订单'
+  if (status === 0) return '继续支付'
+  if (status === 1) return '查看服务状态'
+  if (status === 2) return '查看订单'
+  if (status === 3) return '已取消'
+  return '查看订单'
+}
 
-  return status === 2 || statusText === '已完成'
+function mapOrderItems(records: OrderListItem[]): ListItem[] {
+  return records.map((order) => {
+    const orderNo = textOf(order.order_no)
+    const orderMeta = orderNo ?? textOf(order.id)
+    const orderId = numberOf(order.order_id ?? (typeof order.id === 'number' ? order.id : undefined))
+    const status = numberOf(order.status)
+    const isCompleted = status === 2 || textOf(order.status_text) === '已完成'
+    const title = textOrPlaceholder(order.title ?? order.order_no ?? order.id, '未命名订单')
+    const canReview = Boolean(isCompleted && orderId)
+
+    return {
+      title,
+      desc: textOrPlaceholder(order.description ?? order.remark ?? order.status_text, '接口未返回订单描述'),
+      meta: orderMeta,
+      price: priceOf(order.pay_amount ?? order.total_amount ?? order.amount),
+      tag: textOf(order.status_text),
+      icon: 'file-list-3-line',
+      tone: isCompleted ? 'success' : 'gold',
+      path: canReview ? routes.userReviews : orderNo ? routes.paymentTransfer : undefined,
+      query: canReview ? { order_id: orderId, order_no: orderNo, title } : orderNo ? { order_no: orderNo } : undefined,
+      action: orderNo || canReview ? getOrderAction(status, canReview) : '订单信息缺失'
+    }
+  })
 }
 
 export default function UserOrdersPage() {
   const [activeTab, setActiveTab] = useState<OrderTab>(orderTabs[0])
-  const [items, setItems] = useState<ListItem[]>([])
-  const [isLoading, setIsLoading] = useState(true)
-  const [hasError, setHasError] = useState(false)
-
-  useEffect(() => {
-    async function loadOrders() {
-      setIsLoading(true)
-      setHasError(false)
-
-      const response = await getOrders({
+  const { hasError, hasMore, isLoading, isLoadingMore, items } = usePaginatedList<OrderListItem, ListItem>({
+    deps: [activeTab],
+    fetchPage: ({ page, page_size }) =>
+      getOrders({
         ...(activeTab.status !== undefined ? { status: activeTab.status } : {}),
-        page: 1,
-        page_size: 20
-      })
-      setItems(
-        firstRecordList(response.data).map((order) => {
-          const orderNo = textOf(order.order_no ?? order.id)
-          const orderId = textOf(order.order_id ?? order.id)
-          const isCompleted = isCompletedOrder(order)
-          const title = textOrPlaceholder(order.title ?? order.order_no ?? order.id, '未命名订单')
-
-          return {
-            title,
-            desc: textOrPlaceholder(order.description ?? order.remark ?? order.status_text, '接口未返回订单描述'),
-            meta: orderNo,
-            price: priceOf(order.pay_amount ?? order.total_amount ?? order.amount),
-            tag: textOf(order.status_text),
-            icon: 'file-list-3-line',
-            tone: isCompleted ? 'success' : 'gold',
-            path: isCompleted ? routes.userReviews : orderNo ? routes.paymentTransfer : undefined,
-            query: isCompleted
-              ? {
-                  ...(orderId ? { order_id: orderId } : {}),
-                  title
-                }
-              : orderNo
-                ? { order_no: orderNo }
-                : undefined,
-            action: isCompleted ? '去评价' : orderNo ? '查看' : '订单号缺失'
-          }
-        })
-      )
-    }
-
-    void loadOrders()
-      .catch(() => {
-        setItems([])
-        setHasError(true)
-      })
-      .finally(() => setIsLoading(false))
-  }, [activeTab])
+        page,
+        page_size
+      }),
+    mapItems: mapOrderItems
+  })
 
   return (
     <PageShell title="我的订单" subtitle="查看资源采购、活动报名和会员订单。">
@@ -101,7 +88,10 @@ export default function UserOrdersPage() {
         ) : hasError ? (
           <StateNotice state="error" />
         ) : items.length ? (
-          <ItemList items={items} />
+          <>
+            <ItemList items={items} />
+            <ListLoadMore hasItems={items.length > 0} hasMore={hasMore} isLoadingMore={isLoadingMore} />
+          </>
         ) : (
           <StateNotice state="empty" copy={{ title: '暂无订单', desc: '当前接口没有返回订单记录。' }} />
         )}

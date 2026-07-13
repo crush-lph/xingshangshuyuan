@@ -1,17 +1,19 @@
-import { useEffect, useRef, useState } from 'react'
-import Taro from '@tarojs/taro'
+import { useEffect, useState } from 'react'
 import { Input, ScrollView, Text, View } from '@tarojs/components'
-import { ItemList, SectionCard, StateNotice, type ListItem } from '@/components/business'
+import { ItemList, ListLoadMore, SectionCard, StateNotice, type ListItem } from '@/components/business'
 import { PageShell } from '@/components/PageShell'
 import { getProductCategories, getProducts } from '@/services'
 import { routes } from '@/shared/router'
 import { useDebouncedValue } from '@/shared/use-debounced-value'
+import { usePaginatedList } from '@/shared/use-paginated-list'
 import { compactJoin, getPageParam, priceOf, textOrPlaceholder } from '@/shared/view-data'
 
 interface ResourceItem extends ListItem {
   category: string
   categoryId?: number
 }
+
+type ResourceRecord = NonNullable<Awaited<ReturnType<typeof getProducts>>['data']['list']>[number]
 
 interface ResourceFilter {
   label: string
@@ -22,7 +24,7 @@ function getResourceFilterChipId(categoryId?: number) {
   return `resource-filter-${categoryId ?? 'all'}`
 }
 
-function mapResourceItems(list: NonNullable<Awaited<ReturnType<typeof getProducts>>['data']['list']>): ResourceItem[] {
+function mapResourceItems(list: ResourceRecord[]): ResourceItem[] {
   return list.map((item) => {
     const category = textOrPlaceholder(item.product_type_text, '未分类')
     const price = priceOf(item.vip_price ?? item.price, item.price_unit)
@@ -51,11 +53,23 @@ export default function ResourceListPage() {
   const [activeCategoryId, setActiveCategoryId] = useState<string | number | undefined>(() =>
     getPageParam('category_id')
   )
-  const [resources, setResources] = useState<ResourceItem[]>([])
-  const [isLoading, setIsLoading] = useState(true)
-  const [hasError, setHasError] = useState(false)
-  const requestIdRef = useRef(0)
-  const hasLoadedRef = useRef(false)
+  const {
+    hasError,
+    hasMore,
+    isLoading,
+    isLoadingMore,
+    items: resources
+  } = usePaginatedList<ResourceRecord, ResourceItem>({
+    deps: [activeCategoryId, debouncedQuery],
+    fetchPage: ({ page, page_size }) =>
+      getProducts({
+        ...(activeCategoryId !== undefined ? { category_id: activeCategoryId } : {}),
+        ...(debouncedQuery.trim() ? { keyword: debouncedQuery.trim() } : {}),
+        page,
+        page_size
+      }),
+    mapItems: mapResourceItems
+  })
 
   useEffect(() => {
     async function loadCategories() {
@@ -82,57 +96,6 @@ export default function ResourceListPage() {
 
     void loadCategories().catch(() => undefined)
   }, [])
-
-  useEffect(() => {
-    const currentRequestId = requestIdRef.current + 1
-    const categoryId = activeCategoryId
-    const keyword = debouncedQuery.trim()
-    const shouldKeepCurrentList = hasLoadedRef.current
-
-    requestIdRef.current = currentRequestId
-
-    async function loadResources() {
-      if (shouldKeepCurrentList) {
-        setIsLoading(false)
-      } else {
-        setIsLoading(true)
-      }
-      setHasError(false)
-
-      try {
-        const response = await getProducts({
-          ...(categoryId !== undefined ? { category_id: categoryId } : {}),
-          ...(keyword ? { keyword } : {}),
-          page: 1,
-          page_size: 20
-        })
-
-        if (requestIdRef.current !== currentRequestId) {
-          return
-        }
-
-        setResources(mapResourceItems(response.data.list ?? []))
-        hasLoadedRef.current = true
-      } catch {
-        if (requestIdRef.current !== currentRequestId) {
-          return
-        }
-
-        if (shouldKeepCurrentList) {
-          Taro.showToast({ title: '筛选失败，请稍后重试', icon: 'none' })
-        } else {
-          setResources([])
-          setHasError(true)
-        }
-      } finally {
-        if (requestIdRef.current === currentRequestId) {
-          setIsLoading(false)
-        }
-      }
-    }
-
-    void loadResources()
-  }, [activeCategoryId, debouncedQuery])
 
   function handleFilterChange(item: ResourceFilter) {
     if (String(activeCategoryId ?? '') === String(item.categoryId ?? '')) {
@@ -185,7 +148,10 @@ export default function ResourceListPage() {
             </SectionCard>
 
             {resources.length ? (
-              <ItemList items={resources} />
+              <>
+                <ItemList items={resources} />
+                <ListLoadMore hasItems={resources.length > 0} hasMore={hasMore} isLoadingMore={isLoadingMore} />
+              </>
             ) : (
               <StateNotice state="empty" copy={{ title: '暂无资源', desc: '当前接口或筛选条件没有返回可展示资源。' }} />
             )}

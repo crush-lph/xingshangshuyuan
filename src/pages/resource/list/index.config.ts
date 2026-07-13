@@ -1,4 +1,4 @@
 export default definePageConfig({
-  navigationBarTitleText: '服务商城',
+  navigationBarTitleText: '资源列表',
   enablePullDownRefresh: true
 })

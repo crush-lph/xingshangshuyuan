@@ -245,8 +245,8 @@ export function getUserApplications(
 }
 
 export interface UpdateOpportunityStatusPayload {
-  opportunity_id?: number
-  status?: number
+  opportunity_id: number
+  status: 5
 }
 
 export type UpdateOpportunityStatusData = EmptyObject

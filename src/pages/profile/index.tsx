@@ -194,7 +194,7 @@ export default function ProfilePage() {
         const unreadCount = unreadResult.value.data.unread_count ?? 0
         setServiceMenuItems((items) =>
           items.map((item) =>
-            item.label === '我的商机'
+            item.label === '消息中心'
               ? {
                   ...item,
                   badge: unreadCount > 0 ? `${unreadCount}条未读` : undefined

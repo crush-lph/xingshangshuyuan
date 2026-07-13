@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import Taro from '@tarojs/taro'
 import { Text, View } from '@tarojs/components'
 import Popup from '@nutui/nutui-react-taro/dist/es/packages/popup'
@@ -37,6 +37,7 @@ export default function MemberBenefitPage() {
   const [hasError, setHasError] = useState(false)
   const [isPaying, setIsPaying] = useState(false)
   const [pollingOrderNo, setPollingOrderNo] = useState('')
+  const paymentLockRef = useRef(false)
 
   function applyMemberData(snapshot: MemberDataSnapshot) {
     setLevels(snapshot.levels)
@@ -71,12 +72,12 @@ export default function MemberBenefitPage() {
     }
   }, [])
 
-  async function ensureOrder(level = targetLevel) {
+  async function ensureOrder(level = targetLevel, forceNew = false) {
     if (!(await ensureLoggedIn('登录后才能开通会员'))) {
       return null
     }
 
-    if (order?.order_no && order.vip_level === level?.level) {
+    if (!forceNew && order?.order_no && order.vip_level === level?.level) {
       return order
     }
 
@@ -93,7 +94,13 @@ export default function MemberBenefitPage() {
     }
   }
 
-  async function handleWechatPayment(level = targetLevel) {
+  async function handleWechatPayment(level = targetLevel, forceNew = false) {
+    if (paymentLockRef.current) return
+    if (level?.level !== DEFAULT_TARGET_LEVEL_VALUE) {
+      Taro.showToast({ title: '当前仅支持开通领航会员', icon: 'none' })
+      return
+    }
+    paymentLockRef.current = true
     if (level) {
       setTargetLevel(level)
     }
@@ -101,7 +108,7 @@ export default function MemberBenefitPage() {
     setIsPaying(true)
 
     try {
-      const nextOrder = await ensureOrder(level)
+      const nextOrder = await ensureOrder(level, forceNew)
 
       if (!nextOrder?.order_no) {
         Taro.showToast({ title: '订单生成失败', icon: 'none' })
@@ -117,6 +124,7 @@ export default function MemberBenefitPage() {
     } catch (error) {
       Taro.showToast({ title: getWechatPaymentErrorMessage(error), icon: 'none' })
     } finally {
+      paymentLockRef.current = false
       Taro.hideLoading()
       setIsPaying(false)
     }
@@ -181,9 +189,10 @@ export default function MemberBenefitPage() {
                   queryStatus={queryVipPaymentStatus}
                   backLabel="关闭弹窗"
                   onBack={() => setPollingOrderNo('')}
-                  onRetryPayment={() => {
+                  onRetryPayment={(reason) => {
                     setPollingOrderNo('')
-                    void handleWechatPayment()
+                    if (reason !== 'timeout') setOrder(null)
+                    void handleWechatPayment(targetLevel, reason !== 'timeout')
                   }}
                   onSuccess={handlePaymentConfirmed}
                 />

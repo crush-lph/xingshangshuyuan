@@ -1,9 +1,16 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import Taro from '@tarojs/taro'
 import { Text, View } from '@tarojs/components'
-import { ActionBar, FieldList, SectionCard, StateNotice } from '@/components/business'
+import { ActionBar, FieldList, PaymentStatusPoller, SectionCard, StateNotice } from '@/components/business'
 import { PageShell } from '@/components/PageShell'
-import { buyCourse, getCourseDetail, payOrder, type BuyCourseData, type GetCourseDetailData } from '@/services'
+import {
+  buyCourse,
+  getCourseDetail,
+  payOrder,
+  queryOrderPaymentStatus,
+  type BuyCourseData,
+  type GetCourseDetailData
+} from '@/services'
 import { ensureLoggedIn } from '@/shared/auth-guard'
 import { router, routes } from '@/shared/router'
 import { getPageParam, priceOf, textOf, textOrPlaceholder } from '@/shared/view-data'
@@ -15,6 +22,8 @@ export default function CoursePurchasePage() {
   const [isLoading, setIsLoading] = useState(true)
   const [hasError, setHasError] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [pollingOrderNo, setPollingOrderNo] = useState('')
+  const paymentLockRef = useRef(false)
 
   useEffect(() => {
     async function loadCourse() {
@@ -40,12 +49,12 @@ export default function CoursePurchasePage() {
       .finally(() => setIsLoading(false))
   }, [])
 
-  async function ensureOrder() {
+  async function ensureOrder(forceNew = false) {
     if (!(await ensureLoggedIn('登录后才能购买课程'))) {
       return null
     }
 
-    if (order?.order_no) {
+    if (!forceNew && order?.order_no) {
       return order
     }
 
@@ -68,27 +77,13 @@ export default function CoursePurchasePage() {
     }
   }
 
-  async function handleTransferPayment() {
+  async function handleWechatPayment(forceNew = false) {
+    if (paymentLockRef.current) return
+    paymentLockRef.current = true
     setIsSubmitting(true)
 
     try {
-      const nextOrder = await ensureOrder()
-
-      if (nextOrder?.order_no) {
-        router.to(routes.paymentTransfer, { order_no: nextOrder.order_no })
-      } else if (nextOrder) {
-        Taro.showToast({ title: '订单未返回转账编号', icon: 'none' })
-      }
-    } finally {
-      setIsSubmitting(false)
-    }
-  }
-
-  async function handleWechatPayment() {
-    setIsSubmitting(true)
-
-    try {
-      const nextOrder = await ensureOrder()
+      const nextOrder = await ensureOrder(forceNew)
 
       if (!nextOrder?.order_no) {
         Taro.showToast({ title: '订单生成失败', icon: 'none' })
@@ -99,12 +94,12 @@ export default function CoursePurchasePage() {
       const payResult = await payOrder({ order_no: nextOrder.order_no, pay_method: 1 })
       await requestWechatPayment(payResult.data.pay_params)
 
-      setOrder(null)
-      Taro.showToast({ title: '支付完成，进入学习', icon: 'success' })
-      router.redirect(routes.courseLearn, { course_id: course?.id })
+      setPollingOrderNo(nextOrder.order_no)
+      Taro.showToast({ title: '正在确认支付结果', icon: 'none' })
     } catch (error) {
       Taro.showToast({ title: getWechatPaymentErrorMessage(error), icon: 'none' })
     } finally {
+      paymentLockRef.current = false
       Taro.hideLoading()
       setIsSubmitting(false)
     }
@@ -112,6 +107,7 @@ export default function CoursePurchasePage() {
 
   const displayPrice = priceOf(order?.pay_amount ?? course?.price) ?? '生成订单后确认'
   const originalPrice = priceOf(course?.original_price)
+  const isPaymentLocked = isSubmitting || Boolean(pollingOrderNo)
 
   return (
     <PageShell title="购买课程" subtitle="确认课程信息后生成订单并完成支付。">
@@ -180,18 +176,32 @@ export default function CoursePurchasePage() {
           <ActionBar
             actions={[
               {
-                label: '对公转账',
-                variant: 'outline',
-                disabled: isSubmitting,
-                onClick: handleTransferPayment
-              },
-              {
-                label: isSubmitting ? '处理中' : '微信支付购买',
-                disabled: isSubmitting,
+                label: isPaymentLocked ? '支付处理中' : '微信支付购买',
+                disabled: isPaymentLocked,
                 onClick: handleWechatPayment
               }
             ]}
           />
+          {pollingOrderNo ? (
+            <PaymentStatusPoller
+              orderNo={pollingOrderNo}
+              queryStatus={queryOrderPaymentStatus}
+              onRetryPayment={(reason) => {
+                setPollingOrderNo('')
+                if (reason !== 'timeout') setOrder(null)
+                void handleWechatPayment(reason !== 'timeout')
+              }}
+              onBack={() => {
+                void router.redirect(routes.userOrders)
+              }}
+              onSuccess={() => {
+                setOrder(null)
+                setPollingOrderNo('')
+                Taro.showToast({ title: '支付已确认，进入学习', icon: 'success' })
+                router.redirect(routes.courseLearn, { course_id: course?.id })
+              }}
+            />
+          ) : null}
         </View>
       ) : (
         <StateNotice state="empty" copy={{ title: '暂无课程', desc: '当前缺少课程编号或接口没有返回课程详情。' }} />

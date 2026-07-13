@@ -3,18 +3,11 @@ export default defineAppConfig({
   subPackages: [
     {
       root: 'pages/resource',
-      pages: [
-        'home/index',
-        'list/index',
-        'standard-detail/index',
-        'nonstandard-detail/index',
-        'submit/index',
-        'purchase/index'
-      ]
+      pages: ['home/index', 'list/index', 'standard-detail/index', 'submit/index', 'purchase/index']
     },
     {
       root: 'pages/event',
-      pages: ['home/index', 'list/index', 'detail/index', 'signup/index', 'group/index', 'ticket/index']
+      pages: ['home/index', 'list/index', 'detail/index', 'signup/index', 'ticket/index']
     },
     {
       root: 'pages/course',
@@ -22,7 +15,7 @@ export default defineAppConfig({
     },
     {
       root: 'pages/member',
-      pages: ['benefit/index', 'confirm/index', 'payment-transfer/index']
+      pages: ['benefit/index', 'payment-transfer/index']
     },
     {
       root: 'pages/opportunity',

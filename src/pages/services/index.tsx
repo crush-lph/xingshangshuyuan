@@ -3,11 +3,12 @@ import { View, Text } from '@tarojs/components'
 import Button from '@nutui/nutui-react-taro/dist/es/packages/button'
 import '@nutui/nutui-react-taro/dist/es/packages/button/style/css'
 import { AppIcon } from '@/components/AppIcon'
-import { SectionCard, StateNotice } from '@/components/business'
+import { ListLoadMore, SectionCard, StateNotice } from '@/components/business'
 import { PageShell } from '@/components/PageShell'
 import { getProductCategories, getProducts } from '@/services'
 import { getAppIconName, type AppIconName } from '@/shared/app-icons'
 import { router, routes, type Query, type RoutePath } from '@/shared/router'
+import { usePaginatedList } from '@/shared/use-paginated-list'
 import { priceOf, textOf, textOrPlaceholder } from '@/shared/view-data'
 
 interface Category {
@@ -25,6 +26,20 @@ interface ServiceProduct {
   icon: AppIconName
   path: RoutePath
   query?: Query
+}
+
+type ServiceProductRecord = NonNullable<Awaited<ReturnType<typeof getProducts>>['data']['list']>[number]
+
+function mapServiceProducts(list: ServiceProductRecord[]): ServiceProduct[] {
+  return list.map((item) => ({
+    title: textOrPlaceholder(item.name, '未命名服务'),
+    desc: textOrPlaceholder(item.description, '接口未返回服务描述'),
+    price: priceOf(item.vip_price ?? item.price, item.price_unit),
+    tag: textOf(item.product_type_text),
+    icon: getAppIconName(textOrPlaceholder(item.name, '未命名服务'), undefined, routes.resourceStandardDetail),
+    path: routes.resourceStandardDetail,
+    query: item.id ? { product_id: item.id } : undefined
+  }))
 }
 
 function ServiceProductCard({ item }: { item: ServiceProduct }) {
@@ -65,51 +80,46 @@ function ServiceProductCard({ item }: { item: ServiceProduct }) {
 
 export default function ServicesPage() {
   const [categories, setCategories] = useState<Category[]>([])
-  const [items, setItems] = useState<ServiceProduct[]>([])
-  const [isLoading, setIsLoading] = useState(true)
-  const [hasError, setHasError] = useState(false)
+  const [isCategoriesLoading, setIsCategoriesLoading] = useState(true)
+  const [hasCategoriesError, setHasCategoriesError] = useState(false)
+  const {
+    hasError: hasProductsError,
+    hasMore,
+    isLoading: isProductsLoading,
+    isLoadingMore,
+    items
+  } = usePaginatedList<ServiceProductRecord, ServiceProduct>({
+    deps: [],
+    fetchPage: ({ page, page_size }) => getProducts({ page, page_size }),
+    mapItems: mapServiceProducts
+  })
+  const isLoading = isCategoriesLoading && isProductsLoading
+  const hasError = hasCategoriesError && hasProductsError
 
   useEffect(() => {
-    async function loadServiceData() {
-      setIsLoading(true)
-      setHasError(false)
+    async function loadCategories() {
+      setIsCategoriesLoading(true)
+      setHasCategoriesError(false)
 
-      const [categoriesResult, productsResult] = await Promise.allSettled([
-        getProductCategories(),
-        getProducts({ page: 1, page_size: 6 })
-      ])
-
-      setHasError(categoriesResult.status === 'rejected' && productsResult.status === 'rejected')
-
-      if (categoriesResult.status === 'fulfilled') {
+      try {
+        const response = await getProductCategories()
         setCategories(
-          (categoriesResult.value.data.list ?? []).slice(0, 4).map((item) => ({
+          (response.data.list ?? []).slice(0, 4).map((item) => ({
             id: item.id,
             name: textOrPlaceholder(item.name, '未命名分类'),
             icon: getAppIconName(textOrPlaceholder(item.name, '未命名分类'), item.icon, routes.resourceList),
             path: routes.resourceList
           }))
         )
+      } catch {
+        setCategories([])
+        setHasCategoriesError(true)
+      } finally {
+        setIsCategoriesLoading(false)
       }
-
-      if (productsResult.status === 'fulfilled') {
-        setItems(
-          (productsResult.value.data.list ?? []).slice(0, 6).map((item) => ({
-            title: textOrPlaceholder(item.name, '未命名服务'),
-            desc: textOrPlaceholder(item.description, '接口未返回服务描述'),
-            price: priceOf(item.vip_price ?? item.price, item.price_unit),
-            tag: textOf(item.product_type_text),
-            icon: getAppIconName(textOrPlaceholder(item.name, '未命名服务'), undefined, routes.resourceStandardDetail),
-            path: routes.resourceStandardDetail,
-            query: item.id ? { product_id: item.id } : undefined
-          }))
-        )
-      }
-
-      setIsLoading(false)
     }
 
-    void loadServiceData()
+    void loadCategories()
   }, [])
 
   return (
@@ -146,6 +156,7 @@ export default function ServicesPage() {
                 {items.map((item, index) => (
                   <ServiceProductCard key={`${item.title}-${index}`} item={item} />
                 ))}
+                <ListLoadMore hasItems={items.length > 0} hasMore={hasMore} isLoadingMore={isLoadingMore} />
               </View>
             ) : (
               <StateNotice state="empty" copy={{ title: '暂无服务商品', desc: '当前接口没有返回可展示服务。' }} />

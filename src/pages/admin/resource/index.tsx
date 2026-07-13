@@ -1,69 +1,73 @@
-import { useEffect, useState } from 'react'
 import { View } from '@tarojs/components'
-import { InterfaceGapNotice, ItemList, StateNotice, type ListItem } from '@/components/business'
+import { InterfaceGapNotice, ItemList, ListLoadMore, StateNotice, type ListItem } from '@/components/business'
 import { PageShell } from '@/components/PageShell'
-import { getContractDetail, getContracts, getUserCustomers } from '@/services'
+import { getContracts, getUserCustomers, type ContractItem, type UserCustomerItem } from '@/services'
+import { usePaginatedList } from '@/shared/use-paginated-list'
 import { firstRecordList, textOf, textOrPlaceholder } from '@/shared/view-data'
 import { AdminGuard } from '../components/AdminGuard'
 
-function AdminResourceContent() {
-  const [items, setItems] = useState<ListItem[]>([])
-  const [isLoading, setIsLoading] = useState(true)
-  const [hasError, setHasError] = useState(false)
+interface AdminResourceRecord extends Record<string, unknown> {
+  recordType: 'customer' | 'contract'
+}
 
-  useEffect(() => {
-    async function loadResources() {
-      setIsLoading(true)
-      setHasError(false)
-
-      const [customersResult, contractsResult] = await Promise.allSettled([
-        getUserCustomers({ page: 1, page_size: 10 }),
-        getContracts({ page: 1, page_size: 10 })
-      ])
-
-      const customers = customersResult.status === 'fulfilled' ? firstRecordList(customersResult.value.data) : []
-      const contracts = contractsResult.status === 'fulfilled' ? firstRecordList(contractsResult.value.data) : []
-      const firstContractId = textOf(contracts[0]?.contract_id ?? contracts[0]?.id)
-      const contractDetail = firstContractId
-        ? await getContractDetail({ contract_id: firstContractId }).catch(() => null)
-        : null
-
-      setItems([
-        ...customers.map((item) => ({
-          title: textOrPlaceholder(item.name ?? item.customer_name ?? item.title, '未命名客户'),
-          desc: textOrPlaceholder(item.description ?? item.company_name ?? item.status_text, '接口未返回客户说明'),
-          meta: textOf(item.created_at),
-          tag: textOf(item.status_text),
-          icon: 'user-3-line',
-          tone: 'brand' as const,
-          action: '查看状态'
-        })),
-        ...contracts.map((item) => ({
-          title: textOrPlaceholder(item.contract_no ?? item.title ?? item.name, '未命名合同'),
-          desc: textOrPlaceholder(
-            contractDetail?.data && firstRecordList(contractDetail.data)[0]?.description
-              ? firstRecordList(contractDetail.data)[0]?.description
-              : (item.description ?? item.status_text),
-            '接口未返回合同说明'
-          ),
-          meta: textOf(item.created_at),
-          tag: textOf(item.status_text),
-          icon: 'archive-line',
-          tone: 'tech' as const,
-          action: '查看状态'
-        }))
-      ])
-
-      setHasError(customersResult.status === 'rejected' && contractsResult.status === 'rejected')
+function mapAdminResourceItems(records: AdminResourceRecord[]): ListItem[] {
+  return records.map((item) => {
+    if (item.recordType === 'contract') {
+      return {
+        title: textOrPlaceholder(item.contract_no ?? item.title ?? item.name, '未命名合同'),
+        desc: textOrPlaceholder(item.description ?? item.status_text, '接口未返回合同说明'),
+        meta: textOf(item.created_at),
+        tag: textOf(item.status_text),
+        icon: 'archive-line',
+        tone: 'tech',
+        action: '查看状态'
+      }
     }
 
-    void loadResources()
-      .catch(() => {
-        setItems([])
-        setHasError(true)
-      })
-      .finally(() => setIsLoading(false))
-  }, [])
+    return {
+      title: textOrPlaceholder(item.name ?? item.customer_name ?? item.title, '未命名客户'),
+      desc: textOrPlaceholder(item.description ?? item.company_name ?? item.status_text, '接口未返回客户说明'),
+      meta: textOf(item.created_at),
+      tag: textOf(item.status_text),
+      icon: 'user-3-line',
+      tone: 'brand',
+      action: '查看状态'
+    }
+  })
+}
+
+function AdminResourceContent() {
+  const { hasError, hasMore, isLoading, isLoadingMore, items } = usePaginatedList<AdminResourceRecord, ListItem>({
+    deps: [],
+    fetchPage: async ({ page, page_size }) => {
+      const [customersResult, contractsResult] = await Promise.allSettled([
+        getUserCustomers({ page, page_size }),
+        getContracts({ page, page_size })
+      ])
+
+      if (customersResult.status === 'rejected' && contractsResult.status === 'rejected') {
+        throw new Error('admin resources load failed')
+      }
+
+      const customers =
+        customersResult.status === 'fulfilled'
+          ? (firstRecordList(customersResult.value.data) as UserCustomerItem[]).map((item) => ({
+              ...item,
+              recordType: 'customer' as const
+            }))
+          : []
+      const contracts =
+        contractsResult.status === 'fulfilled'
+          ? (firstRecordList(contractsResult.value.data) as ContractItem[]).map((item) => ({
+              ...item,
+              recordType: 'contract' as const
+            }))
+          : []
+
+      return { data: { list: [...customers, ...contracts] } }
+    },
+    mapItems: mapAdminResourceItems
+  })
 
   return (
     <PageShell title="资源需求" subtitle="跟进非标需求、供应商报价和交付状态。">
@@ -83,7 +87,10 @@ function AdminResourceContent() {
         ) : hasError ? (
           <StateNotice state="error" />
         ) : items.length ? (
-          <ItemList items={items} />
+          <>
+            <ItemList items={items} />
+            <ListLoadMore hasItems={items.length > 0} hasMore={hasMore} isLoadingMore={isLoadingMore} />
+          </>
         ) : (
           <StateNotice state="empty" copy={{ title: '暂无资源数据', desc: '当前接口没有返回客户或合同数据。' }} />
         )}

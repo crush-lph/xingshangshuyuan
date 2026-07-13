@@ -2,29 +2,18 @@ import { useEffect, useState } from 'react'
 import { Text, View } from '@tarojs/components'
 import { ActionBar, FieldList, SectionCard, StateNotice } from '@/components/business'
 import { PageShell } from '@/components/PageShell'
-import {
-  getOpportunities,
-  getOpportunityApplications,
-  getOpportunityDetail,
-  type GetOpportunityDetailData
-} from '@/services'
+import { getOpportunityApplications, getOpportunityDetail, type GetOpportunityDetailData } from '@/services'
 import { routes } from '@/shared/router'
 import { compactJoin, getPageParam, textOrPlaceholder } from '@/shared/view-data'
 
 async function resolveOpportunityId() {
-  const pageId = getPageParam('opportunity_id')
-
-  if (pageId) {
-    return pageId
-  }
-
-  const response = await getOpportunities({ page: 1, page_size: 1 })
-  return response.data.list?.[0]?.id
+  return getPageParam('opportunity_id')
 }
 
 export default function OpportunityDetailPage() {
   const [detail, setDetail] = useState<GetOpportunityDetailData | null>(null)
   const [applicationCount, setApplicationCount] = useState<number | null>(null)
+  const [isExpired, setIsExpired] = useState(false)
   const [isLoading, setIsLoading] = useState(true)
   const [hasError, setHasError] = useState(false)
 
@@ -42,15 +31,22 @@ export default function OpportunityDetailPage() {
       }
 
       const response = await getOpportunityDetail({ opportunity_id: opportunityId })
-      setDetail(response.data.id ? response.data : null)
+      const opportunity = response.data.id ? response.data : null
+      setDetail(opportunity)
+      setIsExpired(Boolean(opportunity?.expired_at && Date.parse(opportunity.expired_at) <= Date.now()))
 
-      const applications = await getOpportunityApplications({ opportunity_id: opportunityId }).catch(() => null)
-      setApplicationCount(applications?.data.total ?? null)
+      if (opportunity?.is_owner) {
+        const applications = await getOpportunityApplications({ opportunity_id: opportunityId }).catch(() => null)
+        setApplicationCount(applications?.data.total ?? null)
+      } else {
+        setApplicationCount(null)
+      }
     }
 
     void loadDetail()
       .catch(() => {
         setDetail(null)
+        setIsExpired(false)
         setApplicationCount(null)
         setHasError(true)
       })
@@ -63,6 +59,7 @@ export default function OpportunityDetailPage() {
       : detail?.apply_count !== undefined && detail.apply_count !== null
         ? String(detail.apply_count)
         : '申请人数暂不可用'
+  const canApply = Boolean(detail && !detail.is_owner && detail.status === 2 && !isExpired)
 
   return (
     <PageShell title="商机详情" subtitle={detail ? textOrPlaceholder(detail.title) : '商机接口详情'}>
@@ -109,16 +106,28 @@ export default function OpportunityDetailPage() {
             </Text>
           </SectionCard>
 
-          <ActionBar
-            actions={[
-              { label: '会员优先申请', variant: 'gold', path: routes.memberBenefit },
-              {
-                label: '申请接单',
-                path: routes.opportunityApply,
-                query: detail.id ? { opportunity_id: detail.id } : undefined
+          {detail.is_owner || canApply ? (
+            <ActionBar
+              actions={
+                detail.is_owner
+                  ? [
+                      {
+                        label: '查看收到的申请',
+                        path: routes.opportunityApplications,
+                        query: detail.id ? { opportunity_id: detail.id } : undefined
+                      }
+                    ]
+                  : [
+                      { label: '会员优先申请', variant: 'gold', path: routes.memberBenefit },
+                      {
+                        label: '申请接单',
+                        path: routes.opportunityApply,
+                        query: detail.id ? { opportunity_id: detail.id } : undefined
+                      }
+                    ]
               }
-            ]}
-          />
+            />
+          ) : null}
         </View>
       ) : (
         <StateNotice state="empty" copy={{ title: '暂无商机详情', desc: '当前接口没有返回商机详情。' }} />

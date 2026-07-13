@@ -1,4 +1,4 @@
 export default definePageConfig({
-  navigationBarTitleText: '服务商城',
+  navigationBarTitleText: '订单确认',
   enablePullDownRefresh: true
 })

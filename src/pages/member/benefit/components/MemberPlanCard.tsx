@@ -154,14 +154,14 @@ export function MemberPlanCard({ level, isPaymentLocked, onPay }: MemberPlanCard
       <Button
         block
         className={`rounded-full font-bold ${visual.button}`}
-        disabled={isPaymentLocked}
+        disabled={isPaymentLocked || !isNavigatorLevel(level)}
         shape="round"
         size="xlarge"
         style={buttonStyle}
         type="primary"
         onClick={() => onPay(level)}
       >
-        {isPaymentLocked ? '支付处理中' : getButtonText(level)}
+        {isPaymentLocked ? '支付处理中' : isNavigatorLevel(level) ? getButtonText(level) : '当前等级无需购买'}
       </Button>
     </View>
   )

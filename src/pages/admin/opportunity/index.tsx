@@ -1,79 +1,52 @@
-import { useEffect, useState } from 'react'
 import Taro from '@tarojs/taro'
 import { View } from '@tarojs/components'
-import { InterfaceGapNotice, ItemList, StateNotice, type ListItem } from '@/components/business'
+import { InterfaceGapNotice, ItemList, ListLoadMore, StateNotice, type ListItem } from '@/components/business'
 import { PageShell } from '@/components/PageShell'
-import { getMyOpportunities, updateOpportunityStatus } from '@/services'
+import { getMyOpportunities, updateOpportunityStatus, type GetMyOpportunitiesData } from '@/services'
+import { usePaginatedList } from '@/shared/use-paginated-list'
 import { compactJoin, textOrPlaceholder } from '@/shared/view-data'
 import { AdminGuard } from '../components/AdminGuard'
 
+type AdminOpportunityRecord = NonNullable<GetMyOpportunitiesData['list']>[number]
+
+function mapAdminOpportunities(records: AdminOpportunityRecord[], refresh: () => Promise<void>): ListItem[] {
+  return records.map((item) => ({
+    title: textOrPlaceholder(item.title, '未命名商机'),
+    desc: compactJoin([item.type_text, item.city]) || '接口未返回商机摘要',
+    meta:
+      item.apply_count === undefined && item.view_count === undefined
+        ? '接口未返回申请/浏览统计'
+        : compactJoin([
+            item.apply_count === undefined ? '' : `${item.apply_count} 人申请`,
+            item.view_count === undefined ? '' : `${item.view_count} 次浏览`
+          ]),
+    tag: textOrPlaceholder(item.status_text),
+    icon: 'briefcase-4-line',
+    tone: 'gold',
+    action: item.id ? '关闭商机' : undefined,
+    onClick: item.id
+      ? async () => {
+          try {
+            await updateOpportunityStatus({ opportunity_id: Number(item.id), status: 5 })
+            Taro.showToast({ title: '商机已关闭', icon: 'success' })
+            await refresh()
+          } catch {
+            Taro.showToast({ title: '商机状态更新失败，请稍后重试', icon: 'none' })
+          }
+        }
+      : undefined
+  }))
+}
+
 function AdminOpportunityContent() {
-  const [items, setItems] = useState<ListItem[]>([])
-  const [isLoading, setIsLoading] = useState(true)
-  const [hasError, setHasError] = useState(false)
-  const [refreshKey, setRefreshKey] = useState(0)
-
-  useEffect(() => {
-    let isMounted = true
-
-    async function loadOpportunities() {
-      if (refreshKey > 0) {
-        setIsLoading(true)
-        setHasError(false)
-      }
-
-      try {
-        const response = await getMyOpportunities({ page: 1, page_size: 20 })
-        if (!isMounted) {
-          return
-        }
-
-        setItems(
-          (response.data.list ?? []).map((item) => ({
-            title: textOrPlaceholder(item.title, '未命名商机'),
-            desc: compactJoin([item.type_text, item.city]) || '接口未返回商机摘要',
-            meta:
-              item.apply_count === undefined && item.view_count === undefined
-                ? '接口未返回申请/浏览统计'
-                : compactJoin([
-                    item.apply_count === undefined ? '' : `${item.apply_count} 人申请`,
-                    item.view_count === undefined ? '' : `${item.view_count} 次浏览`
-                  ]),
-            tag: textOrPlaceholder(item.status_text),
-            icon: 'briefcase-4-line',
-            tone: 'gold',
-            action: item.id ? '关闭商机' : undefined,
-            onClick: item.id
-              ? async () => {
-                  try {
-                    await updateOpportunityStatus({ opportunity_id: item.id, status: 0 })
-                    Taro.showToast({ title: '商机已关闭', icon: 'success' })
-                    setRefreshKey((current) => current + 1)
-                  } catch {
-                    Taro.showToast({ title: '商机状态更新失败，请稍后重试', icon: 'none' })
-                  }
-                }
-              : undefined
-          }))
-        )
-      } catch {
-        if (isMounted) {
-          setItems([])
-          setHasError(true)
-        }
-      } finally {
-        if (isMounted) {
-          setIsLoading(false)
-        }
-      }
-    }
-
-    void loadOpportunities()
-
-    return () => {
-      isMounted = false
-    }
-  }, [refreshKey])
+  const { hasError, hasMore, isLoading, isLoadingMore, items, refresh } = usePaginatedList<
+    AdminOpportunityRecord,
+    ListItem
+  >({
+    deps: [],
+    fetchPage: ({ page, page_size }) => getMyOpportunities({ page, page_size }),
+    mapItems: (records: AdminOpportunityRecord[]) => mapAdminOpportunities(records, refresh)
+  })
 
   return (
     <PageShell title="商机撮合" subtitle="审核商机、匹配服务商并跟踪撮合结果。">
@@ -93,7 +66,10 @@ function AdminOpportunityContent() {
         ) : hasError ? (
           <StateNotice state="error" />
         ) : items.length ? (
-          <ItemList items={items} />
+          <>
+            <ItemList items={items} />
+            <ListLoadMore hasItems={items.length > 0} hasMore={hasMore} isLoadingMore={isLoadingMore} />
+          </>
         ) : (
           <StateNotice state="empty" copy={{ title: '暂无商机管理数据', desc: '当前接口没有返回商机数据。' }} />
         )}

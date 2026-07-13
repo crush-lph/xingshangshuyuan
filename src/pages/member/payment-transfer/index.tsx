@@ -1,35 +1,40 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import Taro from '@tarojs/taro'
-import { Text, View } from '@tarojs/components'
-import { ActionBar, FieldList, SectionCard, StateNotice } from '@/components/business'
+import { View } from '@tarojs/components'
+import { ActionBar, FieldList, PaymentStatusPoller, StateNotice } from '@/components/business'
 import { PageShell } from '@/components/PageShell'
-import { cancelOrder, getOrderDetail, paymentCallback, uploadFile, type GetOrderDetailData } from '@/services'
+import { cancelOrder, getOrderDetail, payOrder, queryOrderPaymentStatus, type GetOrderDetailData } from '@/services'
 import { ensureLoggedIn } from '@/shared/auth-guard'
 import { router, routes } from '@/shared/router'
 import { getPageParam, priceOf, textOrPlaceholder } from '@/shared/view-data'
+import { getWechatPaymentErrorMessage, requestWechatPayment } from '@/shared/wechat-payment'
 
 export default function PaymentTransferPage() {
   const [order, setOrder] = useState<GetOrderDetailData | null>(null)
-  const [voucherPath, setVoucherPath] = useState('')
   const [isLoading, setIsLoading] = useState(true)
   const [hasError, setHasError] = useState(false)
-  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [pollingOrderNo, setPollingOrderNo] = useState('')
+  const [isPaying, setIsPaying] = useState(false)
+  const paymentLockRef = useRef(false)
+
+  async function refreshOrder() {
+    const orderNo = getPageParam('order_no')
+
+    if (!orderNo) {
+      setOrder(null)
+      return
+    }
+
+    const response = await getOrderDetail({ order_no: orderNo })
+    setOrder(response.data.order_no ? response.data : null)
+  }
 
   useEffect(() => {
     async function loadOrder() {
       setIsLoading(true)
       setHasError(false)
 
-      const orderNo = getPageParam('order_no')
-
-      if (!orderNo) {
-        setOrder(null)
-        setIsLoading(false)
-        return
-      }
-
-      const response = await getOrderDetail({ order_no: orderNo })
-      setOrder(response.data.order_no ? response.data : null)
+      await refreshOrder()
     }
 
     void loadOrder()
@@ -40,63 +45,22 @@ export default function PaymentTransferPage() {
       .finally(() => setIsLoading(false))
   }, [])
 
-  async function handlePickVoucher() {
-    try {
-      const result = await Taro.chooseImage({
-        count: 1,
-        sizeType: ['compressed'],
-        sourceType: ['album', 'camera']
-      })
-      const selectedPath = result.tempFilePaths[0]
-
-      if (selectedPath) {
-        setVoucherPath(selectedPath)
-        Taro.showToast({ title: '已选择凭证', icon: 'success' })
-      }
-    } catch {
-      Taro.showToast({ title: '未选择凭证', icon: 'none' })
-    }
-  }
-
-  async function handleSubmitVoucher() {
-    if (!(await ensureLoggedIn('登录后才能提交支付凭证'))) {
-      return
-    }
-
-    if (!order?.order_no) {
-      Taro.showToast({ title: '暂无订单数据', icon: 'none' })
-      return
-    }
-
-    if (!voucherPath) {
-      Taro.showToast({ title: '请先上传凭证', icon: 'none' })
-      return
-    }
-
-    setIsSubmitting(true)
-    Taro.showLoading({ title: '提交中' })
+  async function handleWechatPayment() {
+    if (paymentLockRef.current || !order?.order_no || order.status !== 0) return
+    paymentLockRef.current = true
+    setIsPaying(true)
+    setPollingOrderNo('')
 
     try {
-      const voucher = await uploadFile({
-        filePath: voucherPath,
-        scene: 'bank_transfer_voucher',
-        formData: {
-          order_no: order.order_no
-        }
-      })
-
-      await paymentCallback({
-        order_no: order.order_no,
-        voucher_url: voucher.fileUrl,
-        pay_method: 'bank_transfer'
-      })
-      Taro.showToast({ title: '凭证已提交', icon: 'success' })
-      router.redirect(routes.userOrders)
-    } catch {
-      Taro.showToast({ title: '凭证提交失败，请稍后重试', icon: 'none' })
+      const response = await payOrder({ order_no: order.order_no, pay_method: 1 })
+      setPollingOrderNo(order.order_no)
+      await requestWechatPayment(response.data.pay_params)
+      Taro.showToast({ title: '正在确认支付结果', icon: 'none' })
+    } catch (error) {
+      Taro.showToast({ title: getWechatPaymentErrorMessage(error), icon: 'none' })
     } finally {
-      Taro.hideLoading()
-      setIsSubmitting(false)
+      paymentLockRef.current = false
+      setIsPaying(false)
     }
   }
 
@@ -105,7 +69,7 @@ export default function PaymentTransferPage() {
       return
     }
 
-    if (!order?.order_no) {
+    if (!order?.order_no || order.status !== 0) {
       return
     }
 
@@ -119,7 +83,7 @@ export default function PaymentTransferPage() {
   }
 
   return (
-    <PageShell title="对公支付凭证" subtitle="上传转账凭证后进入财务审核。">
+    <PageShell title="订单详情" subtitle="查看订单状态，并继续处理待支付订单。">
       {isLoading ? (
         <StateNotice state="loading" />
       ) : hasError ? (
@@ -134,27 +98,52 @@ export default function PaymentTransferPage() {
               { label: '备注信息', value: textOrPlaceholder(order.remark) }
             ]}
           />
-          <SectionCard title="凭证上传">
-            <View
-              className="rounded-lg border border-dashed border-line bg-canvas px-4 py-8"
-              onClick={handlePickVoucher}
-            >
-              <Text className="block text-center text-sm text-muted">
-                {voucherPath ? '已选择银行回单截图' : '点击上传银行回单截图'}
-              </Text>
-              {voucherPath ? <Text className="mt-2 block text-center text-xs text-muted">{voucherPath}</Text> : null}
-            </View>
-          </SectionCard>
-          <ActionBar
-            actions={[
-              { label: '取消订单', variant: 'outline', onClick: handleCancelOrder },
-              {
-                label: isSubmitting ? '提交中' : '提交凭证',
-                disabled: isSubmitting,
-                onClick: handleSubmitVoucher
-              }
-            ]}
-          />
+          {order.status === 0 ? (
+            <ActionBar
+              actions={[
+                { label: '取消订单', variant: 'outline', disabled: isPaying, onClick: handleCancelOrder },
+                { label: isPaying ? '支付处理中' : '微信支付', disabled: isPaying, onClick: handleWechatPayment }
+              ]}
+            />
+          ) : null}
+          {order.status === 2 && order.order_id ? (
+            <ActionBar
+              actions={[
+                { label: '返回订单列表', variant: 'outline', path: routes.userOrders },
+                {
+                  label: '评价订单',
+                  path: routes.userReviews,
+                  query: {
+                    order_id: order.order_id,
+                    order_no: order.order_no,
+                    title: order.items?.[0]?.product_name
+                  }
+                }
+              ]}
+            />
+          ) : null}
+          {pollingOrderNo ? (
+            <PaymentStatusPoller
+              orderNo={pollingOrderNo}
+              queryStatus={queryOrderPaymentStatus}
+              onBack={() => {
+                void router.redirect(routes.userOrders)
+              }}
+              onRetryPayment={(reason) => {
+                if (reason !== 'timeout') {
+                  setPollingOrderNo('')
+                  void refreshOrder()
+                  return
+                }
+                void handleWechatPayment()
+              }}
+              onSuccess={() => {
+                setPollingOrderNo('')
+                Taro.showToast({ title: '支付已确认', icon: 'success' })
+                void refreshOrder()
+              }}
+            />
+          ) : null}
         </View>
       ) : (
         <StateNotice state="empty" copy={{ title: '暂无订单详情', desc: '当前缺少订单号或接口没有返回订单详情。' }} />

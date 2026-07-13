@@ -2,25 +2,12 @@ import { useEffect, useState } from 'react'
 import { RichText, Text, View } from '@tarojs/components'
 import { ActionBar, FieldList, ReviewList, SectionCard, StateNotice } from '@/components/business'
 import { PageShell } from '@/components/PageShell'
-import {
-  getProductDetail,
-  getProductReviews,
-  getProducts,
-  type GetProductDetailData,
-  type ProductReviewItem
-} from '@/services'
+import { getProductDetail, getProductReviews, type GetProductDetailData, type ProductReviewItem } from '@/services'
 import { routes } from '@/shared/router'
 import { compactJoin, getPageParam, priceOf, textOf, textOrPlaceholder } from '@/shared/view-data'
 
 async function resolveProductId() {
-  const pageId = getPageParam('product_id')
-
-  if (pageId) {
-    return pageId
-  }
-
-  const response = await getProducts({ page: 1, page_size: 1 })
-  return response.data.list?.[0]?.id
+  return getPageParam('product_id')
 }
 
 export default function ResourceStandardDetailPage() {

@@ -72,9 +72,9 @@ export function getProductReviews(
 }
 
 export interface SubmitReviewPayload {
-  order_id?: number
-  rating?: number
-  content?: string
+  order_id: number
+  rating: number
+  content: string
 }
 
 export interface SubmitReviewData {

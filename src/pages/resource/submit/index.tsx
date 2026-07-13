@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import Taro from '@tarojs/taro'
 import { Text, View } from '@tarojs/components'
-import { ActionBar, FormSection, FormTextField, FormTextareaField } from '@/components/business'
+import { ActionBar, FormSection, FormTextField, FormTextareaField, InterfaceGapNotice } from '@/components/business'
 import { PageShell } from '@/components/PageShell'
 import { saveCompanyProfile } from '@/services'
 import { ensureLoggedIn } from '@/shared/auth-guard'
@@ -78,7 +78,7 @@ export default function ResourceSubmitPage() {
         service_cities: textOf(form.serviceCities) ?? form.city.trim(),
         is_cross_region: textOf(form.serviceCities) ? 1 : 0
       })
-      Taro.showToast({ title: '需求已提交', icon: 'success' })
+      Taro.showToast({ title: '企业资源档案已保存', icon: 'success' })
       router.redirect(routes.resourceHome)
     } catch {
       Taro.showToast({ title: '提交失败，请稍后重试', icon: 'none' })
@@ -89,8 +89,13 @@ export default function ResourceSubmitPage() {
   }
 
   return (
-    <PageShell title="提交资源需求" subtitle="填写核心需求后，由客户经理协助匹配供应商。">
+    <PageShell title="完善资源档案" subtitle="保存企业能力与资源方向，供后续需求接口接入后复用。">
       <View className="grid gap-3">
+        <InterfaceGapNotice
+          title="资源需求提交接口尚未接入"
+          desc="当前只能保存企业资源档案，不会生成后台待处理需求。"
+          items={['后端补充资源需求创建接口后，才能形成提交、分配、撮合和交付闭环。']}
+        />
         <FormSection title="企业与需求信息" desc="用于建立企业档案，并作为平台匹配资源方的基础信息。">
           <FormTextField
             label="企业名称"
@@ -144,13 +149,15 @@ export default function ResourceSubmitPage() {
         </FormSection>
 
         <View className="rounded-lg bg-gold-soft px-4 py-3">
-          <Text className="text-sm leading-6 text-gold">提交后平台会根据企业档案和需求内容安排资源撮合。</Text>
+          <Text className="text-sm leading-6 text-gold">
+            当前保存内容仅用于完善企业资源档案，不代表已进入后台需求处理队列。
+          </Text>
         </View>
 
         <ActionBar
           actions={[
             { label: '返回资源库', variant: 'outline', path: routes.resourceHome },
-            { label: isSubmitting ? '提交中' : '提交需求', disabled: isSubmitting, onClick: handleSubmit }
+            { label: isSubmitting ? '保存中' : '保存企业资源档案', disabled: isSubmitting, onClick: handleSubmit }
           ]}
         />
       </View>

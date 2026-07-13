@@ -1,69 +1,68 @@
-import { useEffect, useState } from 'react'
 import { View } from '@tarojs/components'
-import { InterfaceGapNotice, ItemList, StateNotice, type ListItem } from '@/components/business'
+import { InterfaceGapNotice, ItemList, ListLoadMore, StateNotice, type ListItem } from '@/components/business'
 import { PageShell } from '@/components/PageShell'
 import { getInvoices, getOrders } from '@/services'
-import { routes } from '@/shared/router'
+import { usePaginatedList } from '@/shared/use-paginated-list'
 import { firstRecordList, priceOf, textOf, textOrPlaceholder } from '@/shared/view-data'
 import { AdminGuard } from '../components/AdminGuard'
 
-function AdminOrdersContent() {
-  const [items, setItems] = useState<ListItem[]>([])
-  const [isLoading, setIsLoading] = useState(true)
-  const [hasError, setHasError] = useState(false)
+interface AdminOrderRecord extends Record<string, unknown> {
+  recordType: 'order' | 'invoice'
+}
 
-  useEffect(() => {
-    async function loadOrders() {
-      setIsLoading(true)
-      setHasError(false)
-
-      const [ordersResult, invoicesResult] = await Promise.allSettled([
-        getOrders({ page: 1, page_size: 20 }),
-        getInvoices({ page: 1, page_size: 20 })
-      ])
-      const orders = ordersResult.status === 'fulfilled' ? firstRecordList(ordersResult.value.data) : []
-      const invoices = invoicesResult.status === 'fulfilled' ? firstRecordList(invoicesResult.value.data) : []
-
-      setItems([
-        ...orders.map((order) => {
-          const orderNo = textOf(order.order_no ?? order.id)
-
-          return {
-            title: textOrPlaceholder(order.order_no ?? order.id, '未命名订单'),
-            desc: textOrPlaceholder(order.description ?? order.remark ?? order.status_text, '接口未返回订单描述'),
-            price: priceOf(order.pay_amount ?? order.total_amount ?? order.amount),
-            tag: textOf(order.status_text),
-            icon: 'file-list-3-line',
-            tone: 'gold' as const,
-            path: routes.paymentTransfer,
-            query: orderNo ? { order_no: orderNo } : undefined,
-            action: '查看状态'
-          }
-        }),
-        ...invoices.map((invoice) => ({
-          title: textOrPlaceholder(invoice.invoice_no ?? invoice.title ?? invoice.id, '未命名发票'),
-          desc: textOrPlaceholder(invoice.description ?? invoice.status_text, '接口未返回发票说明'),
-          price: priceOf(invoice.amount),
-          tag: textOf(invoice.status_text),
-          icon: 'file-list-3-line',
-          tone: 'tech' as const,
-          action: '查看状态'
-        }))
-      ])
-
-      setHasError(ordersResult.status === 'rejected' && invoicesResult.status === 'rejected')
+function mapAdminOrderItems(records: AdminOrderRecord[]): ListItem[] {
+  return records.map((record) => {
+    if (record.recordType === 'invoice') {
+      return {
+        title: textOrPlaceholder(record.invoice_no ?? record.title ?? record.id, '未命名发票'),
+        desc: textOrPlaceholder(record.description ?? record.status_text, '接口未返回发票说明'),
+        price: priceOf(record.amount),
+        tag: textOf(record.status_text),
+        icon: 'file-list-3-line',
+        tone: 'tech',
+        action: '查看状态'
+      }
     }
 
-    void loadOrders()
-      .catch(() => {
-        setItems([])
-        setHasError(true)
-      })
-      .finally(() => setIsLoading(false))
-  }, [])
+    return {
+      title: textOrPlaceholder(record.order_no ?? record.id, '未命名订单'),
+      desc: textOrPlaceholder(record.description ?? record.remark ?? record.status_text, '接口未返回订单描述'),
+      price: priceOf(record.pay_amount ?? record.total_amount ?? record.amount),
+      tag: textOf(record.status_text),
+      icon: 'file-list-3-line',
+      tone: 'gold'
+    }
+  })
+}
+
+function AdminOrdersContent() {
+  const { hasError, hasMore, isLoading, isLoadingMore, items } = usePaginatedList<AdminOrderRecord, ListItem>({
+    deps: [],
+    fetchPage: async ({ page, page_size }) => {
+      const [ordersResult, invoicesResult] = await Promise.allSettled([
+        getOrders({ page, page_size }),
+        getInvoices({ page, page_size })
+      ])
+      const orders =
+        ordersResult.status === 'fulfilled'
+          ? firstRecordList(ordersResult.value.data).map((item) => ({ ...item, recordType: 'order' as const }))
+          : []
+      const invoices =
+        invoicesResult.status === 'fulfilled'
+          ? firstRecordList(invoicesResult.value.data).map((item) => ({ ...item, recordType: 'invoice' as const }))
+          : []
+
+      if (ordersResult.status === 'rejected' && invoicesResult.status === 'rejected') {
+        throw new Error('admin orders load failed')
+      }
+
+      return { data: { list: [...orders, ...invoices] } }
+    },
+    mapItems: mapAdminOrderItems
+  })
 
   return (
-    <PageShell title="订单确认" subtitle="处理对公转账、会员开通和资源采购订单。">
+    <PageShell title="订单确认" subtitle="查看订单与发票数据，确认操作等待后台接口接入。">
       <View className="grid gap-3">
         <InterfaceGapNotice
           title="当前可查看，暂不能确认"
@@ -80,7 +79,10 @@ function AdminOrdersContent() {
         ) : hasError ? (
           <StateNotice state="error" />
         ) : items.length ? (
-          <ItemList items={items} />
+          <>
+            <ItemList items={items} />
+            <ListLoadMore hasItems={items.length > 0} hasMore={hasMore} isLoadingMore={isLoadingMore} />
+          </>
         ) : (
           <StateNotice state="empty" copy={{ title: '暂无订单数据', desc: '当前接口没有返回订单或发票数据。' }} />
         )}

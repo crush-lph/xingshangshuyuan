@@ -1,10 +1,11 @@
-import { useEffect, useRef, useState } from 'react'
+import { useState } from 'react'
 import Taro from '@tarojs/taro'
 import { Text, View } from '@tarojs/components'
-import { ActionBar, ItemList, StateNotice, type ListItem } from '@/components/business'
+import { ActionBar, ItemList, ListLoadMore, StateNotice, type ListItem } from '@/components/business'
 import { PageShell } from '@/components/PageShell'
 import { getUserMessages, markAllUserMessagesRead, markUserMessageRead } from '@/services'
-import { firstRecordList, textOf, textOrPlaceholder } from '@/shared/view-data'
+import { usePaginatedList } from '@/shared/use-paginated-list'
+import { textOf, textOrPlaceholder } from '@/shared/view-data'
 
 interface MessageItem extends ListItem {
   id?: number
@@ -64,11 +65,23 @@ function mapMessage(value: Record<string, unknown>, onRead: (messageId: number) 
 
 export default function UserMessagesPage() {
   const [activeTab, setActiveTab] = useState<(typeof messageTabs)[number]['label']>('全部')
-  const [items, setItems] = useState<MessageItem[]>([])
-  const [isLoading, setIsLoading] = useState(true)
-  const [hasError, setHasError] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
-  const requestIdRef = useRef(0)
+  const activeItem = messageTabs.find((item) => item.label === activeTab)
+  const activeType = activeItem && 'type' in activeItem ? activeItem.type : undefined
+  const { hasError, hasMore, isLoading, isLoadingMore, items, refresh, setItems } = usePaginatedList<
+    Record<string, unknown>,
+    MessageItem
+  >({
+    deps: [activeTab],
+    fetchPage: ({ page, page_size }) =>
+      getUserMessages({
+        ...(activeType !== undefined ? { type: activeType } : {}),
+        page,
+        page_size
+      }),
+    mapItems: (records) => records.map((item) => mapMessage(item, handleMarkRead)),
+    pageSize: 30
+  })
 
   async function handleMarkRead(messageId: number) {
     try {
@@ -85,56 +98,16 @@ export default function UserMessagesPage() {
     }
   }
 
-  async function loadMessages() {
-    const currentRequestId = requestIdRef.current + 1
-    const activeItem = messageTabs.find((item) => item.label === activeTab)
-    const activeType = activeItem && 'type' in activeItem ? activeItem.type : undefined
-
-    requestIdRef.current = currentRequestId
-    setIsLoading(true)
-    setHasError(false)
-
-    try {
-      const response = await getUserMessages({
-        ...(activeType !== undefined ? { type: activeType } : {}),
-        page: 1,
-        page_size: 30
-      })
-
-      if (requestIdRef.current !== currentRequestId) {
-        return
-      }
-
-      setItems(firstRecordList(response.data).map((item) => mapMessage(item, handleMarkRead)))
-    } catch {
-      if (requestIdRef.current !== currentRequestId) {
-        return
-      }
-
-      setItems([])
-      setHasError(true)
-    } finally {
-      if (requestIdRef.current === currentRequestId) {
-        setIsLoading(false)
-      }
-    }
-  }
-
-  useEffect(() => {
-    void loadMessages()
-  }, [activeTab])
-
   async function handleMarkAllRead() {
     try {
       setIsSubmitting(true)
       await markAllUserMessagesRead()
       Taro.showToast({ title: '已全部标记已读', icon: 'success' })
-      await loadMessages()
+      await refresh()
     } catch {
       Taro.showToast({ title: '操作失败，请稍后重试', icon: 'none' })
     } finally {
       setIsSubmitting(false)
-      setIsLoading(false)
     }
   }
 
@@ -164,7 +137,10 @@ export default function UserMessagesPage() {
         ) : hasError ? (
           <StateNotice state="error" copy={{ title: '消息加载失败', desc: '请稍后重试。' }} />
         ) : items.length ? (
-          <ItemList items={items} />
+          <>
+            <ItemList items={items} />
+            <ListLoadMore hasItems={items.length > 0} hasMore={hasMore} isLoadingMore={isLoadingMore} />
+          </>
         ) : (
           <StateNotice state="empty" copy={{ title: '暂无消息', desc: '当前筛选条件下没有消息。' }} />
         )}

@@ -138,12 +138,16 @@ export default function CourseDetailPage() {
                     { label: '返回书苑', variant: 'outline', path: routes.shuyuan }
                   ]
                 : [
-                    {
-                      label: '试看课程',
-                      variant: 'outline',
-                      path: routes.courseLearn,
-                      query: course.id ? { course_id: course.id } : undefined
-                    },
+                    ...(sections.some((section) => section.is_free)
+                      ? [
+                          {
+                            label: '试看课程',
+                            variant: 'outline' as const,
+                            path: routes.courseLearn,
+                            query: course.id ? { course_id: course.id } : undefined
+                          }
+                        ]
+                      : []),
                     {
                       label: '购买课程',
                       variant: 'gold',

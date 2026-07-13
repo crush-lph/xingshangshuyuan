@@ -1,5 +1,5 @@
 import { Text, View } from '@tarojs/components'
-import { router } from '@/shared/router'
+import { openRouteWithAuth } from '@/shared/auth-guard'
 import type { MetricItem } from '../types'
 
 interface MetricGridProps {
@@ -13,7 +13,7 @@ export function MetricGrid({ items }: MetricGridProps) {
         <View
           key={item.label}
           className={`px-2 py-4 text-center ${index === items.length - 1 ? '' : 'border-r border-line'}`}
-          onClick={() => router.to(item.path)}
+          onClick={() => void openRouteWithAuth(item.path)}
         >
           <Text className={`block text-lg font-bold ${item.color}`}>{item.value}</Text>
           <Text className="mt-1 block text-xs text-muted">{item.label}</Text>

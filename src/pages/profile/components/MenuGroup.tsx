@@ -1,16 +1,16 @@
 import { Text, View } from '@tarojs/components'
 import Taro from '@tarojs/taro'
 import { AppIcon } from '@/components/AppIcon'
-import { router } from '@/shared/router'
+import { openRouteWithAuth } from '@/shared/auth-guard'
 import type { MenuItem } from '../types'
 
 interface MenuGroupProps {
   items: MenuItem[]
 }
 
-function openPath(path?: MenuItem['path']) {
+async function openPath(path?: MenuItem['path']) {
   if (path) {
-    router.to(path)
+    await openRouteWithAuth(path)
     return
   }
 
@@ -27,7 +27,7 @@ export function MenuGroup({ items }: MenuGroupProps) {
         <View
           key={item.label}
           className={`flex items-center gap-3 px-4 py-4 ${index === items.length - 1 ? '' : 'border-b border-line'}`}
-          onClick={() => openPath(item.path)}
+          onClick={() => void openPath(item.path)}
         >
           <View className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg ${item.iconClass}`}>
             <AppIcon name={item.icon} size={18} />

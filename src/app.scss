@@ -36,6 +36,10 @@
   content: '\eb25';
 }
 
+.ri-check-line::before {
+  content: '\eb7b';
+}
+
 .ri-checkbox-circle-line::before {
   content: '\eb81';
 }
@@ -46,6 +50,10 @@
 
 .ri-customer-service-2-line::before {
   content: '\ec0c';
+}
+
+.ri-error-warning-line::before {
+  content: '\eca1';
 }
 
 .ri-file-list-3-line::before {
@@ -110,6 +118,10 @@
 
 .ri-ticket-line::before {
   content: '\f20d';
+}
+
+.ri-time-line::before {
+  content: '\f20f';
 }
 
 .ri-trophy-line::before {
@@ -214,4 +226,22 @@ page {
 
 .profile-avatar-button::after {
   border: 0;
+}
+
+@keyframes app-skeleton-pulse {
+  0% {
+    opacity: 0.58;
+  }
+
+  50% {
+    opacity: 1;
+  }
+
+  100% {
+    opacity: 0.58;
+  }
+}
+
+.app-skeleton-pulse {
+  animation: app-skeleton-pulse 1.45s ease-in-out infinite;
 }

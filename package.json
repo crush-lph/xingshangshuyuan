@@ -10,6 +10,7 @@
     "dev:weapp": "NODE_ENV=production taro build --type weapp --watch",
     "dev:h5": "taro build --type h5 --watch",
     "typecheck": "tsc --noEmit",
+    "test": "node --test tests/*.test.mjs",
     "lint": "eslint . --max-warnings=0",
     "lint:fix": "eslint . --fix",
     "format": "prettier . --write",
@@ -35,10 +36,8 @@
     "@tarojs/runtime": "4.2.0",
     "@tarojs/shared": "4.2.0",
     "@tarojs/taro": "4.2.0",
-    "ahooks": "^3.9.7",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
-    "remixicon": "^4.9.1",
     "zustand": "^5.0.14"
   },
   "devDependencies": {

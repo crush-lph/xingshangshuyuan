@@ -4,7 +4,6 @@ import { ActionBar, FieldList, SectionCard, StateNotice } from '@/components/bus
 import { PageShell } from '@/components/PageShell'
 import {
   getEventDetail,
-  getEvents,
   getEventTicket,
   getUserProfile,
   type GetEventDetailData,
@@ -15,14 +14,7 @@ import { routes } from '@/shared/router'
 import { dateTimeRangeOf, getPageParam, textOrPlaceholder } from '@/shared/view-data'
 
 async function resolveEventId() {
-  const pageId = getPageParam('event_id')
-
-  if (pageId) {
-    return pageId
-  }
-
-  const events = await getEvents({ page: 1, page_size: 1 })
-  return events.data.list?.[0]?.id
+  return getPageParam('event_id')
 }
 
 export default function EventTicketPage() {

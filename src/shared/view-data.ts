@@ -1,5 +1,4 @@
 import Taro from '@tarojs/taro'
-import type { Query, RoutePath } from './router'
 
 export type UnknownRecord = Record<string, unknown>
 
@@ -131,23 +130,6 @@ export function firstRecordList(...values: unknown[]) {
   }
 
   return []
-}
-
-export function firstId(value: unknown) {
-  if (!isRecord(value)) {
-    return undefined
-  }
-
-  return textOf(value.id ?? value.product_id ?? value.course_id ?? value.event_id ?? value.opportunity_id)
-}
-
-export function routeWithQuery(path: RoutePath, query: Query): RoutePath {
-  const search = Object.entries(query)
-    .filter(([, value]) => value !== null && value !== undefined)
-    .map(([key, value]) => `${encodeURIComponent(key)}=${encodeURIComponent(String(value))}`)
-    .join('&')
-
-  return search ? (`${path}?${search}` as RoutePath) : path
 }
 
 export function getPageParam(name: string) {

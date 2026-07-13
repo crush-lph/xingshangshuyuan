@@ -1,13 +1,13 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import Taro from '@tarojs/taro'
 import { Text, View } from '@tarojs/components'
-import { ActionBar, SectionCard, StateNotice } from '@/components/business'
+import { ActionBar, PaymentStatusPoller, SectionCard, StateNotice } from '@/components/business'
 import { PageShell } from '@/components/PageShell'
 import {
   createProductOrder,
   getProductDetail,
-  getProducts,
   payOrder,
+  queryOrderPaymentStatus,
   type CreateProductOrderData,
   type GetProductDetailData
 } from '@/services'
@@ -19,14 +19,7 @@ import { getWechatPaymentErrorMessage, requestWechatPayment } from '@/shared/wec
 type ProductSpec = NonNullable<GetProductDetailData['specs']>[number]
 
 async function resolveProductId() {
-  const pageId = getPageParam('product_id')
-
-  if (pageId) {
-    return pageId
-  }
-
-  const response = await getProducts({ page: 1, page_size: 1 })
-  return response.data.list?.[0]?.id
+  return getPageParam('product_id')
 }
 
 function getStandardPrice(product: GetProductDetailData, spec?: ProductSpec) {
@@ -62,6 +55,8 @@ export default function ResourcePurchasePage() {
   const [isLoading, setIsLoading] = useState(true)
   const [hasError, setHasError] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [pollingOrderNo, setPollingOrderNo] = useState('')
+  const paymentLockRef = useRef(false)
 
   useEffect(() => {
     async function loadProduct() {
@@ -93,12 +88,12 @@ export default function ResourcePurchasePage() {
       .finally(() => setIsLoading(false))
   }, [])
 
-  async function ensureOrder() {
+  async function ensureOrder(forceNew = false) {
     if (!(await ensureLoggedIn('登录后才能采购资源'))) {
       return null
     }
 
-    if (order?.order_no) {
+    if (!forceNew && order?.order_no) {
       return order
     }
 
@@ -124,27 +119,13 @@ export default function ResourcePurchasePage() {
     }
   }
 
-  async function handleTransferPayment() {
+  async function handleWechatPayment(forceNew = false) {
+    if (paymentLockRef.current) return
+    paymentLockRef.current = true
     setIsSubmitting(true)
 
     try {
-      const nextOrder = await ensureOrder()
-
-      if (nextOrder?.order_no) {
-        router.to(routes.paymentTransfer, { order_no: nextOrder.order_no })
-      } else if (nextOrder) {
-        Taro.showToast({ title: '订单未返回转账编号', icon: 'none' })
-      }
-    } finally {
-      setIsSubmitting(false)
-    }
-  }
-
-  async function handleWechatPayment() {
-    setIsSubmitting(true)
-
-    try {
-      const nextOrder = await ensureOrder()
+      const nextOrder = await ensureOrder(forceNew)
 
       if (!nextOrder?.order_no) {
         Taro.showToast({ title: '订单生成失败', icon: 'none' })
@@ -155,12 +136,12 @@ export default function ResourcePurchasePage() {
       const payResult = await payOrder({ order_no: nextOrder.order_no, pay_method: 1 })
       await requestWechatPayment(payResult.data.pay_params)
 
-      setOrder(null)
+      setPollingOrderNo(nextOrder.order_no)
       Taro.showToast({ title: '正在确认支付结果', icon: 'none' })
-      router.redirect(routes.userOrders)
     } catch (error) {
       Taro.showToast({ title: getWechatPaymentErrorMessage(error), icon: 'none' })
     } finally {
+      paymentLockRef.current = false
       Taro.hideLoading()
       setIsSubmitting(false)
     }
@@ -172,6 +153,7 @@ export default function ResourcePurchasePage() {
   }
 
   const selectedSpec = product?.specs?.[selectedSpecIndex]
+  const isPaymentLocked = isSubmitting || Boolean(pollingOrderNo)
 
   return (
     <PageShell title="采购确认" subtitle="先选择采购规格，再确认金额并生成订单。">
@@ -292,18 +274,32 @@ export default function ResourcePurchasePage() {
           <ActionBar
             actions={[
               {
-                label: '对公转账',
-                variant: 'outline',
-                disabled: isSubmitting,
-                onClick: handleTransferPayment
-              },
-              {
-                label: isSubmitting ? '处理中' : '立即购买',
-                disabled: isSubmitting,
+                label: isPaymentLocked ? '支付处理中' : '立即购买',
+                disabled: isPaymentLocked,
                 onClick: handleWechatPayment
               }
             ]}
           />
+          {pollingOrderNo ? (
+            <PaymentStatusPoller
+              orderNo={pollingOrderNo}
+              queryStatus={queryOrderPaymentStatus}
+              onRetryPayment={(reason) => {
+                setPollingOrderNo('')
+                if (reason !== 'timeout') setOrder(null)
+                void handleWechatPayment(reason !== 'timeout')
+              }}
+              onBack={() => {
+                void router.redirect(routes.userOrders)
+              }}
+              onSuccess={() => {
+                setOrder(null)
+                setPollingOrderNo('')
+                Taro.showToast({ title: '支付结果已确认', icon: 'success' })
+                router.redirect(routes.userOrders)
+              }}
+            />
+          ) : null}
         </View>
       ) : (
         <StateNotice state="empty" copy={{ title: '暂无采购商品', desc: '当前接口没有返回可采购商品。' }} />

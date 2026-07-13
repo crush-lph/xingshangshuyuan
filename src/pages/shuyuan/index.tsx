@@ -1,12 +1,12 @@
 import { useEffect, useState } from 'react'
 import { ScrollView, Text, View } from '@tarojs/components'
-import Taro from '@tarojs/taro'
 import { AppIcon } from '@/components/AppIcon'
-import { ActionBar, SectionCard, StatGrid, StateNotice, type StatItem } from '@/components/business'
+import { ActionBar, ListLoadMore, SectionCard, StatGrid, StateNotice, type StatItem } from '@/components/business'
 import { PageShell } from '@/components/PageShell'
 import { getCourseCategories, getCourses, getEvents, getUserLearningStats } from '@/services'
 import { openEventSignupIfAvailable } from '@/shared/event-registration'
 import { router, routes, type Query } from '@/shared/router'
+import { usePaginatedList } from '@/shared/use-paginated-list'
 import { compactJoin, dateTimeRangeOf, priceOf, textOrPlaceholder, textOf } from '@/shared/view-data'
 
 interface CourseCardItem {
@@ -23,12 +23,14 @@ interface CourseCategoryItem {
   name: string
 }
 
+type CourseRecord = NonNullable<Awaited<ReturnType<typeof getCourses>>['data']['list']>[number]
+
 function getCourseCategoryChipId(categoryId?: number) {
   return `course-category-${categoryId ?? 'all'}`
 }
 
-function mapCourseItems(list: NonNullable<Awaited<ReturnType<typeof getCourses>>['data']['list']>): CourseCardItem[] {
-  return list.slice(0, 3).map((course) => ({
+function mapCourseItems(list: CourseRecord[]): CourseCardItem[] {
+  return list.map((course) => ({
     title: textOrPlaceholder(course.title, '未命名课程'),
     desc: textOrPlaceholder(course.description, '接口未返回课程描述'),
     meta: compactJoin([course.teacher_name, course.student_count ? `${course.student_count}人学习` : '']) || undefined,
@@ -87,28 +89,25 @@ export default function ShuyuanPage() {
     status_text?: string
   } | null>(null)
   const [stats, setStats] = useState<StatItem[]>([])
-  const [items, setItems] = useState<CourseCardItem[]>([])
-  const [isLoading, setIsLoading] = useState(true)
-  const [isCoursesLoading, setIsCoursesLoading] = useState(false)
+  const [isPageLoading, setIsPageLoading] = useState(true)
   const [hasError, setHasError] = useState(false)
-
-  async function loadCourses(categoryId?: number, showLoading = false) {
-    if (showLoading) {
-      setIsCoursesLoading(true)
-    }
-
-    try {
-      const response = await getCourses({ page: 1, page_size: 3, category_id: categoryId })
-      setItems(mapCourseItems(response.data.list ?? []))
-    } catch {
-      Taro.showToast({ title: '课程加载失败，请稍后重试', icon: 'none' })
-      setItems([])
-    } finally {
-      if (showLoading) {
-        setIsCoursesLoading(false)
-      }
-    }
-  }
+  const {
+    hasError: hasCoursesError,
+    hasMore,
+    isLoading: isCoursesLoading,
+    isLoadingMore,
+    items
+  } = usePaginatedList<CourseRecord, CourseCardItem>({
+    deps: [activeCategoryId],
+    fetchPage: ({ page, page_size }) =>
+      getCourses({
+        ...(activeCategoryId !== undefined ? { category_id: activeCategoryId } : {}),
+        page,
+        page_size
+      }),
+    mapItems: mapCourseItems
+  })
+  const isLoading = isPageLoading && isCoursesLoading
 
   function handleCategoryChange(categoryId?: number) {
     if (activeCategoryId === categoryId) {
@@ -116,24 +115,21 @@ export default function ShuyuanPage() {
     }
 
     setActiveCategoryId(categoryId)
-    void loadCourses(categoryId, true)
   }
 
   useEffect(() => {
     async function loadShuyuanData() {
-      setIsLoading(true)
+      setIsPageLoading(true)
       setHasError(false)
 
-      const [categoriesResult, coursesResult, eventsResult, statsResult] = await Promise.allSettled([
+      const [categoriesResult, eventsResult, statsResult] = await Promise.allSettled([
         getCourseCategories(),
-        getCourses({ page: 1, page_size: 3 }),
         getEvents({ page: 1, page_size: 1 }),
         getUserLearningStats()
       ])
 
       setHasError(
         categoriesResult.status === 'rejected' &&
-          coursesResult.status === 'rejected' &&
           eventsResult.status === 'rejected' &&
           statsResult.status === 'rejected'
       )
@@ -180,11 +176,7 @@ export default function ShuyuanPage() {
         setStats(nextStats)
       }
 
-      if (coursesResult.status === 'fulfilled') {
-        setItems(mapCourseItems(coursesResult.value.data.list ?? []))
-      }
-
-      setIsLoading(false)
+      setIsPageLoading(false)
     }
 
     void loadShuyuanData()
@@ -260,11 +252,14 @@ export default function ShuyuanPage() {
 
             {isCoursesLoading ? (
               <StateNotice state="loading" copy={{ title: '正在筛选课程', desc: '请稍候。' }} />
+            ) : hasCoursesError ? (
+              <StateNotice state="error" copy={{ title: '课程加载失败', desc: '请稍后重试。' }} />
             ) : items.length ? (
               <View className="grid max-w-full gap-3 overflow-hidden">
                 {items.map((item, index) => (
                   <CourseCard key={`${item.title}-${index}`} item={item} />
                 ))}
+                <ListLoadMore hasItems={items.length > 0} hasMore={hasMore} isLoadingMore={isLoadingMore} />
               </View>
             ) : (
               <StateNotice

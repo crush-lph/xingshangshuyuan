@@ -39,6 +39,11 @@ export interface RequestError<TData = unknown> extends Error {
   data?: TData
 }
 
+export interface BusinessError<TData = unknown> extends Error {
+  code: number
+  data?: TData
+}
+
 let requestConfig: RequestConfig = {
   header: {
     'content-type': 'application/json'
@@ -60,12 +65,22 @@ function isAbsoluteUrl(url: string) {
   return /^https?:\/\//i.test(url)
 }
 
-function joinUrl(baseURL: string | undefined, url: string) {
+export function resolveRequestUrl(url: string, baseURL = requestConfig.baseURL) {
   if (!baseURL || isAbsoluteUrl(url)) {
     return url
   }
 
   return `${baseURL.replace(/\/+$/, '')}/${url.replace(/^\/+/, '')}`
+}
+
+export function getRequestHeader(header?: RequestHeader) {
+  const token = getAuthToken()
+
+  return {
+    ...requestConfig.header,
+    ...(token ? { Authorization: `Bearer ${token}` } : undefined),
+    ...header
+  }
 }
 
 function isSuccessStatus(statusCode: number) {
@@ -80,29 +95,50 @@ function createRequestError<TData>(statusCode: number, data: TData): RequestErro
   })
 }
 
+function isApiEnvelope(value: unknown): value is { code: number; info?: unknown; data?: unknown } {
+  return value !== null && typeof value === 'object' && 'code' in value && typeof value.code === 'number'
+}
+
+function isUnauthorizedBusinessError(code: number, info: string) {
+  return code === 401 || /未登录|请先登录|登录.*失效|token.*失效/i.test(info)
+}
+
+export function assertBusinessSuccess<TResponse>(response: TResponse): TResponse {
+  if (!isApiEnvelope(response) || response.code === 1) {
+    return response
+  }
+
+  const info = typeof response.info === 'string' && response.info.trim() ? response.info.trim() : '业务请求失败'
+
+  if (isUnauthorizedBusinessError(response.code, info) && getAuthToken()) {
+    notifyUnauthorized()
+  }
+
+  throw Object.assign(new Error(info), {
+    name: 'BusinessError',
+    code: response.code,
+    data: response.data
+  }) as BusinessError
+}
+
 export async function request<TResponse = unknown, TData extends RequestData = TaroGeneral.IAnyObject>(
   options: RequestOptions<TData>
 ): Promise<TResponse> {
   const { baseURL, data, dataType, header, method = 'GET', responseType, timeout, url } = options
   const token = getAuthToken()
-  const authHeader = token ? { Authorization: `Bearer ${token}` } : undefined
 
   const response = await Taro.request<TResponse, TData>({
     data,
     dataType,
     method,
     responseType,
-    url: joinUrl(baseURL ?? requestConfig.baseURL, url),
-    header: {
-      ...requestConfig.header,
-      ...authHeader,
-      ...header
-    },
+    url: resolveRequestUrl(url, baseURL ?? requestConfig.baseURL),
+    header: getRequestHeader(header),
     timeout: timeout ?? requestConfig.timeout
   })
 
   if (isSuccessStatus(response.statusCode)) {
-    return response.data
+    return assertBusinessSuccess(response.data)
   }
 
   if (response.statusCode === 401 && token) {

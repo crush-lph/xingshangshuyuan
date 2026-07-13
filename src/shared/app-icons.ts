@@ -4,26 +4,73 @@ import { textOf } from './view-data'
 export type AppIconName =
   | 'apps-2-line'
   | 'archive-line'
+  | 'arrow-right-s-line'
   | 'book-open-line'
   | 'briefcase-4-line'
   | 'building-2-line'
   | 'calendar-event-line'
+  | 'check-line'
+  | 'checkbox-circle-line'
   | 'coins-line'
+  | 'customer-service-2-line'
+  | 'error-warning-line'
   | 'file-list-3-line'
   | 'graduation-cap-line'
   | 'hand-heart-line'
+  | 'lock-line'
+  | 'login-circle-line'
   | 'map-pin-line'
   | 'notification-3-line'
+  | 'phone-line'
   | 'search-line'
   | 'service-line'
+  | 'shield-check-line'
+  | 'smartphone-line'
   | 'settings-3-line'
   | 'shopping-bag-3-line'
   | 'star-line'
   | 'ticket-line'
+  | 'time-line'
   | 'trophy-line'
   | 'user-3-line'
   | 'vip-crown-line'
-  | (string & {})
+  | 'wechat-fill'
+
+const appIconNames = new Set<AppIconName>([
+  'apps-2-line',
+  'archive-line',
+  'arrow-right-s-line',
+  'book-open-line',
+  'briefcase-4-line',
+  'building-2-line',
+  'calendar-event-line',
+  'check-line',
+  'checkbox-circle-line',
+  'coins-line',
+  'customer-service-2-line',
+  'error-warning-line',
+  'file-list-3-line',
+  'graduation-cap-line',
+  'hand-heart-line',
+  'lock-line',
+  'login-circle-line',
+  'map-pin-line',
+  'notification-3-line',
+  'phone-line',
+  'search-line',
+  'service-line',
+  'shield-check-line',
+  'smartphone-line',
+  'settings-3-line',
+  'shopping-bag-3-line',
+  'star-line',
+  'ticket-line',
+  'time-line',
+  'trophy-line',
+  'user-3-line',
+  'vip-crown-line',
+  'wechat-fill'
+])
 
 const remixIconNamePattern = /^[a-z0-9]+(?:-[a-z0-9]+)*-(line|fill)$/
 
@@ -67,11 +114,11 @@ const iconByKeyword: Array<{ keywords: string[]; icon: AppIconName }> = [
 export function normalizeRemixIconName(value: string | null | undefined): AppIconName | undefined {
   const iconName = textOf(value)?.replace(/^ri-/, '')
 
-  if (!iconName || !remixIconNamePattern.test(iconName)) {
+  if (!iconName || !remixIconNamePattern.test(iconName) || !appIconNames.has(iconName as AppIconName)) {
     return undefined
   }
 
-  return iconName
+  return iconName as AppIconName
 }
 
 export function getAppIconName(

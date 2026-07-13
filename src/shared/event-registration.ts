@@ -4,6 +4,7 @@ import { textOf } from './view-data'
 
 export interface EventRegistrationState {
   id?: number
+  is_registered?: boolean
   status?: number | string | boolean | null
   status_text?: string | null
 }
@@ -24,6 +25,9 @@ function normalizeStatusText(event: EventRegistrationState) {
 }
 
 export function isEventRegistrationOpen(event: EventRegistrationState) {
+  if (event.is_registered) {
+    return false
+  }
   const status = normalizeStatus(event.status)
 
   if (status !== undefined) {
@@ -44,6 +48,9 @@ export function isEventRegistrationOpen(event: EventRegistrationState) {
 }
 
 export function getEventRegistrationUnavailableMessage(event: EventRegistrationState) {
+  if (event.is_registered) {
+    return '您已报名该活动'
+  }
   const status = normalizeStatus(event.status)
 
   if (status === 2) {

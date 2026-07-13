@@ -1,13 +1,28 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import Taro from '@tarojs/taro'
 import { View } from '@tarojs/components'
-import { ActionBar, FieldList, FormSection, FormTextField, StateNotice } from '@/components/business'
+import {
+  ActionBar,
+  FieldList,
+  FormSection,
+  FormTextField,
+  PaymentStatusPoller,
+  StateNotice
+} from '@/components/business'
 import { PageShell } from '@/components/PageShell'
-import { getEventDetail, getEvents, getUserProfile, registerEvent, type GetEventDetailData } from '@/services'
+import {
+  getEventDetail,
+  getUserProfile,
+  payOrder,
+  queryOrderPaymentStatus,
+  registerEvent,
+  type GetEventDetailData
+} from '@/services'
 import { ensureLoggedIn } from '@/shared/auth-guard'
 import { isEventRegistrationOpen, showEventRegistrationUnavailable } from '@/shared/event-registration'
 import { router, routes } from '@/shared/router'
 import { dateTimeRangeOf, getPageParam, priceOf, textOf, textOrPlaceholder } from '@/shared/view-data'
+import { getWechatPaymentErrorMessage, requestWechatPayment } from '@/shared/wechat-payment'
 
 interface SignupForm {
   realName: string
@@ -22,14 +37,7 @@ const initialForm: SignupForm = {
 }
 
 async function resolveEventId() {
-  const pageId = getPageParam('event_id')
-
-  if (pageId) {
-    return pageId
-  }
-
-  const events = await getEvents({ page: 1, page_size: 1 })
-  return events.data.list?.[0]?.id
+  return getPageParam('event_id')
 }
 
 export default function EventSignupPage() {
@@ -38,6 +46,8 @@ export default function EventSignupPage() {
   const [isLoading, setIsLoading] = useState(true)
   const [hasError, setHasError] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [pollingOrderNo, setPollingOrderNo] = useState('')
+  const submissionLockRef = useRef(false)
 
   useEffect(() => {
     async function loadData() {
@@ -89,12 +99,22 @@ export default function EventSignupPage() {
   }, [])
 
   async function handleRegister() {
+    if (submissionLockRef.current) {
+      return
+    }
+
     if (!(await ensureLoggedIn('登录后才能报名活动'))) {
       return
     }
 
     if (!event?.id) {
       Taro.showToast({ title: '暂无活动数据', icon: 'none' })
+      return
+    }
+
+    if (event.is_registered) {
+      Taro.showToast({ title: '您已报名该活动', icon: 'none' })
+      router.redirect(routes.userEvents)
       return
     }
 
@@ -113,6 +133,7 @@ export default function EventSignupPage() {
       return
     }
 
+    submissionLockRef.current = true
     setIsSubmitting(true)
     Taro.showLoading({ title: '报名中' })
 
@@ -123,14 +144,29 @@ export default function EventSignupPage() {
         phone: form.phone.trim(),
         company_name: textOf(form.companyName)
       })
-      Taro.showToast({ title: '报名已提交', icon: 'success' })
+      if (response.data.order_no) {
+        const orderNo = response.data.order_no
+        setPollingOrderNo(orderNo)
+        Taro.showLoading({ title: '拉起支付中' })
+        const payResult = await payOrder({ order_no: orderNo, pay_method: 1 })
+        await requestWechatPayment(payResult.data.pay_params)
+        Taro.showToast({ title: '正在确认支付结果', icon: 'none' })
+        return
+      }
+
+      if (!response.data.registration_id) {
+        throw new Error('报名接口未返回报名记录或支付订单')
+      }
+
+      Taro.showToast({ title: '报名成功', icon: 'success' })
       router.redirect(routes.eventTicket, {
         event_id: event.id,
-        registration_id: response.data.registration_id ?? undefined
+        registration_id: response.data.registration_id
       })
-    } catch {
-      Taro.showToast({ title: '报名失败，请稍后重试', icon: 'none' })
+    } catch (error) {
+      Taro.showToast({ title: getWechatPaymentErrorMessage(error) || '报名失败，请稍后重试', icon: 'none' })
     } finally {
+      submissionLockRef.current = false
       Taro.hideLoading()
       setIsSubmitting(false)
     }
@@ -182,10 +218,53 @@ export default function EventSignupPage() {
 
           <ActionBar
             actions={[
-              { label: '对公转账', variant: 'outline', path: routes.paymentTransfer },
-              { label: isSubmitting ? '提交中' : '确认报名', disabled: isSubmitting, onClick: handleRegister }
+              {
+                label: isSubmitting || pollingOrderNo ? '支付处理中' : '确认报名',
+                disabled: isSubmitting || Boolean(pollingOrderNo),
+                onClick: handleRegister
+              }
             ]}
           />
+          {pollingOrderNo ? (
+            <PaymentStatusPoller
+              orderNo={pollingOrderNo}
+              queryStatus={queryOrderPaymentStatus}
+              backLabel="查看我的活动"
+              onBack={() => {
+                void router.redirect(routes.userEvents)
+              }}
+              onRetryPayment={(reason) => {
+                if (reason !== 'timeout') {
+                  setPollingOrderNo('')
+                  Taro.showToast({ title: '订单已终止，请重新报名', icon: 'none' })
+                  return
+                }
+
+                void (async () => {
+                  if (submissionLockRef.current) return
+                  submissionLockRef.current = true
+                  setIsSubmitting(true)
+                  const orderNo = pollingOrderNo
+                  setPollingOrderNo('')
+                  try {
+                    const payResult = await payOrder({ order_no: orderNo, pay_method: 1 })
+                    setPollingOrderNo(orderNo)
+                    await requestWechatPayment(payResult.data.pay_params)
+                  } catch (error) {
+                    Taro.showToast({ title: getWechatPaymentErrorMessage(error), icon: 'none' })
+                  } finally {
+                    submissionLockRef.current = false
+                    setIsSubmitting(false)
+                  }
+                })()
+              }}
+              onSuccess={() => {
+                setPollingOrderNo('')
+                Taro.showToast({ title: '支付成功，报名已确认', icon: 'success' })
+                router.redirect(routes.userEvents)
+              }}
+            />
+          ) : null}
         </View>
       ) : (
         <StateNotice state="empty" copy={{ title: '暂无可报名活动', desc: '当前接口没有返回可报名活动。' }} />

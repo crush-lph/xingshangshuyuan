@@ -6,7 +6,6 @@ import { PageShell } from '@/components/PageShell'
 import {
   applyOpportunity,
   getCompanyProfile,
-  getOpportunities,
   getOpportunityDetail,
   type GetCompanyProfileData,
   type GetOpportunityDetailData
@@ -30,14 +29,7 @@ const initialForm: OpportunityApplyForm = {
 }
 
 async function resolveOpportunityId() {
-  const pageId = getPageParam('opportunity_id')
-
-  if (pageId) {
-    return pageId
-  }
-
-  const response = await getOpportunities({ page: 1, page_size: 1 })
-  return response.data.list?.[0]?.id
+  return getPageParam('opportunity_id')
 }
 
 export default function OpportunityApplyPage() {
@@ -94,6 +86,11 @@ export default function OpportunityApplyPage() {
       return
     }
 
+    if (detail.is_owner || detail.status !== 2 || (detail.expired_at && Date.parse(detail.expired_at) <= Date.now())) {
+      Taro.showToast({ title: '当前商机不可申请', icon: 'none' })
+      return
+    }
+
     if (!textOf(form.reason)) {
       Taro.showToast({ title: '请填写接单说明', icon: 'none' })
       return
@@ -111,7 +108,7 @@ export default function OpportunityApplyPage() {
         attachment_url: textOf(form.attachmentUrl)
       })
       Taro.showToast({ title: '申请已提交', icon: 'success' })
-      router.redirect(routes.profile)
+      router.redirect(routes.opportunityApplications)
     } catch {
       Taro.showToast({ title: '申请提交失败，请稍后重试', icon: 'none' })
     } finally {

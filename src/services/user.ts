@@ -140,5 +140,5 @@ export function uploadUserAvatar(
   data: UploadUserAvatarPayload,
   options?: ApiBodyRequestOptions<UploadUserAvatarPayload>
 ) {
-  return api.post<UploadUserAvatarResponse, UploadUserAvatarPayload>('/api/upload', data, options)
+  return api.post<UploadUserAvatarResponse, UploadUserAvatarPayload>('/api/user/upload_avatar', data, options)
 }

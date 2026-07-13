@@ -47,7 +47,6 @@ export default function CourseLearnPage() {
   const [sections, setSections] = useState<CourseSectionNode[]>([])
   const [activeSection, setActiveSection] = useState<CourseSectionNode | null>(null)
   const [isLoading, setIsLoading] = useState(true)
-  const [isSaving, setIsSaving] = useState(false)
   const [hasError, setHasError] = useState(false)
   const lastReportedRef = useRef<{ sectionId?: number | string; position: number }>({ position: 0 })
   const isReportingRef = useRef(false)
@@ -81,9 +80,17 @@ export default function CourseLearnPage() {
         progressResult.status === 'fulfilled' ? progressResult.value.data.last_section_id : undefined
       const initialSectionId = sectionId ?? (progressSectionId === undefined ? undefined : String(progressSectionId))
 
-      setCourse(detailResult.status === 'fulfilled' && detailResult.value.data.id ? detailResult.value.data : null)
+      const nextCourse =
+        detailResult.status === 'fulfilled' && detailResult.value.data.id ? detailResult.value.data : null
+      const initialSection = findInitialSection(nextSections, initialSectionId)
+      const accessibleSection =
+        nextCourse?.is_bought || initialSection?.is_free
+          ? initialSection
+          : (flattenPlayableSections(nextSections).find((section) => Boolean(section.is_free)) ?? null)
+
+      setCourse(nextCourse)
       setSections(nextSections)
-      setActiveSection(findInitialSection(nextSections, initialSectionId))
+      setActiveSection(accessibleSection)
       setHasError(
         detailResult.status === 'rejected' &&
           sectionsResult.status === 'rejected' &&
@@ -129,7 +136,7 @@ export default function CourseLearnPage() {
     isCompleted?: boolean
     showToast?: boolean
   }) {
-    if (!course?.id || !activeSection?.id) {
+    if (!course?.id || !course.is_bought || !activeSection?.id) {
       return
     }
 
@@ -157,10 +164,6 @@ export default function CourseLearnPage() {
     }
 
     try {
-      if (options.showToast) {
-        setIsSaving(true)
-      }
-
       isReportingRef.current = true
       await updateUserCourseProgress({
         course_id: course.id,
@@ -185,10 +188,6 @@ export default function CourseLearnPage() {
       }
     } finally {
       isReportingRef.current = false
-
-      if (options.showToast) {
-        setIsSaving(false)
-      }
     }
   }
 
@@ -221,18 +220,6 @@ export default function CourseLearnPage() {
     })
   }
 
-  function handleMarkCompleted() {
-    const duration = normalizeDuration(activeSection?.duration) ?? lastReportedRef.current.position
-
-    void reportLearningProgress({
-      currentTime: duration,
-      duration,
-      force: true,
-      isCompleted: true,
-      showToast: true
-    })
-  }
-
   return (
     <PageShell
       title="课程学习"
@@ -245,7 +232,7 @@ export default function CourseLearnPage() {
       ) : course ? (
         <View className="grid gap-3">
           <View className="overflow-hidden rounded-lg bg-black shadow-medium">
-            {videoUrl ? (
+            {videoUrl && (course.is_bought || activeSection?.is_free) ? (
               <Video
                 className="h-[420rpx] w-full"
                 controls
@@ -274,7 +261,7 @@ export default function CourseLearnPage() {
                 activeSectionId={activeSection?.id}
                 sections={sections}
                 onSelect={(section) => {
-                  if (!section.children?.length || section.video_url) {
+                  if ((course.is_bought || section.is_free) && (!section.children?.length || section.video_url)) {
                     setActiveSection(section)
                   }
                 }}
@@ -286,12 +273,6 @@ export default function CourseLearnPage() {
 
           <ActionBar
             actions={[
-              {
-                label: activeSection?.is_completed ? '已学完' : '标记学完',
-                variant: 'gold',
-                disabled: isSaving || !activeSection?.id,
-                onClick: handleMarkCompleted
-              },
               { label: '课程详情', variant: 'outline', path: routes.courseDetail, query: { course_id: course.id } }
             ]}
           />

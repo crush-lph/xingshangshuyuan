@@ -10,7 +10,7 @@ import {
   type StatItem
 } from '@/components/business'
 import { PageShell } from '@/components/PageShell'
-import { getOpportunities, getOpportunityStats, getUserApplications } from '@/services'
+import { getMyOpportunities, getOpportunities, getOpportunityStats, getUserApplications } from '@/services'
 import { routes } from '@/shared/router'
 import { compactJoin, textOf, textOrPlaceholder } from '@/shared/view-data'
 
@@ -18,6 +18,7 @@ export default function OpportunityHomePage() {
   const [stats, setStats] = useState<StatItem[]>([])
   const [items, setItems] = useState<ListItem[]>([])
   const [applicationItems, setApplicationItems] = useState<ListItem[]>([])
+  const [publishedItems, setPublishedItems] = useState<ListItem[]>([])
   const [types, setTypes] = useState<string[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [hasError, setHasError] = useState(false)
@@ -27,16 +28,18 @@ export default function OpportunityHomePage() {
       setIsLoading(true)
       setHasError(false)
 
-      const [statsResult, listResult, applicationsResult] = await Promise.allSettled([
+      const [statsResult, listResult, applicationsResult, publishedResult] = await Promise.allSettled([
         getOpportunityStats(),
         getOpportunities({ page: 1, page_size: 6 }),
-        getUserApplications({ page: 1, page_size: 3 })
+        getUserApplications({ page: 1, page_size: 3 }),
+        getMyOpportunities({ page: 1, page_size: 3 })
       ])
 
       setHasError(
         statsResult.status === 'rejected' &&
           listResult.status === 'rejected' &&
-          applicationsResult.status === 'rejected'
+          applicationsResult.status === 'rejected' &&
+          publishedResult.status === 'rejected'
       )
 
       if (statsResult.status === 'fulfilled') {
@@ -82,6 +85,22 @@ export default function OpportunityHomePage() {
             path: routes.opportunityDetail,
             query: item.opportunity_id ? { opportunity_id: item.opportunity_id } : undefined,
             action: '查看'
+          }))
+        )
+      }
+
+      if (publishedResult.status === 'fulfilled') {
+        setPublishedItems(
+          (publishedResult.value.data.list ?? []).map((item) => ({
+            title: textOrPlaceholder(item.title, '未命名商机'),
+            desc: compactJoin([item.type_text, item.city]) || '接口未返回商机摘要',
+            meta: `${item.apply_count ?? 0} 人申请`,
+            tag: textOf(item.status_text),
+            icon: 'briefcase-4-line',
+            tone: 'gold',
+            path: routes.opportunityDetail,
+            query: item.id ? { opportunity_id: item.id } : undefined,
+            action: '管理'
           }))
         )
       }
@@ -145,6 +164,12 @@ export default function OpportunityHomePage() {
             {applicationItems.length ? (
               <SectionCard title="我的申请">
                 <ItemList items={applicationItems} />
+              </SectionCard>
+            ) : null}
+
+            {publishedItems.length ? (
+              <SectionCard title="我发布的商机">
+                <ItemList items={publishedItems} />
               </SectionCard>
             ) : null}
           </>

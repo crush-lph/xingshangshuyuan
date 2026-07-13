@@ -44,6 +44,8 @@ const serviceUrl = buildUrl(routes.services, { tab: 'tools', from: 'home' })
 
 void router.to(homePath)
 void router.redirect('/pages/order/detail/index', { id: 1001 })
+// @ts-expect-error tabBar pages must use router.to or router.switchTab.
+void router.redirect(routes.profile)
 void router.reLaunch(routes.home)
 void router.switchTab(routes.profile)
 void router.switchTab(routes.shuyuan)

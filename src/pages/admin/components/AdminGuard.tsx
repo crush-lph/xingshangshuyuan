@@ -1,8 +1,7 @@
 import { useEffect, type ReactNode } from 'react'
-import Taro from '@tarojs/taro'
 import { StateNotice } from '@/components/business'
 import { PageShell } from '@/components/PageShell'
-import { routes } from '@/shared/router'
+import { router, routes } from '@/shared/router'
 import { useUserInfo } from '@/stores/user-info'
 
 interface AdminGuardProps {
@@ -36,7 +35,7 @@ export function AdminGuard({ title, children }: AdminGuardProps) {
           copy={{ title: '需要登录', desc: '登录管理员账号后才能访问后台功能。' }}
           actionText="去登录"
           onAction={() => {
-            void Taro.navigateTo({ url: routes.userLogin })
+            void router.to(routes.userLogin)
           }}
         />
       </PageShell>

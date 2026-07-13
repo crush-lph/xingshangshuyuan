@@ -4,7 +4,7 @@ import { ActionBar, SectionCard, StateNotice } from '@/components/business'
 import { PageShell } from '@/components/PageShell'
 import { getUserProfile, getUserVip } from '@/services'
 import { routes } from '@/shared/router'
-import { isRecord, textOf, textOrPlaceholder } from '@/shared/view-data'
+import { isRecord, textOf } from '@/shared/view-data'
 
 function normalizeBenefits(...values: unknown[]) {
   for (const value of values) {

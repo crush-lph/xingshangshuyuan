@@ -11,17 +11,14 @@ export const routes = {
   resourceHome: '/pages/resource/home/index',
   resourceList: '/pages/resource/list/index',
   resourceStandardDetail: '/pages/resource/standard-detail/index',
-  resourceNonstandardDetail: '/pages/resource/nonstandard-detail/index',
   resourceSubmit: '/pages/resource/submit/index',
   resourcePurchase: '/pages/resource/purchase/index',
   eventHome: '/pages/event/home/index',
   eventList: '/pages/event/list/index',
   eventDetail: '/pages/event/detail/index',
   eventSignup: '/pages/event/signup/index',
-  eventGroup: '/pages/event/group/index',
   eventTicket: '/pages/event/ticket/index',
   memberBenefit: '/pages/member/benefit/index',
-  memberConfirm: '/pages/member/confirm/index',
   paymentTransfer: '/pages/member/payment-transfer/index',
   opportunityHome: '/pages/opportunity/home/index',
   opportunityDetail: '/pages/opportunity/detail/index',
@@ -51,7 +48,7 @@ export const tabRoutePaths = [routes.home, routes.services, routes.shuyuan, rout
 export type KnownRoutePath = (typeof routes)[keyof typeof routes]
 export type TabRoutePath = (typeof tabRoutePaths)[number]
 export type RoutePath = KnownRoutePath | `/${string}`
-export type PageRoutePath = Exclude<RoutePath, TabRoutePath>
+export type PageRoutePath = Exclude<KnownRoutePath, TabRoutePath> | `/${string}`
 export type QueryValue = string | number | boolean | null | undefined
 export type Query = Record<string, QueryValue>
 export interface ParsedRoute {
@@ -153,7 +150,7 @@ export const router = {
 
     return Taro.navigateTo({ url: buildUrl(path, query) })
   },
-  redirect(path: PageRoutePath, query?: Query) {
+  redirect<Path extends RoutePath>(path: Path extends TabRoutePath ? never : Path, query?: Query) {
     assertNotTabRoute(path, 'redirect')
     return Taro.redirectTo({ url: buildUrl(path, query) })
   },

@@ -2,7 +2,7 @@ import { useEffect, useState, type CSSProperties } from 'react'
 import { Text, View } from '@tarojs/components'
 import Taro from '@tarojs/taro'
 import { AppIcon } from '@/components/AppIcon'
-import { defaultCapsuleNavMetrics, getCapsuleNavMetrics } from '@/shared'
+import { defaultCapsuleNavMetrics, getCapsuleNavMetrics } from '@/shared/capsule-metrics'
 
 const NAV_SEARCH_GAP = 10
 const NAV_SEARCH_HEIGHT = 44

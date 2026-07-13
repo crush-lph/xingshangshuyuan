@@ -7,6 +7,7 @@
 - 当前接口基础地址：`https://www.xssy365.com/`，维护在 `.env`、`.env.example` 和 `config/index.ts`。
 - 基础路径：接口文档中未提供固定服务地址，项目内接口均使用 `/api/...` 相对路径；运行时通过 `setRequestConfig({ baseURL })` 注入后端地址。
 - 响应结构：除特别说明外，接口返回 `ApiResponse<T>`：`{ code: number; info: string; data: T }`。
+- 业务成功码：`code === 1` 表示成功；其他数值由请求层统一抛出 `BusinessError`，`401` 或登录失效文案会同步清理会话。
 - 认证：文档中标记为需认证的接口应携带后端约定的登录 token，具体 header 由 `src/shared/request.ts` 全局配置或请求 options 注入。
 - 文件上传：`POST /api/upload` 在 Apifox 中没有 multipart 字段定义；小程序真实文件上传建议另行封装 `Taro.uploadFile`，不要直接用 JSON `api.post` 上传二进制文件。
 

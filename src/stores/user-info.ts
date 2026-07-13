@@ -51,8 +51,8 @@ function hasUserProfile(value: GetUserProfileData | null) {
   return Boolean(value?.user_id || value?.nickname || value?.phone || value?.company_name)
 }
 
-function getIsLoggedIn(userInfo: GetUserInfoData | null, profile: GetUserProfileData | null, token?: string) {
-  return Boolean(token || hasUserInfo(userInfo) || hasUserProfile(profile))
+function getIsLoggedIn(token?: string) {
+  return Boolean(token)
 }
 
 function getIsPhoneBound(userInfo: GetUserInfoData | null, profile: GetUserProfileData | null) {
@@ -64,6 +64,7 @@ function getIsAdmin(userInfo: GetUserInfoData | null, profile: GetUserProfileDat
 }
 
 let hasBoundUnauthorizedListener = false
+let sessionGeneration = 0
 
 export const useUserInfo = create<UserInfoState>()((set, get) => ({
   userInfo: null,
@@ -83,6 +84,7 @@ export const useUserInfo = create<UserInfoState>()((set, get) => ({
     if (!hasBoundUnauthorizedListener) {
       hasBoundUnauthorizedListener = true
       onUnauthorized(() => {
+        sessionGeneration += 1
         const current = get()
         const hadSession = Boolean(current.token || current.isLoggedIn || current.userInfo || current.profile)
 
@@ -115,6 +117,8 @@ export const useUserInfo = create<UserInfoState>()((set, get) => ({
   },
 
   async loadUserInfo() {
+    const requestToken = getAuthToken()
+    const requestGeneration = sessionGeneration
     set({ isLoading: true, error: undefined })
 
     const [userInfoResult, profileResult] = await Promise.allSettled([getUserInfo(), getUserProfile()])
@@ -126,16 +130,22 @@ export const useUserInfo = create<UserInfoState>()((set, get) => ({
         : undefined
     const nextToken = getAuthToken()
 
+    if (requestGeneration !== sessionGeneration || requestToken !== nextToken) {
+      return
+    }
+
+    const hasIdentity = hasUserInfo(userInfo) || hasUserProfile(profile)
+
     set({
       userInfo: hasUserInfo(userInfo) ? userInfo : null,
       profile: hasUserProfile(profile) ? profile : null,
       token: nextToken,
-      isLoggedIn: getIsLoggedIn(userInfo, profile, nextToken),
+      isLoggedIn: getIsLoggedIn(nextToken),
       isPhoneBound: getIsPhoneBound(userInfo, profile),
       isAdmin: getIsAdmin(userInfo, profile),
       refreshVersion: get().refreshVersion + 1,
       isLoading: false,
-      error
+      error: error ?? (!hasIdentity ? '未获取到用户身份信息' : undefined)
     })
   },
 
@@ -151,6 +161,10 @@ export const useUserInfo = create<UserInfoState>()((set, get) => ({
       const response = await wxLogin({ code: loginResult.code })
       const loginData = response.data
       const token = loginData.token
+
+      if (!token) {
+        throw new Error('登录接口未返回有效凭证')
+      }
       const userInfo: GetUserInfoData | null = loginData.user_id
         ? {
             id: loginData.user_id,
@@ -164,14 +178,17 @@ export const useUserInfo = create<UserInfoState>()((set, get) => ({
           }
         : null
 
+      sessionGeneration += 1
       setAuthToken(token)
 
       set({
         token,
         userInfo,
-        isLoggedIn: getIsLoggedIn(userInfo, get().profile, token),
-        isPhoneBound: getIsPhoneBound(userInfo, get().profile),
-        isAdmin: getIsAdmin(userInfo, get().profile)
+        profile: null,
+        isLoggedIn: getIsLoggedIn(token),
+        isPhoneBound: getIsPhoneBound(userInfo, null),
+        isAdmin: getIsAdmin(userInfo, null),
+        isLoading: false
       })
 
       await get().loadUserInfo()
@@ -230,25 +247,32 @@ export const useUserInfo = create<UserInfoState>()((set, get) => ({
   },
 
   setUserInfo(payload) {
-    const nextUserInfo = payload.userInfo === undefined ? get().userInfo : payload.userInfo
-    const nextProfile = payload.profile === undefined ? get().profile : payload.profile
     const nextToken = payload.token === undefined ? get().token : payload.token
+    const isReplacingSession = nextToken !== get().token
+    const nextUserInfo =
+      payload.userInfo === undefined ? (isReplacingSession ? null : get().userInfo) : payload.userInfo
+    const nextProfile = payload.profile === undefined ? (isReplacingSession ? null : get().profile) : payload.profile
 
+    if (isReplacingSession) {
+      sessionGeneration += 1
+    }
     setAuthToken(nextToken)
 
     set({
       userInfo: nextUserInfo,
       profile: nextProfile,
       token: nextToken,
-      isLoggedIn: getIsLoggedIn(nextUserInfo, nextProfile, nextToken),
+      isLoggedIn: getIsLoggedIn(nextToken),
       isPhoneBound: getIsPhoneBound(nextUserInfo, nextProfile),
       isAdmin: getIsAdmin(nextUserInfo, nextProfile),
       refreshVersion: get().refreshVersion + 1,
+      isLoading: false,
       error: undefined
     })
   },
 
   clearUserInfo() {
+    sessionGeneration += 1
     clearAuthToken()
     set({
       userInfo: null,

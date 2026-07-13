@@ -1,28 +1,22 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import Taro from '@tarojs/taro'
 import { Text, View } from '@tarojs/components'
 import Rate from '@nutui/nutui-react-taro/dist/es/packages/rate'
 import '@nutui/nutui-react-taro/dist/es/packages/rate/style/css'
-import { ActionBar, FormSection, FormTextareaField, ReviewList, StateNotice } from '@/components/business'
+import { ActionBar, FormSection, FormTextareaField, ListLoadMore, ReviewList, StateNotice } from '@/components/business'
 import { PageShell } from '@/components/PageShell'
 import { getUserReviews, submitReview, type UserReviewItem } from '@/services'
-import { router, routes } from '@/shared/router'
+import { routes } from '@/shared/router'
+import { usePaginatedList } from '@/shared/use-paginated-list'
 import { getPageParam, numberOf, textOf, textOrPlaceholder } from '@/shared/view-data'
 
-export default function UserReviewsPage() {
-  const orderId = numberOf(getPageParam('order_id'))
-  const orderTitle = textOf(getPageParam('title'))
-  const [items, setItems] = useState<UserReviewItem[]>([])
-  const [rating, setRating] = useState(5)
-  const [content, setContent] = useState('')
-  const [isLoading, setIsLoading] = useState(true)
-  const [hasError, setHasError] = useState(false)
-  const [isSubmitting, setIsSubmitting] = useState(false)
+const ORDER_REVIEW_PAGE_SIZE = 50
+const MAX_REVIEW_PAGES = 100
 
-  const pageTitle = useMemo(() => (orderId ? '提交评价' : '我的评价'), [orderId])
-  const reviewItems = items.map((item) => ({
+function mapReview(item: UserReviewItem, fallbackTitle?: string) {
+  return {
     key: String(item.id ?? `${item.order_id}-${item.created_at}`),
-    title: textOrPlaceholder(item.product_name ?? item.order_id, '未命名服务'),
+    title: textOrPlaceholder(item.product_name ?? fallbackTitle ?? item.order_id, '未命名服务'),
     content: textOrPlaceholder(item.content, '暂无评价内容'),
     rating: item.rating,
     thumbnail: item.thumbnail,
@@ -30,52 +24,106 @@ export default function UserReviewsPage() {
     statusTone: item.status === 0 ? ('neutral' as const) : ('success' as const),
     meta: item.order_id ? `订单 ${item.order_id}` : textOrPlaceholder(item.created_at),
     time: textOf(item.created_at)
-  }))
+  }
+}
+
+async function findOrderReview(orderId: number) {
+  let page = 1
+  let previousPageSignature = ''
+
+  while (page <= MAX_REVIEW_PAGES) {
+    const response = await getUserReviews({ page, page_size: ORDER_REVIEW_PAGE_SIZE })
+    const records = response.data.list ?? []
+    const matchedReview = records.find((item) => item.order_id === orderId)
+
+    if (matchedReview) {
+      return matchedReview
+    }
+
+    const totalPage = numberOf(response.data.total_page)
+    const pageSignature = records.map((item) => item.id ?? `${item.order_id}-${item.created_at}`).join(',')
+
+    const reachedLastPage = totalPage !== undefined ? page >= totalPage : records.length < ORDER_REVIEW_PAGE_SIZE
+
+    if (reachedLastPage || pageSignature === previousPageSignature) {
+      return null
+    }
+
+    previousPageSignature = pageSignature
+    page += 1
+  }
+
+  throw new Error('评价记录过多，暂时无法确认订单评价状态')
+}
+
+function ReviewHistory() {
+  const { hasError, hasMore, isLoading, isLoadingMore, items } = usePaginatedList<UserReviewItem, UserReviewItem>({
+    deps: [],
+    fetchPage: ({ page, page_size }) => getUserReviews({ page, page_size }),
+    mapItems: (records: UserReviewItem[]) => records
+  })
+  const reviewItems = items.map((item) => mapReview(item))
+
+  if (isLoading) {
+    return <StateNotice state="loading" />
+  }
+
+  if (hasError) {
+    return <StateNotice state="error" />
+  }
+
+  if (!reviewItems.length) {
+    return <StateNotice state="empty" copy={{ title: '暂无评价', desc: '完成服务订单后可在订单列表提交评价。' }} />
+  }
+
+  return (
+    <>
+      <ReviewList items={reviewItems} />
+      <ListLoadMore hasItems hasMore={hasMore} isLoadingMore={isLoadingMore} />
+    </>
+  )
+}
+
+function OrderReviewFlow({ orderId, orderNo, orderTitle }: { orderId: number; orderNo?: string; orderTitle?: string }) {
+  const [rating, setRating] = useState(5)
+  const [content, setContent] = useState('')
+  const [existingReview, setExistingReview] = useState<UserReviewItem | null>(null)
+  const [isChecking, setIsChecking] = useState(true)
+  const [hasCheckError, setHasCheckError] = useState(false)
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [reloadVersion, setReloadVersion] = useState(0)
+  const submissionLockRef = useRef(false)
 
   useEffect(() => {
-    let isMounted = true
+    let isActive = true
 
-    void getUserReviews({ page: 1, page_size: 20 })
-      .then((response) => {
-        if (isMounted) {
-          setItems(response.data.list ?? [])
-        }
+    void findOrderReview(orderId)
+      .then((review) => {
+        if (isActive) setExistingReview(review)
       })
       .catch(() => {
-        if (isMounted) {
-          setItems([])
-          setHasError(true)
+        if (isActive) {
+          setExistingReview(null)
+          setHasCheckError(true)
         }
       })
       .finally(() => {
-        if (isMounted) {
-          setIsLoading(false)
-        }
+        if (isActive) setIsChecking(false)
       })
 
     return () => {
-      isMounted = false
+      isActive = false
     }
-  }, [])
+  }, [orderId, reloadVersion])
 
-  async function loadReviews() {
-    setIsLoading(true)
-    setHasError(false)
-
-    try {
-      const response = await getUserReviews({ page: 1, page_size: 20 })
-      setItems(response.data.list ?? [])
-    } catch {
-      setHasError(true)
-      throw new Error('load reviews failed')
-    } finally {
-      setIsLoading(false)
-    }
+  function retryCheck() {
+    setIsChecking(true)
+    setHasCheckError(false)
+    setReloadVersion((value) => value + 1)
   }
 
   async function handleSubmit() {
-    if (!orderId) {
-      Taro.showToast({ title: '缺少订单信息', icon: 'none' })
+    if (submissionLockRef.current || isChecking || existingReview) {
       return
     }
 
@@ -86,82 +134,105 @@ export default function UserReviewsPage() {
       return
     }
 
+    if (rating < 1 || rating > 5) {
+      Taro.showToast({ title: '请选择1至5星评分', icon: 'none' })
+      return
+    }
+
+    submissionLockRef.current = true
     setIsSubmitting(true)
     Taro.showLoading({ title: '提交中' })
 
     try {
-      await submitReview({
+      const response = await submitReview({ order_id: orderId, rating, content: nextContent })
+      setExistingReview({
+        ...response.data,
         order_id: orderId,
-        rating,
-        content: nextContent
+        product_name: orderTitle,
+        status: 1
       })
-      Taro.showToast({ title: '评价已提交', icon: 'success' })
       setContent('')
-      setRating(5)
-      await loadReviews()
-      router.redirect(routes.userReviews)
-    } catch {
-      Taro.showToast({ title: '评价提交失败，请稍后重试', icon: 'none' })
+      Taro.showToast({ title: '评价已提交', icon: 'success' })
+    } catch (error) {
+      const message = error instanceof Error && error.message ? error.message : '评价提交失败，请稍后重试'
+      Taro.showToast({ title: message, icon: 'none' })
+      retryCheck()
     } finally {
+      submissionLockRef.current = false
       Taro.hideLoading()
       setIsSubmitting(false)
     }
   }
 
-  return (
-    <PageShell title={pageTitle} subtitle={orderId ? '对已完成的服务订单进行评价。' : '查看已提交的资源和服务评价。'}>
+  const backAction = orderNo
+    ? { label: '返回订单', variant: 'outline' as const, path: routes.paymentTransfer, query: { order_no: orderNo } }
+    : { label: '返回订单', variant: 'outline' as const, path: routes.userOrders }
+
+  if (isChecking) {
+    return <StateNotice state="loading" copy={{ title: '正在确认评价状态', desc: '请稍候。' }} />
+  }
+
+  if (hasCheckError) {
+    return (
       <View className="grid gap-3">
-        {orderId ? (
-          <FormSection title="评价服务" desc={orderTitle ? `订单服务：${orderTitle}` : `订单编号：${orderId}`}>
-            <View>
-              <Text className="mb-2 block text-sm font-semibold text-ink">
-                服务评分<Text className="text-[#E53E3E]"> *</Text>
-              </Text>
-              <View className="rounded-lg border border-line bg-canvas px-3 py-3">
-                <Rate value={rating} count={5} onChange={(value) => setRating(Number(value) || 5)} />
-              </View>
-            </View>
-            <FormTextareaField
-              label="评价内容"
-              required
-              value={content}
-              placeholder="请填写本次服务体验"
-              onChange={setContent}
-            />
-            <ActionBar
-              actions={[
-                { label: '返回列表', variant: 'outline', path: routes.userReviews },
-                { label: isSubmitting ? '提交中' : '提交评价', disabled: isSubmitting, onClick: handleSubmit }
-              ]}
-            />
-          </FormSection>
-        ) : null}
+        <StateNotice
+          state="error"
+          copy={{ title: '评价状态确认失败', desc: '为避免重复评价，请先重新查询评价状态。' }}
+        />
+        <ActionBar actions={[backAction, { label: '重新查询', onClick: retryCheck }]} />
+      </View>
+    )
+  }
 
-        {!orderId ? (
-          <StateNotice
-            state="empty"
-            copy={{
-              title: '待评价来源以订单为准',
-              desc: '当前不展示静态待评价数量；可评价入口仅来自真实已完成订单。'
-            }}
-          />
-        ) : null}
+  if (existingReview) {
+    return (
+      <View className="grid gap-3">
+        <StateNotice state="completed" copy={{ title: '该订单已评价', desc: '感谢你的反馈，评价内容如下。' }} />
+        <ReviewList items={[mapReview(existingReview, orderTitle)]} />
+        <ActionBar actions={[backAction, { label: '查看我的评价', path: routes.userReviews }]} />
+      </View>
+    )
+  }
 
-        {isLoading ? (
-          <StateNotice state="loading" />
-        ) : hasError ? (
-          <StateNotice state="error" />
-        ) : reviewItems.length ? (
-          <ReviewList items={reviewItems} />
-        ) : (
-          <StateNotice
-            state="empty"
-            copy={{
-              title: orderId ? '暂无历史评价' : '暂无评价',
-              desc: orderId ? '当前接口没有返回该订单的历史评价。' : '当前接口没有返回评价记录。'
-            }}
-          />
-        )}
+  return (
+    <FormSection title="评价服务" desc={orderTitle ? `订单服务：${orderTitle}` : `订单编号：${orderId}`}>
+      <View>
+        <Text className="mb-2 block text-sm font-semibold text-ink">
+          服务评分<Text className="text-[#E53E3E]"> *</Text>
+        </Text>
+        <View className="rounded-lg border border-line bg-canvas px-3 py-3">
+          <Rate value={rating} count={5} onChange={(value) => setRating(Number(value) || 5)} />
+        </View>
+      </View>
+      <FormTextareaField
+        label="评价内容"
+        required
+        value={content}
+        placeholder="请填写本次服务体验"
+        onChange={setContent}
+      />
+      <ActionBar
+        actions={[
+          backAction,
+          { label: isSubmitting ? '提交中' : '提交评价', disabled: isSubmitting, onClick: handleSubmit }
+        ]}
+      />
+    </FormSection>
+  )
+}
+
+export default function UserReviewsPage() {
+  const orderId = numberOf(getPageParam('order_id'))
+  const orderNo = textOf(getPageParam('order_no'))
+  const orderTitle = textOf(getPageParam('title'))
+
+  return (
+    <PageShell
+      title={orderId ? '订单评价' : '我的评价'}
+      subtitle={orderId ? '评价前会核验订单是否已经评价。' : '查看已提交的资源和服务评价。'}
+    >
+      <View className="grid gap-3">
+        {orderId ? <OrderReviewFlow orderId={orderId} orderNo={orderNo} orderTitle={orderTitle} /> : <ReviewHistory />}
       </View>
     </PageShell>
   )

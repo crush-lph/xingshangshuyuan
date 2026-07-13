@@ -1,10 +1,11 @@
-import { useEffect, useRef, useState } from 'react'
+import { useState } from 'react'
 import { Text, View } from '@tarojs/components'
-import { ItemList, StateNotice, type ListItem } from '@/components/business'
+import { ItemList, ListLoadMore, StateNotice, type ListItem } from '@/components/business'
 import { PageShell } from '@/components/PageShell'
 import { getUserCourses, type GetUserCoursesData } from '@/services'
 import { routes } from '@/shared/router'
-import { compactJoin, textOf, textOrPlaceholder } from '@/shared/view-data'
+import { usePaginatedList } from '@/shared/use-paginated-list'
+import { compactJoin, textOrPlaceholder } from '@/shared/view-data'
 
 type UserCourseRecord = NonNullable<GetUserCoursesData['list']>[number]
 
@@ -69,50 +70,18 @@ function mapUserCourse(item: UserCourseRecord): UserCourseItem {
 
 export default function UserCoursesPage() {
   const [activeTab, setActiveTab] = useState<(typeof courseTabs)[number]['label']>('全部')
-  const [items, setItems] = useState<UserCourseItem[]>([])
-  const [isLoading, setIsLoading] = useState(true)
-  const [hasError, setHasError] = useState(false)
-  const requestIdRef = useRef(0)
-
-  useEffect(() => {
-    const currentRequestId = requestIdRef.current + 1
-    const activeItem = courseTabs.find((item) => item.label === activeTab)
-    const activeStatus = activeItem && 'isCompleted' in activeItem ? activeItem.isCompleted : undefined
-
-    requestIdRef.current = currentRequestId
-
-    async function loadUserCourses() {
-      setIsLoading(true)
-      setHasError(false)
-
-      try {
-        const response = await getUserCourses({
-          ...(activeStatus !== undefined ? { is_completed: activeStatus } : {}),
-          page: 1,
-          page_size: 20
-        })
-
-        if (requestIdRef.current !== currentRequestId) {
-          return
-        }
-
-        setItems((response.data.list ?? []).map(mapUserCourse))
-      } catch {
-        if (requestIdRef.current !== currentRequestId) {
-          return
-        }
-
-        setItems([])
-        setHasError(true)
-      } finally {
-        if (requestIdRef.current === currentRequestId) {
-          setIsLoading(false)
-        }
-      }
-    }
-
-    void loadUserCourses()
-  }, [activeTab])
+  const activeItem = courseTabs.find((item) => item.label === activeTab)
+  const activeStatus = activeItem && 'isCompleted' in activeItem ? activeItem.isCompleted : undefined
+  const { hasError, hasMore, isLoading, isLoadingMore, items } = usePaginatedList<UserCourseRecord, UserCourseItem>({
+    deps: [activeTab],
+    fetchPage: ({ page, page_size }) =>
+      getUserCourses({
+        ...(activeStatus !== undefined ? { is_completed: activeStatus } : {}),
+        page,
+        page_size
+      }),
+    mapItems: (records: UserCourseRecord[]) => records.map(mapUserCourse)
+  })
 
   return (
     <PageShell title="我的课程" subtitle="查看已购买课程、学习进度和继续学习入口。">
@@ -138,7 +107,10 @@ export default function UserCoursesPage() {
         ) : hasError ? (
           <StateNotice state="error" copy={{ title: '课程记录加载失败', desc: '请稍后重试。' }} />
         ) : items.length ? (
-          <ItemList items={items} />
+          <>
+            <ItemList items={items} />
+            <ListLoadMore hasItems={items.length > 0} hasMore={hasMore} isLoadingMore={isLoadingMore} />
+          </>
         ) : (
           <StateNotice state="empty" copy={{ title: '暂无课程记录', desc: '当前筛选条件下没有课程。' }} />
         )}

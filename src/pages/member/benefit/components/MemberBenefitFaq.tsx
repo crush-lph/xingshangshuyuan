@@ -18,7 +18,9 @@ export function MemberBenefitFaq({ aboutText }: MemberBenefitFaqProps) {
         </View>
         <View className="rounded-[20px] border border-white/10 bg-white/10 px-4 py-3">
           <Text className="block text-sm font-bold text-white">支持对公转账吗？</Text>
-          <Text className="mt-1 block text-sm leading-6 text-white/60">支持微信支付和对公转账，财务确认后开通。</Text>
+          <Text className="mt-1 block text-sm leading-6 text-white/60">
+            当前仅开放微信支付；对公转账将在凭证审核接口接入后开放。
+          </Text>
         </View>
         <View className="rounded-[20px] border border-white/10 bg-white/10 px-4 py-3">
           <Text className="block text-sm font-bold text-white">是否可以升级？</Text>
