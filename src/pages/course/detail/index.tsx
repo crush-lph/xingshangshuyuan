@@ -1,7 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import Taro from '@tarojs/taro'
 import { RichText, Text, View } from '@tarojs/components'
-import { AppIcon } from '@/components/AppIcon'
 import { ActionBar, SectionCard, StateNotice } from '@/components/business'
 import { PageShell } from '@/components/PageShell'
 import { getCourseDetail, getCourseSections, type GetCourseDetailData, type GetCourseSectionsData } from '@/services'
@@ -139,21 +138,21 @@ export default function CourseDetailPage() {
               {textOrPlaceholder(course.description, '接口未返回课程简介')}
             </Text>
             <View className="mt-4 grid grid-cols-3 overflow-hidden rounded-lg bg-white/10">
-              <View className="flex min-w-0 items-center justify-center gap-1 px-2 py-3">
-                <AppIcon name="coins-line" size={16} color="#F5C542" />
-                <Text className="min-w-0 truncate text-[22rpx] font-semibold text-white">
+              <View className="min-w-0 px-2 py-3 text-center">
+                <Text className="block text-[20rpx] leading-4 text-white/55">课程价格</Text>
+                <Text className="mt-1 block min-w-0 truncate text-[22rpx] font-semibold text-white">
                   {priceOf(course.price) ?? '免费'}
                 </Text>
               </View>
-              <View className="flex min-w-0 items-center justify-center gap-1 border-l border-white/15 px-2 py-3">
-                <AppIcon name="graduation-cap-line" size={16} color="#F5C542" />
-                <Text className="min-w-0 truncate text-[22rpx] font-semibold text-white">
+              <View className="min-w-0 border-l border-white/15 px-2 py-3 text-center">
+                <Text className="block text-[20rpx] leading-4 text-white/55">学习人数</Text>
+                <Text className="mt-1 block min-w-0 truncate text-[22rpx] font-semibold text-white">
                   {course.student_count === undefined ? '暂无数据' : `${course.student_count}人`}
                 </Text>
               </View>
-              <View className="flex min-w-0 items-center justify-center gap-1 border-l border-white/15 px-2 py-3">
-                <AppIcon name="time-line" size={16} color="#F5C542" />
-                <Text className="min-w-0 truncate text-[22rpx] font-semibold text-white">
+              <View className="min-w-0 border-l border-white/15 px-2 py-3 text-center">
+                <Text className="block text-[20rpx] leading-4 text-white/55">课程时长</Text>
+                <Text className="mt-1 block min-w-0 truncate text-[22rpx] font-semibold text-white">
                   {formatDuration(course.total_duration) ?? `${course.section_count ?? 0}课时`}
                 </Text>
               </View>
