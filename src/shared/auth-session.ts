@@ -43,7 +43,9 @@ export function clearAuthToken() {
 
 export function onUnauthorized(listener: () => void) {
   unauthorizedListeners.add(listener)
-  return () => unauthorizedListeners.delete(listener)
+  return () => {
+    unauthorizedListeners.delete(listener)
+  }
 }
 
 export function notifyUnauthorized() {

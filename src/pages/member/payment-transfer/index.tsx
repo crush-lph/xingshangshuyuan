@@ -106,7 +106,7 @@ export default function PaymentTransferPage() {
               ]}
             />
           ) : null}
-          {order.status === 2 && order.order_id ? (
+          {order.status === 2 && order.order_id && order.items?.some((item) => item.product_id) ? (
             <ActionBar
               actions={[
                 { label: '返回订单列表', variant: 'outline', path: routes.userOrders },

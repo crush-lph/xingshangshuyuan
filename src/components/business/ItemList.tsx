@@ -84,7 +84,11 @@ export function ItemList({ items, variant = 'default' }: ItemListProps) {
               </View>
               <View className="min-w-0 flex-1">
                 <View className="flex items-start justify-between gap-2">
-                  <Text className="block min-w-0 flex-1 break-all text-base font-bold leading-6 text-ink">
+                  <Text
+                    className={`block min-w-0 flex-1 break-all font-bold text-ink ${
+                      item.titleSize === 'small' ? 'text-xs leading-5' : 'text-base leading-6'
+                    }`}
+                  >
                     {item.title}
                   </Text>
                   {item.tag ? (
@@ -111,10 +115,14 @@ export function ItemList({ items, variant = 'default' }: ItemListProps) {
                 <View className="mt-3 flex items-center gap-3">
                   {displayMeta ? (
                     <Text className="min-w-0 flex-1 break-all text-xs leading-5 text-muted">{displayMeta}</Text>
+                  ) : displayPrice ? (
+                    <Text className="min-w-0 flex-1 break-all text-left text-lg font-bold leading-6 text-gold">
+                      {displayPrice}
+                    </Text>
                   ) : (
                     <View className="min-w-0 flex-1" />
                   )}
-                  {displayPrice ? (
+                  {displayMeta && displayPrice ? (
                     <Text className="max-w-[280rpx] shrink-0 break-all text-lg font-bold leading-6 text-gold">
                       {displayPrice}
                     </Text>

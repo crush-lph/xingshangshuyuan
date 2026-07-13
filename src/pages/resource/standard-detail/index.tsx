@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { RichText, Text, View } from '@tarojs/components'
-import { ActionBar, FieldList, ReviewList, SectionCard, StateNotice } from '@/components/business'
+import { ActionBar, ReviewList, SectionCard, StateNotice } from '@/components/business'
 import { PageShell } from '@/components/PageShell'
 import { getProductDetail, getProductReviews, type GetProductDetailData, type ProductReviewItem } from '@/services'
 import { routes } from '@/shared/router'
@@ -63,6 +63,7 @@ export default function ResourceStandardDetailPage() {
 
   return (
     <PageShell
+      showHeader={false}
       title={product ? textOrPlaceholder(product.name) : '资源详情'}
       subtitle="标准化工具资源，支持在线采购和会员优惠。"
     >
@@ -78,7 +79,10 @@ export default function ResourceStandardDetailPage() {
                 <Text className="block text-xs font-semibold text-gold-light">
                   {textOrPlaceholder(product.product_type_text, '未分类')}
                 </Text>
-                <Text className="mt-2 block text-xl font-bold text-white">
+                <Text className="mt-2 block break-all text-lg font-bold leading-7 text-white">
+                  {textOrPlaceholder(product.name, '未命名资源')}
+                </Text>
+                <Text className="mt-3 block text-xl font-bold text-white">
                   {priceOf(product.vip_price ?? product.price, product.price_unit) ?? '未提供价格'}
                 </Text>
                 <Text className="mt-1 block text-xs text-white/55">
@@ -96,27 +100,18 @@ export default function ResourceStandardDetailPage() {
             </View>
           </View>
 
-          <FieldList
-            fields={[
-              { label: '商品名称', value: textOrPlaceholder(product.name) },
-              { label: '商品分类', value: textOrPlaceholder(product.product_type_text) },
-              { label: '浏览次数', value: textOrPlaceholder(product.view_count) },
-              { label: '规格数量', value: String(product.specs?.length ?? 0) }
-            ]}
-          />
-
-          <SectionCard title="资源说明">
-            <Text className="block text-sm leading-6 text-muted">
-              {textOrPlaceholder(product.description, '接口未返回资源说明')}
-            </Text>
-          </SectionCard>
-
-          <SectionCard title="资源详情">
+          <SectionCard title="资源介绍">
+            {textOf(product.description) ? (
+              <Text className="block break-all text-sm leading-6 text-muted">{textOf(product.description)}</Text>
+            ) : null}
             {textOf(product.detail) ? (
-              <RichText className="block text-sm leading-6 text-muted" nodes={textOf(product.detail) ?? ''} />
-            ) : (
-              <Text className="block text-sm leading-6 text-muted">接口未返回资源详情</Text>
-            )}
+              <View className={textOf(product.description) ? 'mt-3 border-t border-line pt-3' : ''}>
+                <RichText className="block text-sm leading-6 text-muted" nodes={textOf(product.detail) ?? ''} />
+              </View>
+            ) : null}
+            {!textOf(product.description) && !textOf(product.detail) ? (
+              <Text className="block text-sm leading-6 text-muted">暂无资源介绍</Text>
+            ) : null}
           </SectionCard>
 
           <SectionCard title="商品规格">

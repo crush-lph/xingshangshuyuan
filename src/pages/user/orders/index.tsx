@@ -14,10 +14,9 @@ interface OrderTab {
 
 const orderTabs: OrderTab[] = [{ label: '全部' }, { label: '待支付', status: 0 }, { label: '已完成', status: 2 }]
 
-function getOrderAction(status: number | undefined, canReview: boolean) {
-  if (canReview) return '评价订单'
+function getOrderAction(status: number | undefined) {
   if (status === 0) return '继续支付'
-  if (status === 1) return '查看服务状态'
+  if (status === 1) return '查看'
   if (status === 2) return '查看订单'
   if (status === 3) return '已取消'
   return '查看订单'
@@ -26,24 +25,21 @@ function getOrderAction(status: number | undefined, canReview: boolean) {
 function mapOrderItems(records: OrderListItem[]): ListItem[] {
   return records.map((order) => {
     const orderNo = textOf(order.order_no)
-    const orderMeta = orderNo ?? textOf(order.id)
-    const orderId = numberOf(order.order_id ?? (typeof order.id === 'number' ? order.id : undefined))
     const status = numberOf(order.status)
     const isCompleted = status === 2 || textOf(order.status_text) === '已完成'
     const title = textOrPlaceholder(order.title ?? order.order_no ?? order.id, '未命名订单')
-    const canReview = Boolean(isCompleted && orderId)
 
     return {
       title,
-      desc: textOrPlaceholder(order.description ?? order.remark ?? order.status_text, '接口未返回订单描述'),
-      meta: orderMeta,
+      titleSize: 'small',
+      desc: textOf(order.description ?? order.remark),
       price: priceOf(order.pay_amount ?? order.total_amount ?? order.amount),
       tag: textOf(order.status_text),
       icon: 'file-list-3-line',
       tone: isCompleted ? 'success' : 'gold',
-      path: canReview ? routes.userReviews : orderNo ? routes.paymentTransfer : undefined,
-      query: canReview ? { order_id: orderId, order_no: orderNo, title } : orderNo ? { order_no: orderNo } : undefined,
-      action: orderNo || canReview ? getOrderAction(status, canReview) : '订单信息缺失'
+      path: orderNo ? routes.paymentTransfer : undefined,
+      query: orderNo ? { order_no: orderNo } : undefined,
+      action: orderNo ? getOrderAction(status) : '订单信息缺失'
     }
   })
 }

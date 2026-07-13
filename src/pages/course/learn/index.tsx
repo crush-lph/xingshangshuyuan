@@ -11,7 +11,7 @@ import {
   type GetCourseDetailData,
   type GetCourseSectionsData
 } from '@/services'
-import { routes } from '@/shared/router'
+import { router, routes } from '@/shared/router'
 import { compactJoin, getPageParam, textOf, textOrPlaceholder } from '@/shared/view-data'
 import {
   CourseSectionTree,
@@ -46,10 +46,12 @@ export default function CourseLearnPage() {
   const [course, setCourse] = useState<GetCourseDetailData | null>(null)
   const [sections, setSections] = useState<CourseSectionNode[]>([])
   const [activeSection, setActiveSection] = useState<CourseSectionNode | null>(null)
+  const [accessNotice, setAccessNotice] = useState('')
   const [isLoading, setIsLoading] = useState(true)
   const [hasError, setHasError] = useState(false)
   const lastReportedRef = useRef<{ sectionId?: number | string; position: number }>({ position: 0 })
   const isReportingRef = useRef(false)
+  const isAccessPromptVisibleRef = useRef(false)
 
   useEffect(() => {
     async function loadLearningData() {
@@ -63,6 +65,7 @@ export default function CourseLearnPage() {
         setCourse(null)
         setSections([])
         setActiveSection(null)
+        setAccessNotice('')
         return
       }
 
@@ -78,19 +81,26 @@ export default function CourseLearnPage() {
           : []
       const progressSectionId =
         progressResult.status === 'fulfilled' ? progressResult.value.data.last_section_id : undefined
+      const progressErrorMessage =
+        progressResult.status === 'rejected' && progressResult.reason instanceof Error
+          ? progressResult.reason.message
+          : ''
       const initialSectionId = sectionId ?? (progressSectionId === undefined ? undefined : String(progressSectionId))
 
       const nextCourse =
         detailResult.status === 'fulfilled' && detailResult.value.data.id ? detailResult.value.data : null
       const initialSection = findInitialSection(nextSections, initialSectionId)
-      const accessibleSection =
-        nextCourse?.is_bought || initialSection?.is_free
-          ? initialSection
-          : (flattenPlayableSections(nextSections).find((section) => Boolean(section.is_free)) ?? null)
+      const freeSection = flattenPlayableSections(nextSections).find((section) => Boolean(section.is_free)) ?? null
+      const accessibleSection = nextCourse?.is_bought || initialSection?.is_free ? initialSection : freeSection
 
       setCourse(nextCourse)
       setSections(nextSections)
       setActiveSection(accessibleSection)
+      setAccessNotice(
+        nextCourse && !nextCourse.is_bought
+          ? progressErrorMessage || (freeSection ? '未购买此课程，当前仅可试看免费章节' : '未购买此课程')
+          : ''
+      )
       setHasError(
         detailResult.status === 'rejected' &&
           sectionsResult.status === 'rejected' &&
@@ -103,6 +113,7 @@ export default function CourseLearnPage() {
         setCourse(null)
         setSections([])
         setActiveSection(null)
+        setAccessNotice('')
         setHasError(true)
       })
       .finally(() => setIsLoading(false))
@@ -110,6 +121,8 @@ export default function CourseLearnPage() {
 
   const playableSections = useMemo(() => flattenPlayableSections(sections), [sections])
   const videoUrl = textOf(activeSection?.video_url)
+  const canPlayActiveSection = Boolean(course?.is_bought || activeSection?.is_free)
+  const hasFreeTrial = playableSections.some((section) => Boolean(section.is_free))
 
   useEffect(() => {
     lastReportedRef.current = { sectionId: activeSection?.id, position: 0 }
@@ -220,6 +233,36 @@ export default function CourseLearnPage() {
     })
   }
 
+  async function handleSelectSection(section: CourseSectionNode) {
+    if (course?.is_bought || section.is_free) {
+      if (!section.children?.length || section.video_url) {
+        setActiveSection(section)
+      }
+      return
+    }
+
+    if (isAccessPromptVisibleRef.current) {
+      return
+    }
+
+    isAccessPromptVisibleRef.current = true
+
+    try {
+      const result = await Taro.showModal({
+        title: '课时未解锁',
+        content: '购买课程后即可学习该课时。',
+        confirmText: '去购买',
+        cancelText: '暂不购买'
+      })
+
+      if (result.confirm && course?.id !== undefined) {
+        await router.to(routes.coursePurchase, { course_id: course.id })
+      }
+    } finally {
+      isAccessPromptVisibleRef.current = false
+    }
+  }
+
   return (
     <PageShell
       title="课程学习"
@@ -231,8 +274,31 @@ export default function CourseLearnPage() {
         <StateNotice state="error" />
       ) : course ? (
         <View className="grid gap-3">
+          {accessNotice ? (
+            <SectionCard title="课程未购买">
+              <Text className="block text-sm font-semibold leading-6 text-ink">{accessNotice}</Text>
+              <Text className="block text-sm leading-6 text-muted">
+                {hasFreeTrial
+                  ? '你还没有购买此课程，当前仅开放免费试看章节。购买后可学习完整目录并记录学习进度。'
+                  : '你还没有购买此课程，购买后可学习完整内容并记录学习进度。'}
+              </Text>
+              <View className="mt-3">
+                <ActionBar
+                  actions={[
+                    {
+                      label: '购买课程',
+                      variant: 'gold',
+                      path: routes.coursePurchase,
+                      query: { course_id: course.id }
+                    }
+                  ]}
+                />
+              </View>
+            </SectionCard>
+          ) : null}
+
           <View className="overflow-hidden rounded-lg bg-black shadow-medium">
-            {videoUrl && (course.is_bought || activeSection?.is_free) ? (
+            {videoUrl && canPlayActiveSection ? (
               <Video
                 className="h-[420rpx] w-full"
                 controls
@@ -244,7 +310,11 @@ export default function CourseLearnPage() {
               />
             ) : (
               <View className="flex h-[420rpx] items-center justify-center bg-brand-deep px-6 text-center">
-                <Text className="text-sm leading-6 text-white/70">当前章节暂未配置视频地址</Text>
+                <Text className="text-sm leading-6 text-white/70">
+                  {!course.is_bought || (!canPlayActiveSection && activeSection)
+                    ? '当前章节购买课程后可学习'
+                    : '当前章节暂未配置视频地址'}
+                </Text>
               </View>
             )}
           </View>
@@ -260,11 +330,7 @@ export default function CourseLearnPage() {
               <CourseSectionTree
                 activeSectionId={activeSection?.id}
                 sections={sections}
-                onSelect={(section) => {
-                  if ((course.is_bought || section.is_free) && (!section.children?.length || section.video_url)) {
-                    setActiveSection(section)
-                  }
-                }}
+                onSelect={(section) => void handleSelectSection(section)}
               />
             ) : (
               <StateNotice state="empty" copy={{ title: '暂无课程目录', desc: '当前接口没有返回课程章节。' }} />
@@ -272,9 +338,31 @@ export default function CourseLearnPage() {
           </SectionCard>
 
           <ActionBar
-            actions={[
-              { label: '课程详情', variant: 'outline', path: routes.courseDetail, query: { course_id: course.id } }
-            ]}
+            actions={
+              course.is_bought
+                ? [
+                    {
+                      label: '课程详情',
+                      variant: 'outline',
+                      path: routes.courseDetail,
+                      query: { course_id: course.id }
+                    }
+                  ]
+                : [
+                    {
+                      label: '购买课程',
+                      variant: 'gold',
+                      path: routes.coursePurchase,
+                      query: { course_id: course.id }
+                    },
+                    {
+                      label: '课程详情',
+                      variant: 'outline',
+                      path: routes.courseDetail,
+                      query: { course_id: course.id }
+                    }
+                  ]
+            }
           />
         </View>
       ) : (

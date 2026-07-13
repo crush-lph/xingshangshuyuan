@@ -18,6 +18,7 @@ export interface ActionItem {
 
 export interface ListItem {
   title: string
+  titleSize?: 'normal' | 'small'
   desc?: string
   meta?: string
   price?: string

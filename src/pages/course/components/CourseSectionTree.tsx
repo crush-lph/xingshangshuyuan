@@ -122,7 +122,7 @@ export function CourseSectionTree({ activeSectionId, courseId, sections, onSelec
       return
     }
 
-    if (courseId && section.id) {
+    if (courseId !== undefined && section.id !== undefined) {
       router.to(routes.courseLearn, { course_id: courseId, section_id: section.id })
     }
   }
@@ -131,7 +131,7 @@ export function CourseSectionTree({ activeSectionId, courseId, sections, onSelec
     const children = section.children ?? []
     const isActive = activeSectionId !== undefined && section.id === activeSectionId
     const isChapter = children.length > 0
-    const canOpen = Boolean(onSelect || (courseId && section.id))
+    const canOpen = Boolean(onSelect || (courseId !== undefined && section.id !== undefined))
     const status = getSectionStatus(section, isActive)
     const title = textOrPlaceholder(section.title, `${isChapter ? '章节' : '课时'}${index + 1}`)
     const meta = isChapter ? `${children.length} 个课时` : getSectionMeta(section)

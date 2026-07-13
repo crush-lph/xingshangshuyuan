@@ -1,7 +1,8 @@
 import { useEffect, useRef, useState } from 'react'
 import Taro from '@tarojs/taro'
 import { Text, View } from '@tarojs/components'
-import { ActionBar, FieldList, PaymentStatusPoller, SectionCard, StateNotice } from '@/components/business'
+import { AppIcon } from '@/components/AppIcon'
+import { ActionBar, PaymentStatusPoller, SectionCard, StateNotice } from '@/components/business'
 import { PageShell } from '@/components/PageShell'
 import {
   buyCourse,
@@ -13,8 +14,9 @@ import {
 } from '@/services'
 import { ensureLoggedIn } from '@/shared/auth-guard'
 import { router, routes } from '@/shared/router'
-import { getPageParam, priceOf, textOf, textOrPlaceholder } from '@/shared/view-data'
+import { getPageParam, priceOf, textOrPlaceholder } from '@/shared/view-data'
 import { getWechatPaymentErrorMessage, requestWechatPayment } from '@/shared/wechat-payment'
+import { CourseInstructorCard } from '../components/CourseInstructorCard'
 
 export default function CoursePurchasePage() {
   const [course, setCourse] = useState<GetCourseDetailData | null>(null)
@@ -110,7 +112,7 @@ export default function CoursePurchasePage() {
   const isPaymentLocked = isSubmitting || Boolean(pollingOrderNo)
 
   return (
-    <PageShell title="购买课程" subtitle="确认课程信息后生成订单并完成支付。">
+    <PageShell showHeader={false} title="购买课程" subtitle="确认课程信息后生成订单并完成支付。">
       {isLoading ? (
         <StateNotice state="loading" />
       ) : hasError ? (
@@ -128,50 +130,49 @@ export default function CoursePurchasePage() {
               <Text className="mt-2 block text-sm leading-6 text-white/72">
                 {textOrPlaceholder(course.description, '接口未返回课程简介')}
               </Text>
-              {order?.order_no ? (
-                <View className="mt-3 rounded bg-white/10 px-3 py-2">
-                  <Text className="text-[20rpx] font-semibold text-white/80">最近订单：{order.order_no}</Text>
-                </View>
-              ) : null}
             </View>
           </View>
 
-          <FieldList
-            fields={[
-              { label: '课程讲师', value: textOrPlaceholder(course.teacher_name) },
-              { label: '课程类型', value: textOrPlaceholder(course.course_type_text) },
-              { label: '学习人数', value: course.student_count === undefined ? '未提供' : `${course.student_count}人` },
-              { label: '订单状态', value: textOrPlaceholder(order?.status_text, '未生成') }
-            ]}
-          />
-
-          <SectionCard title="金额确认">
-            <View className="grid gap-3 rounded-lg bg-canvas p-3">
-              <View className="flex items-center justify-between gap-3">
-                <Text className="text-sm font-semibold text-muted">课程金额</Text>
-                <Text className="text-right text-sm font-bold text-ink">{priceOf(course.price) ?? '未提供'}</Text>
-              </View>
-              {originalPrice && originalPrice !== priceOf(course.price) ? (
-                <View className="flex items-center justify-between gap-3">
-                  <Text className="text-sm font-semibold text-muted">课程原价</Text>
-                  <Text className="text-right text-sm text-muted line-through">{originalPrice}</Text>
+          <CourseInstructorCard avatar={course.teacher_avatar} intro={course.teacher_intro} name={course.teacher_name}>
+            <View className="mt-4 flex overflow-hidden rounded-lg border border-line bg-canvas">
+              <View className="flex min-w-0 flex-1 items-center gap-2 px-3 py-3">
+                <AppIcon name="book-open-line" size={18} color="#0B2C5F" />
+                <View className="min-w-0">
+                  <Text className="block text-[20rpx] leading-4 text-muted">课程类型</Text>
+                  <Text className="mt-1 block truncate text-sm font-semibold text-ink">
+                    {textOrPlaceholder(course.course_type_text)}
+                  </Text>
                 </View>
-              ) : null}
-              <View className="flex items-center justify-between gap-3">
-                <Text className="text-sm font-semibold text-muted">应付金额</Text>
-                <Text className="text-right text-lg font-bold text-brand">{displayPrice}</Text>
+              </View>
+              <View className="my-3 w-px shrink-0 bg-line" />
+              <View className="flex min-w-0 flex-1 items-center gap-2 px-3 py-3">
+                <AppIcon name="graduation-cap-line" size={18} color="#C99700" />
+                <View className="min-w-0">
+                  <Text className="block text-[20rpx] leading-4 text-muted">正在学习</Text>
+                  <Text className="mt-1 block truncate text-sm font-semibold text-ink">
+                    {course.student_count === undefined ? '暂未提供' : `${course.student_count} 人`}
+                  </Text>
+                </View>
               </View>
             </View>
-            <Text className="mt-3 block text-[20rpx] leading-5 text-muted">
-              支付完成后可进入课程学习，最终金额以订单接口返回为准。
-            </Text>
-          </SectionCard>
+          </CourseInstructorCard>
 
-          {textOf(course.teacher_intro) ? (
-            <SectionCard title="讲师介绍">
-              <Text className="block text-sm leading-6 text-muted">{textOf(course.teacher_intro)}</Text>
-            </SectionCard>
-          ) : null}
+          <SectionCard title="支付金额">
+            <View className="rounded-lg bg-canvas p-4">
+              {originalPrice && originalPrice !== priceOf(course.price) ? (
+                <View className="mb-2 flex items-center justify-between gap-3">
+                  <Text className="text-[24rpx] text-muted">课程原价</Text>
+                  <Text className="text-right text-[24rpx] text-muted line-through">{originalPrice}</Text>
+                </View>
+              ) : null}
+              <View className="flex items-end justify-between gap-3">
+                <Text className="pb-1 text-sm font-semibold text-ink">本次应付</Text>
+                <Text className="min-w-0 break-all text-right text-xl font-bold leading-8 text-brand">
+                  {displayPrice}
+                </Text>
+              </View>
+            </View>
+          </SectionCard>
 
           <ActionBar
             actions={[

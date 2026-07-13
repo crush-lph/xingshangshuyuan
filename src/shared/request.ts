@@ -110,7 +110,7 @@ export function assertBusinessSuccess<TResponse>(response: TResponse): TResponse
 
   const info = typeof response.info === 'string' && response.info.trim() ? response.info.trim() : '业务请求失败'
 
-  if (isUnauthorizedBusinessError(response.code, info) && getAuthToken()) {
+  if (isUnauthorizedBusinessError(response.code, info)) {
     notifyUnauthorized()
   }
 
@@ -125,8 +125,6 @@ export async function request<TResponse = unknown, TData extends RequestData = T
   options: RequestOptions<TData>
 ): Promise<TResponse> {
   const { baseURL, data, dataType, header, method = 'GET', responseType, timeout, url } = options
-  const token = getAuthToken()
-
   const response = await Taro.request<TResponse, TData>({
     data,
     dataType,
@@ -141,7 +139,7 @@ export async function request<TResponse = unknown, TData extends RequestData = T
     return assertBusinessSuccess(response.data)
   }
 
-  if (response.statusCode === 401 && token) {
+  if (response.statusCode === 401) {
     notifyUnauthorized()
   }
 
