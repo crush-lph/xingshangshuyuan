@@ -28,6 +28,8 @@ export interface ListItem {
   path?: RoutePath
   query?: Query
   action?: string
+  actionPath?: RoutePath
+  actionQuery?: Query
   onClick?: () => void | Promise<void>
 }
 

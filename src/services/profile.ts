@@ -35,6 +35,7 @@ export function getUserVip(options?: ApiRequestOptions) {
 
 export interface GetOrdersQuery {
   status?: QueryValue
+  paid?: QueryValue
   page?: QueryValue
   page_size?: QueryValue
 }
@@ -48,6 +49,9 @@ export interface OrderListItem extends ProfileRecord {
   remark?: string
   status?: number
   status_text?: string
+  paid?: number | boolean
+  is_paid?: number | boolean
+  pay_time?: string | null
   pay_amount?: string
   total_amount?: string
   amount?: string

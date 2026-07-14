@@ -690,11 +690,12 @@
 
 请求 Query：
 
-| 字段      | 类型                        | 必填 | 说明                            | 示例 |
-| --------- | --------------------------- | ---- | ------------------------------- | ---- |
-| status    | string \| number \| boolean | 否   | 0待支付,1待服务,2已完成,3已取消 | 0    |
-| page      | string \| number \| boolean | 否   |                                 | 1    |
-| page_size | string \| number \| boolean | 否   |                                 | 10   |
+| 字段      | 类型                        | 必填 | 说明                                       | 示例 |
+| --------- | --------------------------- | ---- | ------------------------------------------ | ---- |
+| status    | string \| number \| boolean | 否   | 0待支付,1待服务,2已完成,3已取消,4已退款    | 0    |
+| paid      | string \| number \| boolean | 否   | 已支付筛选：0未支付，1已支付；可叠加status | 1    |
+| page      | string \| number \| boolean | 否   |                                            | 1    |
+| page_size | string \| number \| boolean | 否   |                                            | 10   |
 
 请求 Body：
 

@@ -9,10 +9,16 @@ import { numberOf, priceOf, textOf, textOrPlaceholder } from '@/shared/view-data
 
 interface OrderTab {
   label: string
-  status?: 0 | 2
+  paid?: 0 | 1
+  status?: 4
 }
 
-const orderTabs: OrderTab[] = [{ label: '全部' }, { label: '待支付', status: 0 }, { label: '已完成', status: 2 }]
+const orderTabs: OrderTab[] = [
+  { label: '全部' },
+  { label: '未支付', paid: 0 },
+  { label: '已支付', paid: 1 },
+  { label: '已退款', status: 4 }
+]
 
 function getOrderAction(status: number | undefined) {
   if (status === 0) return '继续支付'
@@ -22,10 +28,20 @@ function getOrderAction(status: number | undefined) {
   return '查看订单'
 }
 
-function mapOrderItems(records: OrderListItem[]): ListItem[] {
+function mapOrderItems(records: OrderListItem[], fromPaidFilter = false): ListItem[] {
   return records.map((order) => {
     const orderNo = textOf(order.order_no)
+    const orderId = numberOf(order.order_id ?? order.id)
     const status = numberOf(order.status)
+    const paidFlag = order.paid ?? order.is_paid
+    const isPaid =
+      fromPaidFilter ||
+      paidFlag === true ||
+      numberOf(paidFlag) === 1 ||
+      Boolean(textOf(order.pay_time)) ||
+      status === 1 ||
+      status === 2
+    const canReview = isPaid && status !== 3 && status !== 4 && orderId !== undefined
     const isCompleted = status === 2 || textOf(order.status_text) === '已完成'
     const title = textOrPlaceholder(order.title ?? order.order_no ?? order.id, '未命名订单')
 
@@ -39,7 +55,15 @@ function mapOrderItems(records: OrderListItem[]): ListItem[] {
       tone: isCompleted ? 'success' : 'gold',
       path: orderNo ? routes.paymentTransfer : undefined,
       query: orderNo ? { order_no: orderNo } : undefined,
-      action: orderNo ? getOrderAction(status) : '订单信息缺失'
+      action: canReview ? '去评价' : orderNo ? getOrderAction(status) : '订单信息缺失',
+      actionPath: canReview ? routes.userReviews : undefined,
+      actionQuery: canReview
+        ? {
+            order_id: orderId,
+            ...(orderNo ? { order_no: orderNo } : {}),
+            title
+          }
+        : undefined
     }
   })
 }
@@ -50,18 +74,19 @@ export default function UserOrdersPage() {
     deps: [activeTab],
     fetchPage: ({ page, page_size }) =>
       getOrders({
+        ...(activeTab.paid !== undefined ? { paid: activeTab.paid } : {}),
         ...(activeTab.status !== undefined ? { status: activeTab.status } : {}),
         page,
         page_size
       }),
-    mapItems: mapOrderItems
+    mapItems: (records) => mapOrderItems(records, activeTab.paid === 1)
   })
 
   return (
     <PageShell title="我的订单" subtitle="查看资源采购、活动报名和会员订单。">
       <View className="grid gap-3">
         <SectionCard>
-          <View className="grid grid-cols-3 gap-2 text-center">
+          <View className="grid grid-cols-4 gap-2 text-center">
             {orderTabs.map((item) => {
               const isActive = item.label === activeTab.label
 

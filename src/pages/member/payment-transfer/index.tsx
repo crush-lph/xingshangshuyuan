@@ -16,6 +16,13 @@ export default function PaymentTransferPage() {
   const [pollingOrderNo, setPollingOrderNo] = useState('')
   const [isPaying, setIsPaying] = useState(false)
   const paymentLockRef = useRef(false)
+  const isPaidOrder = Boolean(order?.pay_time) || order?.status === 1 || order?.status === 2
+  const canReviewOrder =
+    isPaidOrder &&
+    order?.status !== 3 &&
+    order?.status !== 4 &&
+    Boolean(order?.order_id) &&
+    Boolean(order?.items?.some((item) => item.product_id))
 
   async function refreshOrder() {
     const orderNo = getPageParam('order_no')
@@ -106,7 +113,7 @@ export default function PaymentTransferPage() {
               ]}
             />
           ) : null}
-          {order.status === 2 && order.order_id && order.items?.some((item) => item.product_id) ? (
+          {canReviewOrder && order.order_id ? (
             <ActionBar
               actions={[
                 { label: '返回订单列表', variant: 'outline', path: routes.userOrders },

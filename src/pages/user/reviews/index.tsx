@@ -73,7 +73,7 @@ function ReviewHistory() {
   }
 
   if (!reviewItems.length) {
-    return <StateNotice state="empty" copy={{ title: '暂无评价', desc: '完成服务订单后可在订单列表提交评价。' }} />
+    return <StateNotice state="empty" copy={{ title: '暂无评价', desc: '订单支付后可在订单列表提交评价。' }} />
   }
 
   return (
@@ -229,7 +229,7 @@ export default function UserReviewsPage() {
   return (
     <PageShell
       title={orderId ? '订单评价' : '我的评价'}
-      subtitle={orderId ? '评价前会核验订单是否已经评价。' : '查看已提交的资源和服务评价。'}
+      subtitle={orderId ? '分享本次服务体验。' : '查看已提交的资源和服务评价。'}
     >
       <View className="grid gap-3">
         {orderId ? <OrderReviewFlow orderId={orderId} orderNo={orderNo} orderTitle={orderTitle} /> : <ReviewHistory />}

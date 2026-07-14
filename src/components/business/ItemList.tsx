@@ -128,7 +128,17 @@ export function ItemList({ items, variant = 'default' }: ItemListProps) {
                     </Text>
                   ) : null}
                   {item.action ? (
-                    <View className="ml-auto flex max-w-[180rpx] shrink-0 items-center justify-end gap-1">
+                    <View
+                      className="ml-auto flex max-w-[180rpx] shrink-0 items-center justify-end gap-1"
+                      onClick={(event) => {
+                        if (!item.actionPath) {
+                          return
+                        }
+
+                        event.stopPropagation()
+                        void router.to(item.actionPath, item.actionQuery)
+                      }}
+                    >
                       <Text className="break-all text-right text-xs font-semibold leading-4 text-tech">
                         {item.action}
                       </Text>
