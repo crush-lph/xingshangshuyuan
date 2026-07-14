@@ -8,6 +8,21 @@ import { textOrPlaceholder } from '@/shared/view-data'
 import { AdminGuard } from '../components/AdminGuard'
 
 const EMPTY_FIELD_TEXT = '-'
+const ERROR_TOAST_DURATION = 4000
+
+function getCheckinErrorMessage(error: unknown) {
+  if (!error || typeof error !== 'object') {
+    return '核验失败，请重试'
+  }
+
+  const { data, message } = error as {
+    data?: { info?: unknown; message?: unknown }
+    message?: unknown
+  }
+  const serverMessage = data?.info ?? data?.message ?? message
+
+  return typeof serverMessage === 'string' && serverMessage.trim() ? serverMessage.trim() : '核验失败，请重试'
+}
 
 function AdminCheckinContent() {
   const [checkinResult, setCheckinResult] = useState<CheckinEventData | null>(null)
@@ -44,7 +59,11 @@ function AdminCheckinContent() {
           : ''
 
       if (!/cancel/i.test(errMsg)) {
-        Taro.showToast({ title: '核验失败，请重试', icon: 'none' })
+        Taro.showToast({
+          title: getCheckinErrorMessage(error),
+          icon: 'none',
+          duration: ERROR_TOAST_DURATION
+        })
       }
     } finally {
       Taro.hideLoading()

@@ -1,6 +1,5 @@
-import Taro from '@tarojs/taro'
-import { notifyUnauthorized } from '@/shared/auth-session'
-import { assertBusinessSuccess, getRequestHeader, resolveRequestUrl } from '@/shared/request'
+import { readImageFileAsDataUri } from '@/shared/image-file'
+import { api } from '@/shared/request'
 
 export interface UploadFileOptions {
   filePath: string
@@ -62,44 +61,13 @@ function extractFileUrl(response: unknown): string | undefined {
   return undefined
 }
 
-function parseUploadResponse(data: string) {
-  try {
-    return JSON.parse(data) as unknown
-  } catch {
-    return data
-  }
-}
-
-function createUploadHeader() {
-  const header = getRequestHeader()
-
-  // Let the mini-program runtime generate the multipart boundary.
-  delete header['content-type']
-  delete header['Content-Type']
-
-  return header
-}
-
 export async function uploadFile(options: UploadFileOptions): Promise<UploadFileResult> {
-  const response = await Taro.uploadFile({
-    url: resolveRequestUrl('/api/upload'),
-    filePath: options.filePath,
-    name: options.name ?? 'file',
-    header: createUploadHeader(),
-    formData: {
-      ...options.formData,
-      ...(options.scene ? { scene: options.scene } : {})
-    }
+  const image = readImageFileAsDataUri(options.filePath)
+  const raw = await api.post<unknown>('/api/upload', {
+    ...options.formData,
+    ...(options.scene ? { scene: options.scene } : {}),
+    image
   })
-
-  if (response.statusCode < 200 || response.statusCode >= 300) {
-    if (response.statusCode === 401) {
-      notifyUnauthorized()
-    }
-    throw new Error(`文件上传失败（${response.statusCode}）`)
-  }
-
-  const raw = assertBusinessSuccess(parseUploadResponse(response.data))
   const fileUrl = extractFileUrl(raw)
 
   if (!fileUrl) {

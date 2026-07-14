@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { View, Text } from '@tarojs/components'
+import { ScrollView, View, Text } from '@tarojs/components'
 import Button from '@nutui/nutui-react-taro/dist/es/packages/button'
 import '@nutui/nutui-react-taro/dist/es/packages/button/style/css'
 import { AppIcon } from '@/components/AppIcon'
@@ -14,8 +14,6 @@ import { priceOf, textOf, textOrPlaceholder } from '@/shared/view-data'
 interface Category {
   id?: number
   name: string
-  icon: AppIconName
-  path: RoutePath
 }
 
 interface ServiceProduct {
@@ -80,6 +78,7 @@ function ServiceProductCard({ item }: { item: ServiceProduct }) {
 
 export default function ServicesPage() {
   const [categories, setCategories] = useState<Category[]>([])
+  const [activeCategoryId, setActiveCategoryId] = useState<number | undefined>()
   const [isCategoriesLoading, setIsCategoriesLoading] = useState(true)
   const [hasCategoriesError, setHasCategoriesError] = useState(false)
   const {
@@ -89,8 +88,13 @@ export default function ServicesPage() {
     isLoadingMore,
     items
   } = usePaginatedList<ServiceProductRecord, ServiceProduct>({
-    deps: [],
-    fetchPage: ({ page, page_size }) => getProducts({ page, page_size }),
+    deps: [activeCategoryId],
+    fetchPage: ({ page, page_size }) =>
+      getProducts({
+        ...(activeCategoryId !== undefined ? { category_id: activeCategoryId } : {}),
+        page,
+        page_size
+      }),
     mapItems: mapServiceProducts
   })
   const isLoading = isCategoriesLoading && isProductsLoading
@@ -104,11 +108,9 @@ export default function ServicesPage() {
       try {
         const response = await getProductCategories()
         setCategories(
-          (response.data.list ?? []).slice(0, 4).map((item) => ({
+          (response.data.list ?? []).map((item) => ({
             id: item.id,
-            name: textOrPlaceholder(item.name, '未命名分类'),
-            icon: getAppIconName(textOrPlaceholder(item.name, '未命名分类'), item.icon, routes.resourceList),
-            path: routes.resourceList
+            name: textOrPlaceholder(item.name, '未命名分类')
           }))
         )
       } catch {
@@ -123,7 +125,7 @@ export default function ServicesPage() {
   }, [])
 
   return (
-    <PageShell title="服务商城" subtitle="工具、培训、咨询和资质服务统一入口。">
+    <PageShell showHeader={false} title="服务商城" subtitle="工具、培训、咨询和资质服务统一入口。">
       <View className="grid gap-3">
         {isLoading ? <StateNotice state="loading" /> : null}
         {!isLoading && hasError ? <StateNotice state="error" /> : null}
@@ -132,26 +134,37 @@ export default function ServicesPage() {
           <>
             <SectionCard title="服务分类">
               {categories.length ? (
-                <View className="grid grid-cols-2 gap-3">
-                  {categories.map((item) => (
-                    <View
-                      key={item.name}
-                      className="rounded-lg bg-brand-soft p-3"
-                      onClick={() => router.to(item.path, item.id ? { category_id: item.id } : undefined)}
-                    >
-                      <View className="mb-2 flex h-9 w-9 items-center justify-center rounded-lg bg-white text-brand">
-                        <AppIcon name={item.icon} size={20} />
-                      </View>
-                      <Text className="block text-sm font-bold text-brand">{item.name}</Text>
-                    </View>
-                  ))}
-                </View>
+                <ScrollView scrollX enhanced showScrollbar={false} className="w-full max-w-full overflow-hidden">
+                  <View className="inline-flex gap-2 pr-1">
+                    {[{ id: undefined, name: '全部' }, ...categories].map((item) => {
+                      const isActive = activeCategoryId === item.id
+
+                      return (
+                        <View
+                          key={item.id ?? 'all'}
+                          className={`shrink-0 rounded-full border px-4 py-2 ${
+                            isActive ? 'border-brand bg-brand' : 'border-transparent bg-brand-soft'
+                          }`}
+                          onClick={() => setActiveCategoryId(item.id)}
+                        >
+                          <Text className={`text-xs font-semibold ${isActive ? 'text-white' : 'text-brand'}`}>
+                            {item.name}
+                          </Text>
+                        </View>
+                      )
+                    })}
+                  </View>
+                </ScrollView>
               ) : (
                 <StateNotice state="empty" copy={{ title: '暂无服务分类', desc: '当前接口没有返回服务分类。' }} />
               )}
             </SectionCard>
 
-            {items.length ? (
+            {isProductsLoading ? (
+              <StateNotice state="loading" />
+            ) : hasProductsError ? (
+              <StateNotice state="error" />
+            ) : items.length ? (
               <View className="grid gap-3">
                 {items.map((item, index) => (
                   <ServiceProductCard key={`${item.title}-${index}`} item={item} />

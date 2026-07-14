@@ -183,7 +183,7 @@ export default function ShuyuanPage() {
   }, [])
 
   return (
-    <PageShell title="行商书苑" subtitle="财税机构课程、活动和服务标准沉淀。">
+    <PageShell showHeader={false} title="行商书苑" subtitle="财税机构课程、活动和服务标准沉淀。">
       <View className="grid max-w-full gap-3 overflow-hidden">
         {isLoading ? <StateNotice state="loading" /> : null}
         {!isLoading && hasError ? <StateNotice state="error" /> : null}

@@ -166,8 +166,8 @@ export default function ResourcePurchasePage() {
           <View className="overflow-hidden rounded-lg bg-brand-deep shadow-medium">
             <View className="bg-[linear-gradient(135deg,rgba(240,180,41,0.18)_0%,rgba(26,53,128,0.82)_48%,rgba(5,14,46,1)_100%)] p-4">
               <View className="flex items-center justify-between gap-3">
-                <View className="rounded-full bg-white/12 px-3 py-1">
-                  <Text className="text-[20rpx] font-semibold text-gold-light">
+                <View className="flex items-center rounded-full bg-white/12 px-3 py-1">
+                  <Text className="block text-[20rpx] font-semibold leading-5 text-gold-light">
                     {textOrPlaceholder(product.product_type_text, '资源采购')}
                   </Text>
                 </View>
